@@ -64,3 +64,39 @@ hyperparameter_policy:
         validation split. Rejected because without explicit donor-level isolation, the
         same donors can appear in training, tuning, and test pools, producing
         optimistically biased results.
+
+# Cross-virus evaluation protocol. See METHODS_CHOICES.md Issue 15. Pre-specified
+# before Phase 4 begins. Leave-one-virus-out cross-validation is the standard transfer
+# learning protocol.
+cross_virus_protocol:
+  protocol: leave_one_virus_out
+  report_directions: all              # report each held-out direction separately
+  report_summary_statistic: "mean and per-direction values"
+  v1_directions:
+    - train: sars_cov_2
+      test: iav
+    - train: iav
+      test: sars_cov_2
+  rationale: |
+    Leave-one-virus-out is the standard transfer learning protocol for the
+    cross-virus generalization question. Reporting both directions plus the mean
+    prevents asymmetric sample-size effects from biasing the headline result.
+
+    For v1 (two viruses: SARS-CoV-2 + IAV), the protocol reduces to two directions:
+    train on SARS, test on IAV; and train on IAV, test on SARS. When RSV and other
+    viruses are added in v1.5+, the protocol extends naturally to N held-out
+    directions per benchmark.
+  alternatives_rejected:
+    - single_direction:
+        choice: train on SARS, test on IAV (the higher-N direction)
+        rationale_for_rejection: |
+          Asymmetric sample sizes make a single direction misleading. SARS has more
+          donors / cells than IAV in the v1 corpus, so train-SARS-test-IAV is the
+          easier direction. Reporting only that direction would inflate headline
+          performance and a reviewer would ask why only one direction was tested.
+    - random_holdout:
+        choice: random 80/20 split of (donor x virus) pairs
+        rationale_for_rejection: |
+          Random holdout breaks the cross-virus generalization framing. A method can
+          pass random holdout by memorizing within-virus structure; that is not the
+          question we are evaluating.

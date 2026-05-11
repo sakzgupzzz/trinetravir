@@ -242,26 +242,6 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
-### Issue 15: cross-virus training/test split protocol (LOAD-BEARING)
-
-**Status**: open. Resolution required before Phase 4.
-
-**The choice as it stands**: to be determined. The cross-virus benchmark requires choosing which virus(es) to train on and which to hold out.
-
-**Why this is a problem**: train-on-SARS-test-on-IAV and train-on-IAV-test-on-SARS will produce different results because of asymmetric sample sizes, biological differences, and severity distributions. A single direction is arbitrary; choosing both with equal weight implies a symmetric protocol.
-
-**Resolution required**:
-- Pre-specify the cross-virus split protocol. Recommended: leave-one-virus-out cross-validation, where each virus in the benchmark serves as the held-out target in turn, and the model is trained on all other viruses. Report mean and per-virus performance.
-- For v1 with two viruses (SARS, IAV), this becomes train-SARS-test-IAV and train-IAV-test-SARS. Report both and the mean.
-- When RSV or other viruses are added later, the protocol extends naturally.
-
-**Validation strategy**: pre-specified protocol; methods section describes the leave-one-virus-out scheme.
-
-**Date opened**: 2026-05-10
-**Date resolved**: <fill in>
-
----
-
 ## Process rules for future methodological choices
 
 The following process applies to any methodological choice made after this document is initialized.
@@ -300,6 +280,27 @@ The conceptual rename (`infection_status` -> `donor_disease_status`) was applied
 - Define `infected` cells via per-cell viral read detection: not feasible in v1. PBMC viral read counts are extremely sparse and most v1-corpus studies (Lee, Wilk, Arunachalam, Schulte-Schrepping) did not align reads to viral genomes. v2 may revisit this for airway-epithelium studies.
 
 **Validation strategy**: refactor with full test coverage (`uv run pytest src/tests/` = 39 passed at resolution time). No scientific sensitivity analysis required — this is a naming and vocabulary clarification, not a methods change. The methods section of the eventual paper will define both the column and the allowed values explicitly so a reviewer cannot mistake the donor-level proxy for cell-level infection state.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-10
+
+---
+
+### Resolved Issue 15: cross-virus train/test split protocol (LOAD-BEARING) — 2026-05-10
+
+**Final choice**: cross-virus evaluation uses leave-one-virus-out cross-validation. Each virus in the benchmark serves as the held-out target in turn; the model is trained on all other viruses and evaluated zero-shot on the held-out virus. Both directions plus the mean are reported.
+
+For v1 (two viruses: SARS-CoV-2 and IAV), the protocol reduces to two directions: train on SARS-CoV-2 / test on IAV, and train on IAV / test on SARS-CoV-2. When RSV / 2nd IAV / DNA-virus control studies are added in v1.5+, the protocol extends naturally to N held-out directions.
+
+The protocol is encoded in `configs/evaluation.yaml` under `cross_virus_protocol:` with `protocol: leave_one_virus_out`, `v1_directions:` explicit list, `report_directions: all`, and an explicit rationale block.
+
+**Why leave-one-virus-out rather than a single direction or random holdout**: SARS and IAV have asymmetric sample sizes in the v1 corpus (SARS has more donors and cells). Picking a single direction (e.g. only train-SARS-test-IAV) would inflate headline performance because that is the easier direction; reviewers would (rightly) ask why only one direction was tested. Random holdout of (donor × virus) pairs would let a method pass by memorizing within-virus structure, which is not the cross-virus generalization question.
+
+**Alternatives considered and rejected**:
+- Single direction (the higher-N one): rejected for inflating headlines and reviewer-flagging.
+- Random 80/20 holdout: rejected because random holdout does not test cross-virus generalization; it tests within-virus interpolation.
+
+**Validation strategy**: protocol pre-specified in `configs/evaluation.yaml` before Phase 4 begins. Methods section quotes the protocol verbatim. Headline results in the paper report each direction separately AND the mean; if the two directions diverge substantially (>0.1 absolute Pearson r difference), that divergence is itself reported as a finding about cross-virus asymmetry, not concealed by averaging.
 
 **Date opened**: 2026-05-10
 **Date resolved**: 2026-05-10
