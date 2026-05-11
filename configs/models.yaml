@@ -1,0 +1,33 @@
+# Model hyperparameters. Populated in Phases 5-8.
+
+baselines:
+  predict_mean: {}
+  linear_delta:
+    n_pca_components: 50
+  knn:
+    k_values: [25, 50, 100]
+    metric: cosine
+
+existing_methods:
+  scgen:
+    n_latent: 100
+    n_hidden: 800
+    n_layers: 2
+    max_epochs: 100
+  sccausalvi: {}
+  foundation_embed:
+    models: [scgpt, geneformer, scprint2]
+    head: mlp
+    head_hidden: [512, 256]
+
+factorized:
+  hidden_dim: 256
+  virus_embedding_dim: 32
+  n_layers: 3
+  dropout: 0.1
+  reg_isg_specific: 1.0       # penalize virus_specific magnitude on ISG genes
+  reg_nonisg_sparsity: 0.1    # sparsity on virus_specific outside ISGs
+  reg_adversarial: 0.0        # virus_id classifier on shared output (off by default)
+  learning_rate: 1.0e-3
+  batch_size: 256
+  max_epochs: 200

@@ -1,0 +1,138 @@
+# Dataset registry for Phase 2 (PBMC scope, v1.1).
+#
+# Schema per study:
+#   <study_id>:
+#     source: cellxgene | geo
+#     accession: <Census dataset_id UUID | GEO GSE accession>
+#     virus_map: {disease_label: canonical_virus_label}
+#     infection_status_rule: disease_proxy   # only rule implemented in v1.1
+#     tissue: pbmc                            # locked for v1.1
+#     n_cells_census: <int>                   # cells reported by Census; post-PBMC-filter may differ
+#     citation: <author year journal>
+#     notes: <free text caveats>
+#
+# infection_status_rule == "disease_proxy" semantics (v1.1, PBMC-only):
+#   - "infected" = cell from a virally-infected donor (NOT per-cell viral RNA detected)
+#   - "mock"     = cell from a healthy donor (disease == "normal" or "healthy")
+#   - cells with diseases not in virus_map AND not in {normal, healthy} are dropped
+# This is the appropriate unit of analysis for systemic PBMC cytokine response,
+# but it is NOT the same as airway-epithelium "infected vs bystander" partitioning.
+# Documented as a v1.1 scope limitation; per-cell viral-read rules will be needed
+# for v2 airway studies.
+
+defaults:
+  census_version: "2025-11-08"   # PINNED — never use "stable" or "latest"; reproducibility
+  tissue: pbmc
+  qc:
+    min_genes_per_cell: 200
+    min_cells_per_gene: 3
+    max_pct_mito: 20.0
+    doublet_method: scrublet
+  infection_status:
+    rule: disease_proxy
+    healthy_tokens: [normal, healthy]
+    bystander_definition: not_applicable_for_pbmc_disease_proxy
+
+studies:
+
+  lee_2020:
+    source: cellxgene
+    accession: de2c780c-1747-40bd-9ccf-9588ec186cee
+    virus_map:
+      "COVID-19": sars_cov_2
+      "influenza": iav
+    infection_status_rule: disease_proxy
+    tissue: pbmc
+    n_cells_census: 59572
+    citation: "Lee et al. 2020, Sci Immunology — Immunophenotyping of COVID-19 and influenza highlights the role of type I interferons in development of severe COVID-19"
+    notes: "Anchor study. Single experimental design with COVID-19 + influenza A + healthy donors. §9 mini-gate dataset (Pearson r=0.46 between SARS-CoV-2 and IAV response vectors)."
+
+  wilk_2020:
+    source: cellxgene
+    accession: 456e8b9b-f872-488b-871d-94534090a865
+    virus_map:
+      "COVID-19": sars_cov_2
+    infection_status_rule: disease_proxy
+    tissue: pbmc
+    n_cells_census: 44721
+    citation: "Wilk et al. 2020, Nat Med — A single-cell atlas of the peripheral immune response in patients with severe COVID-19"
+    notes: "Severity-stratified PBMCs. Includes healthy controls."
+
+  arunachalam_2020:
+    source: cellxgene
+    accession: 59b69042-47c2-47fd-ad03-d21beb99818f
+    virus_map:
+      "COVID-19": sars_cov_2
+    infection_status_rule: disease_proxy
+    tissue: pbmc
+    n_cells_census: 49139
+    citation: "Arunachalam et al. 2020 (Pulendran lab) — Systems biological assessment of immunity to mild versus severe COVID-19 infection in humans"
+    notes: "Mild vs severe stratification. Useful for severity ablation."
+
+  schulte_schrepping_2020:
+    source: cellxgene
+    accession: 5e717147-0f75-4de1-8bd2-6fda01b8d75f
+    virus_map:
+      "COVID-19": sars_cov_2
+    infection_status_rule: disease_proxy
+    tissue: pbmc
+    n_cells_census: 90957
+    citation: "Schulte-Schrepping et al. 2020, Cell — Severe COVID-19 is marked by a dysregulated myeloid cell compartment"
+    notes: "Largest single PBMC cohort in the registry (~91k cells). Two-cohort design within the study (Bonn + Berlin)."
+
+  guo_2020:
+    source: cellxgene
+    accession: ae5341b8-60fb-4fac-86db-86e49ee66287
+    virus_map:
+      "COVID-19": sars_cov_2
+    infection_status_rule: disease_proxy
+    tissue: pbmc
+    n_cells_census: 14783
+    citation: "Guo et al. 2020 — Single-cell analysis of two severe COVID-19 patients reveals a monocyte-associated and tocilizumab-responding cytokine storm"
+    notes: "Smallest cohort. Useful for fast iteration during development."
+
+  mgh_acute_covid:
+    source: cellxgene
+    accession: fa8605cf-f27e-44af-ac2a-476bee4410d3
+    virus_map:
+      "COVID-19": sars_cov_2
+    infection_status_rule: disease_proxy
+    tissue: pbmc
+    n_cells_census: 59506
+    citation: "MGH ED Acute COVID-19 cohort — single-cell profiling across WHO severity categories"
+    notes: "WHO severity scale annotated; useful for severity-stratified within-virus splits."
+
+# ---------------------------------------------------------------------------
+# Studies REQUIRED but NOT yet in Census — Phase 2 still needs GEO downloads:
+#
+# rsv_pbmc_TBD:
+#   source: geo
+#   accession: TBD
+#   virus_map: {"RSV": rsv}
+#   notes: |
+#     RSV PBMC scRNA-seq is NOT in cellxgene Census (verified 2026-05-10).
+#     Required for the 3-virus benchmark. Search GEO for:
+#       - pediatric bronchiolitis cohorts
+#       - Liao et al. or similar infant PBMC studies
+#     If no clean RSV PBMC dataset exists, fall back to 2-virus benchmark
+#     (SARS-CoV-2 + IAV) and document in limitations.
+#
+# iav_pbmc_TBD:
+#   source: geo
+#   accession: TBD
+#   virus_map: {"influenza": iav}
+#   notes: |
+#     Currently only Lee et al. provides IAV PBMC data via Census. A second
+#     IAV PBMC study would let us measure within-virus cross-study generalization
+#     for IAV (currently impossible). Search GEO for human in vivo IAV PBMC
+#     studies; live-virus in vitro PBMC stimulation cohorts also acceptable.
+#
+# dna_virus_control_TBD:
+#   source: geo
+#   accession: TBD
+#   virus_map: {"<HSV-1|CMV>": <hsv1|cmv>}
+#   notes: |
+#     DNA virus control. Defer until SARS + IAV + RSV pipeline works.
+#     Candidates: HSV-1 (Drayman et al. follow-ups), CMV (latency/reactivation
+#     single-cell studies). Both likely GEO-only.
+# ---------------------------------------------------------------------------

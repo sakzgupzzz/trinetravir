@@ -1,0 +1,73 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+pip-wheel-metadata/
+
+# --- Virtual envs ---
+.venv/
+venv/
+env/
+.python-version.local
+
+# --- uv ---
+# Keep uv.lock checked in for reproducibility; ignore caches.
+.uv-cache/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# --- Editors / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Test / coverage ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# --- Experiment tracking ---
+wandb/
+lightning_logs/
+mlruns/
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+
+# --- Data (large; gitignored per PLAN §2) ---
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+# data/reference/ IS tracked (small curated gene sets)
+
+# --- Results (figures/tables regenerable) ---
+results/tables/*
+results/figures/*
+!results/tables/.gitkeep
+!results/figures/.gitkeep
+
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json

@@ -1,0 +1,32 @@
+# Evaluation metrics + split definitions. Used in Phases 5-9.
+# Per PLAN §7 metric guidance: avoid naive Wasserstein / Energy distance alone.
+
+splits:
+  within_virus:
+    description: standard held-out cell type / donor within a single virus
+    holdout_strategy: leave_one_donor_out
+  cross_virus:
+    description: train on N-1 viruses, predict on held-out virus zero-shot
+    holdout_strategy: leave_one_virus_out
+  cross_virus_cross_celltype:
+    description: held-out virus AND held-out cell type (hardest)
+    holdout_strategy: leave_one_virus_one_celltype_out
+
+metrics:
+  per_gene_pearson:
+    enabled: true
+    subsets: [all_genes, isg, non_isg, virus_specific_entry]
+  de_overlap:
+    enabled: true
+    top_k: 100
+    score: jaccard
+  direction_accuracy:
+    enabled: true
+  mmd:
+    enabled: true
+    kernels: [rbf, linear, polynomial]
+    bandwidth: median_heuristic
+
+reproducibility:
+  seed: 42
+  n_bootstrap: 100
