@@ -67,6 +67,12 @@ class StudyConfig:
         Free-text human-readable citation.
     notes
         Free-text caveats (e.g. severity-strata, longitudinal timepoints).
+    excluded
+        If True, ``--all`` skips this study. Direct ``--study-id`` requests
+        still load it (override path for ablation / re-evaluation).
+    exclusion_reason
+        Free-text reason recorded when ``excluded=True``. Required when
+        excluded; checked at config-load time.
     """
 
     study_id: str
@@ -76,6 +82,8 @@ class StudyConfig:
     infection_status_rule: str
     citation: str
     notes: str
+    excluded: bool = False
+    exclusion_reason: str = ""
 
 
 def load_dataset_config(config_path: str | Path) -> tuple[dict[str, Any], dict[str, StudyConfig]]:
@@ -101,6 +109,12 @@ def load_dataset_config(config_path: str | Path) -> tuple[dict[str, Any], dict[s
 
     studies: dict[str, StudyConfig] = {}
     for study_id, payload in studies_raw.items():
+        excluded = bool(payload.get("excluded", False))
+        exclusion_reason = str(payload.get("exclusion_reason", "")).strip()
+        if excluded and not exclusion_reason:
+            raise ValueError(
+                f"{study_id}: excluded=true requires exclusion_reason in datasets.yaml"
+            )
         studies[study_id] = StudyConfig(
             study_id=study_id,
             source=payload["source"],
@@ -109,6 +123,8 @@ def load_dataset_config(config_path: str | Path) -> tuple[dict[str, Any], dict[s
             infection_status_rule=payload.get("infection_status_rule", "disease_proxy"),
             citation=payload.get("citation", ""),
             notes=payload.get("notes", ""),
+            excluded=excluded,
+            exclusion_reason=exclusion_reason,
         )
     return defaults, studies
 

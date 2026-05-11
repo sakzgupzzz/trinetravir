@@ -89,7 +89,16 @@ studies:
     tissue: pbmc
     n_cells_census: 14783
     citation: "Guo et al. 2020 — Single-cell analysis of two severe COVID-19 patients reveals a monocyte-associated and tocilizumab-responding cytokine storm"
-    notes: "Smallest cohort. Useful for fast iteration during development."
+    notes: "Smallest cohort. Originally selected for fast iteration."
+    excluded: true
+    exclusion_reason: |
+      Census record contains 0 healthy-control cells (verified 2026-05-10
+      via consistency notebook). Cannot compute within-study response
+      vector mean(diseased) - mean(healthy). Unsalvageable for transfer
+      learning evaluation in v1. The original Guo et al. publication
+      profiled only 2 severe COVID-19 patients with no matched controls in
+      the cellxgene-released subset. Re-evaluate in v2 if a re-released
+      dataset adds controls.
 
   mgh_acute_covid:
     source: cellxgene
@@ -100,7 +109,18 @@ studies:
     tissue: pbmc
     n_cells_census: 59506
     citation: "MGH ED Acute COVID-19 cohort — single-cell profiling across WHO severity categories"
-    notes: "WHO severity scale annotated; useful for severity-stratified within-virus splits."
+    notes: "WHO severity scale annotated. Originally selected for severity-stratified splits."
+    excluded: true
+    exclusion_reason: |
+      Only 1 healthy donor in cellxgene record (1,954 healthy cells from a
+      single individual, vs 57,552 diseased cells from 14 donors). Within-
+      study mean(diseased) - mean(healthy) response vector would be
+      dominated by that one donor's baseline drift. Cross-study Pearson r
+      with the other 4 SARS PBMC studies was strongly negative (range
+      [-0.58, -0.24]) — almost certainly the 1-healthy-donor artifact, not
+      biology. Salvage path (use MGH diseased cells with cross-study healthy
+      baseline) inverts the analysis order and is deferred to v2 cross-cohort
+      evaluation work.
 
 # ---------------------------------------------------------------------------
 # Studies REQUIRED but NOT yet in Census — Phase 2 still needs GEO downloads:

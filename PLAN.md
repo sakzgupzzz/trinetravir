@@ -225,6 +225,14 @@ Tier-1 use case: if your laptop has less than 32GB RAM and the combined dataset 
 
 **Cross-study batch-correction watchpoint (added v1.2):** After Harmony correction, compute response-vector Pearson correlation *within the same virus* across studies. This must stay below ~0.7 to confirm Harmony has not over-corrected the biology. Reference floor: Lee et al. 2020 within-study, between-virus r = 0.46 (§9 mini-gate result). If post-Harmony cross-study within-virus correlations rise far above 0.7, back off Harmony `theta` (lambda parameter) or remove donor as a batch key. If they collapse below 0.46, Harmony is erasing real disease signal — also a problem.
 
+**Phase 3 entry-gate update (v1.2, added 2026-05-10).** Pre-Harmony cross-study within-virus r matrix on the 5 SARS-CoV-2 PBMC studies came out at mean off-diag r = 0.054, range [-0.58, +0.59]. mgh_acute_covid + guo_2020 are now excluded (1 healthy donor and 0 healthy donors respectively — see configs/datasets.yaml exclusion_reason). The remaining 4 clean studies show: lee↔wilk↔arunachalam form a coherent core (r ≈ 0.4–0.6), but schulte_schrepping_2020 sits near-zero with everything (r ≈ -0.06 to +0.21). Before launching Harmony, run `notebooks/03_celltype_stratified_consistency.ipynb` to recompute the cross-study r matrix per major cell type (mono / CD4T / CD8T / B / NK). Two diagnostic outcomes:
+  - If per-cell-type r is meaningfully higher than bulk r → cell-type-composition drift is the problem; harmonize with `cell_type` as a covariate (or per-cell-type harmonization).
+  - If per-cell-type r remains near-zero against schulte_schrepping → deeper protocol/cohort issue (10x version, capture chemistry, severity stratification, time-from-symptom-onset). Drop or down-weight schulte_schrepping rather than try to correct it away.
+
+Also pull and report severity distribution per study during the same notebook. Severe COVID has substantially different PBMC signatures (dysregulated type I IFN, emergency myelopoiesis); if studies have systematically different severity distributions, the "study effect" in the r matrix is partly real biology and stratifying by severity in eventual benchmark splits is preferable to correcting it away.
+
+**Phase 3 exit-gate (added v1.2).** Post-Harmony within-virus cross-study Pearson r should be **≥ 0.5 across all pairs** (5 SARS PBMC pairs after exclusions, or 6 if schulte_schrepping is retained). If yes, proceed to Phase 4 GATE 1 on the harmonized dataset. If no, diagnose before adding more data. **Do not attack GEO datasets (RSV / 2nd IAV / DNA control) until this gate passes** — more data into a broken harmonization pipeline just produces a noisier broken pipeline. GEO acquisition becomes Phase 3.5 / v1.5.
+
 Deliverable: a single harmonized AnnData per virus, stored in `data/processed/{virus}.h5ad`, plus a combined `data/processed/all_viruses.h5ad`.
 
 ### Phase 4: Sanity check (End of Week 4) — GATE 1 [Tier 0]

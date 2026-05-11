@@ -183,6 +183,35 @@ def test_load_dataset_config_parses_real_yaml() -> None:
     assert studies["wilk_2020"].virus_map == {"COVID-19": "sars_cov_2"}
 
 
+def test_excluded_studies_marked_with_reason() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    _, studies = load_dataset_config(repo_root / "configs" / "datasets.yaml")
+    assert studies["guo_2020"].excluded
+    assert (
+        "0 healthy" in studies["guo_2020"].exclusion_reason.lower()
+        or studies["guo_2020"].exclusion_reason
+    )
+    assert studies["mgh_acute_covid"].excluded
+    assert studies["mgh_acute_covid"].exclusion_reason
+    # Clean studies must NOT be excluded
+    for clean in ("lee_2020", "wilk_2020", "arunachalam_2020", "schulte_schrepping_2020"):
+        assert not studies[clean].excluded, f"{clean} unexpectedly marked excluded"
+
+
+def test_excluded_requires_reason(tmp_path: Path) -> None:
+    bad_yaml = tmp_path / "bad.yaml"
+    bad_yaml.write_text(
+        "defaults: {census_version: '2025-11-08'}\n"
+        "studies:\n"
+        "  bad_study:\n"
+        "    source: cellxgene\n"
+        "    accession: x\n"
+        "    excluded: true\n"
+    )
+    with pytest.raises(ValueError, match="exclusion_reason"):
+        load_dataset_config(bad_yaml)
+
+
 # ---- build_manifest ------------------------------------------------------
 
 

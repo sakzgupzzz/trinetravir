@@ -55,7 +55,16 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p.add_argument(
         "--study-id", action="append", help="Specific study_id(s) to download. Repeatable."
     )
-    p.add_argument("--all", action="store_true", help="Download every Census study in the config.")
+    p.add_argument(
+        "--all",
+        action="store_true",
+        help="Download every Census study in the config (skips excluded).",
+    )
+    p.add_argument(
+        "--include-excluded",
+        action="store_true",
+        help="When combined with --all, also download studies marked excluded in datasets.yaml.",
+    )
     p.add_argument("--list", action="store_true", help="List configured studies and exit.")
     p.add_argument(
         "--dry-run", action="store_true", help="Resolve plan and report without downloading."
@@ -71,10 +80,13 @@ def _select_studies(
     studies: dict[str, StudyConfig],
     requested_ids: list[str] | None,
     all_flag: bool,
+    include_excluded: bool = False,
 ) -> list[StudyConfig]:
     census_studies = {sid: s for sid, s in studies.items() if s.source == "cellxgene"}
     if all_flag:
-        return list(census_studies.values())
+        # --all skips excluded studies. Excluded studies are still available
+        # via explicit --study-id (override path for ablation work).
+        return [s for s in census_studies.values() if include_excluded or not s.excluded]
     if requested_ids:
         missing = [sid for sid in requested_ids if sid not in census_studies]
         if missing:
@@ -93,13 +105,15 @@ def main(argv: list[str] | None = None) -> int:
     census_version = defaults["census_version"]
 
     if args.list:
-        print(f"{'study_id':<28} {'source':<10} {'n_cells':>8}  accession")
+        print(f"{'study_id':<28} {'source':<10} {'excluded':>8}  accession")
         for sid, s in studies.items():
-            n = "?"  # n_cells lives in raw yaml, not StudyConfig; cheap to skip here
-            print(f"{sid:<28} {s.source:<10} {n:>8}  {s.accession}")
+            mark = "EXCL" if s.excluded else ""
+            print(f"{sid:<28} {s.source:<10} {mark:>8}  {s.accession}")
         return 0
 
-    selected = _select_studies(studies, args.study_id, args.all)
+    selected = _select_studies(
+        studies, args.study_id, args.all, include_excluded=args.include_excluded
+    )
     log.info("Census version pinned: %s", census_version)
     log.info("Selected %d study(ies) for download", len(selected))
     for s in selected:
