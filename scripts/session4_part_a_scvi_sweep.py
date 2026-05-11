@@ -135,12 +135,20 @@ def scvi_normalized_log_scaled(model, adata: ad.AnnData) -> np.ndarray:
 def per_study_status_response_vectors(
     X_scaled: np.ndarray, obs: pd.DataFrame
 ) -> dict[str, dict[str, np.ndarray]]:
-    """Compute mean expression per (study, donor_disease_status) cell group."""
+    """Compute mean expression per (study, donor_disease_status) cell group.
+
+    Uses boolean masks (positional) rather than groupby().groups indices (label-based)
+    to avoid IndexError when obs.index is non-integer (e.g., cell_id strings).
+    """
     out: dict[str, dict[str, np.ndarray]] = {}
-    for (study, status), idx in obs.groupby(
-        ["study_id", "donor_disease_status"], observed=True
-    ).groups.items():
-        out.setdefault(study, {})[status] = X_scaled[list(idx)].mean(axis=0)
+    study_arr = obs["study_id"].astype(str).values
+    status_arr = obs["donor_disease_status"].astype(str).values
+    for study in pd.unique(study_arr):
+        for status in pd.unique(status_arr):
+            mask = (study_arr == study) & (status_arr == status)
+            if not mask.any():
+                continue
+            out.setdefault(study, {})[status] = X_scaled[mask].mean(axis=0)
     return out
 
 
