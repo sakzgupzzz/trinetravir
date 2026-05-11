@@ -11,8 +11,8 @@
 | 3 | **Human decision on Issue 25** | METHODS_CHOICES.md Issue 25 entry | Block #2 complete + Issue 25 opened | **DONE 2026-05-11** (Option B hybrid) |
 | 4 | **Session 6A (held-out cohort acquisition + harmonization + schema v6)** | `SESSION_6A_CHECKLIST.md` | Block #3 (Issue 25 Option B hybrid) | **DONE 2026-05-11** (Parts A/B/C/D/E all complete; 4/4 cohorts harmonized; audit 14/0 PASS) |
 | 5 | **Session 6B (held-out calibration + per-stratum sensitivity + few-shot)** | inline spec (chat) | Block #4 audit gate passes | **DONE 2026-05-11 (Parts A/B/C/F/G; Parts D/E deferred to Phase 5+ — require v1 factorized model)** |
-| 6 | **Session 7 (pre-modeling sensitivity audit)** | `references/session_7_prompt.md` | Block #5 closure + Session 7 prompt committed | **NEXT** — gate between 6B and 3.5; pre/post-Harmony Δr + within-cohort sensitivity with pre-committed decision rules |
-| 7 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #6 audit-confirm | BLOCKED on #6 |
+| 6 | **Session 7 (pre-modeling sensitivity audit)** | `references/session_7_prompt.md` | Block #5 closure + Session 7 prompt committed | **DONE 2026-05-11** — Issue 32 MIXED (Δr 0.02-0.25; monocyte MVS BIOLOGY_DOMINANT) + Issue 33 BIOLOGY_CONSISTENT (100% within-cohort sign concordance); ISG-conservation framework empirically defended; human audit-confirmed |
+| 7 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #6 audit-confirm | **NEXT** — Issues 18-24 pre-specs for Phase 5/7/9 prerequisites; planning-heavy block requiring chat-side discussion before Claude Code commits |
 | 8 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #7 complete | BLOCKED on #7 |
 
 **Block #6 (Session 7) is the new gate** between Session 6B closure and Session 3.5. Triggered by critique-document concern 4 (Harmony preserving only conserved axes). Pattern mirrors Session 5 audit response: pre-committed decision rules before computation; results disclosed regardless of outcome.
@@ -57,15 +57,20 @@
   - Spec: not yet drafted. Likely covers scVI sensitivity analysis (Issue 6), GPU environment setup, possibly initial Phase 4 work.
   - End-state: Issue 6 resolved. Project ready for Phase 4 implementation.
 
-- **Block #6 (Session 7, pre-modeling sensitivity audit)**: NEXT, gate after Block #5 closure
+- **Block #6 (Session 7, pre-modeling sensitivity audit)**: **DONE 2026-05-11**
   - Spec: `references/session_7_prompt.md` (committed 2026-05-11)
-  - Pre-conditions verified: Session 6B closed (Issues 27-31 + Yoshida CI caveat + N=1000 verdicts in commits `b251057` + `777e84c`); Session 7 prompt committed (this commit).
-  - Parts:
-    - Part A — pre/post-Harmony response-vector Δr quantification with pre-committed thresholds (≤0.10 / (0.10, 0.30] / >0.30)
-    - Part B — within-cohort-only sensitivity (sign concordance ≥80% / 50-80% / <50%)
-    - Part C — audit gate before unlocking #7
-  - End-state: Issues 32 + 33 resolved with verdicts; MANUSCRIPT_DRAFT.md Methods supplementary + Limitations updated; conditional reframing pass if Δr > 0.30 or within-cohort disappears.
-  - Launch trigger: "Launch Session 7 per references/session_7_prompt.md. Open Issues 32 and 33 with the pre-committed decision rules verbatim before running any analyses."
+  - Atomic commits: `9d363d8` (Issues 32+33 pre-spec gate) → `6abc7bd` (Part A) → `1382811` (Part B) → `5796130` (mechanical rules + manuscript update).
+  - Issue 32 (pre/post-Harmony Δr): MIXED both gene sets. NO bucket × gene_set crosses Δr > 0.30 HARMONY_DOMINANT threshold. Monocyte MVS Δr=0.08 → BIOLOGY_DOMINANT at the load-bearing grain.
+  - Issue 33 (within-cohort sensitivity): BIOLOGY_CONSISTENT both gene sets. Sign concordance = 100% across 20 bucket-pair × gene_set aggregate tests; mean magnitude alignment 0.077 (full HVG) / 0.136 (MVS).
+  - Conditional atomic commit #5 (substantive reframing) NOT triggered.
+  - Human audit-confirmed: verdicts match pre-committed rules; manuscript updates honest disclosure; no post-hoc rationalization in commit sequence.
+  - ISG-conservation framework empirically defended against critique-document concern 4 (Harmony preserving only conserved axes). Biology with Harmony amplification, NOT integration artifact.
+
+- **Block #7 (Session 3.5, pre-specs)**: NEXT, after Session 7 audit-confirm
+  - Spec: `SESSION_3_5_CHECKLIST.md`
+  - Pre-specifies Issues 18-24 (Phase 5/7/9 prerequisites) + METHODS_CHOICES hygiene cleanup + PLAN.md v1.3 integration + stub baseline files at `src/trinetravir/baselines/`.
+  - Planning-heavy block. Modeling pre-specs require chat-side discussion before Claude Code commits — next chat will be more conversation than execution.
+  - End-state: 7 issues at pre-specification level (18-24). Compute begins in Block #8 (Session 4).
 
 ## Enforcement protocol
 
