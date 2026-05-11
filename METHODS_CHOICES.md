@@ -18,31 +18,6 @@ When a choice is added to this log, it must include the decision date and the ph
 
 The following choices were made earlier in the project with insufficient justification. Each must be resolved before proceeding to Phase 4. Resolution means: justification written, alternatives evaluated, validation strategy specified, and the resulting evidence collected.
 
-### Issue 1: `infection_status` label semantics (LOAD-BEARING)
-
-**Status**: open. Resolution required before Phase 4.
-
-**The choice as it stands**: cells in the harmonized AnnData are labeled `infected` or `mock` in the `infection_status` obs column, based on whether they came from a diseased or healthy donor. For PBMC studies, this is a *donor-level* disease state proxy, not a *cell-level* viral infection state. PBMCs rarely contain directly virally infected cells.
-
-**Why this is a problem**: the label name is misleading. A reviewer reading "infected cells" in the methods will reasonably assume per-cell viral RNA detection, which is not what the column represents. The mismatch between label and meaning will be flagged as imprecise at best, misleading at worst.
-
-**Resolution required**:
-- Rename the obs column from `infection_status` to `donor_disease_status`.
-- Allowed values become `diseased`, `healthy_control`, `mock_control` (the last for in-vitro mock-infected controls if any).
-- Update the loader, harmonization, and downstream code to use the new name.
-- Document in this file that the project measures *systemic immune response to viral disease in PBMCs*, not *cell-autonomous response to direct viral infection*. The factorized model still works on this signal but the framing of the eventual paper must be honest about it.
-
-**Alternatives considered**:
-- Keep `infection_status` but document the proxy clearly: rejected because the label name itself is the source of confusion, and documentation cannot fully fix that.
-- Use per-cell viral read detection to define `infected` cells properly: not possible at scale in our data because PBMC viral read counts are extremely sparse and most studies did not align reads to viral genomes.
-
-**Validation strategy**: the rename is a refactoring task, not a scientific claim, so no sensitivity analysis required. The validation is that the methods section explicitly defines what the label means.
-
-**Date opened**: 2026-05-10
-**Date resolved**: <fill in>
-
----
-
 ### Issue 2: cell-type bucket granularity (LOAD-BEARING)
 
 **Status**: open. Resolution required before Phase 6.
@@ -357,7 +332,25 @@ The following process applies to any methodological choice made after this docum
 
 This section records resolved choices in the order they were made. As issues above are resolved, their content is moved here with the resolution date.
 
-*(initially empty; populated as choices are resolved)*
+### Resolved Issue 1: `donor_disease_status` label semantics (LOAD-BEARING) — 2026-05-10
+
+**Final choice**: cells in every harmonized AnnData carry a `donor_disease_status` obs column with allowed values `diseased` and `healthy_control`. `mock_control` is reserved for future in-vitro mock-infected studies (not used in v1; no PBMC study in the v1 corpus produces it). The column was historically named `infection_status` with values `{infected, mock}` in early PLAN drafts; the rename to `donor_disease_status` with values `{diseased, healthy_control}` reflects what the column actually measures: a *donor-level* disease-state proxy derived from the cellxgene `disease` ontology, not a per-cell viral-read detection.
+
+The conceptual rename (`infection_status` -> `donor_disease_status`) was applied in an earlier session (logged in `memory/schema_decisions.md`). The value rename (`healthy` -> `healthy_control`) was applied 2026-05-10 in this session:
+- Source updates: `src/trinetravir/data/download.py` (label writer), `src/trinetravir/data/harmonize.py` (label readers in `harmony_per_bucket`), `src/trinetravir/eval/calibration.py` (donor-level masks in permutation null and split-half ceiling), `src/tests/test_download.py` + `src/tests/test_harmonize.py` (assertions), `scripts/phase3_lee_diagnostic.py`.
+- On-disk migration: `scripts/migrate_donor_disease_status_value.py` re-writes the value in existing h5ads under `data/raw/` and `data/processed/` (idempotent).
+- The Census remote source files are not modified.
+
+**Why this matters scientifically**: the project models *systemic immune response to viral disease in PBMCs* (interferon and cytokine programs in circulating immune cells whose donor has the virus), not *cell-autonomous response to direct viral infection* (a separate phenomenon that requires per-cell viral-RNA detection and is achievable mainly in airway-epithelium studies). The factorized cross-virus model still works on the systemic-response signal but the framing of the eventual paper must be honest about it. The `donor_disease_status` name is precise; the prior `infection_status` name was misleading and would have been flagged by reviewers.
+
+**Alternatives considered and rejected**:
+- Keep `infection_status` and document the proxy in methods: rejected because the label *name* is the source of reviewer confusion; documentation alone cannot fix that.
+- Define `infected` cells via per-cell viral read detection: not feasible in v1. PBMC viral read counts are extremely sparse and most v1-corpus studies (Lee, Wilk, Arunachalam, Schulte-Schrepping) did not align reads to viral genomes. v2 may revisit this for airway-epithelium studies.
+
+**Validation strategy**: refactor with full test coverage (`uv run pytest src/tests/` = 39 passed at resolution time). No scientific sensitivity analysis required — this is a naming and vocabulary clarification, not a methods change. The methods section of the eventual paper will define both the column and the allowed values explicitly so a reviewer cannot mistake the donor-level proxy for cell-level infection state.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-10
 
 ---
 

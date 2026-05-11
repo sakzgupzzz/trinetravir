@@ -111,8 +111,8 @@ def test_apply_infection_status_lee_dual_virus() -> None:
         "diseased",
         "diseased",
         "diseased",
-        "healthy",
-        "healthy",
+        "healthy_control",
+        "healthy_control",
     ]
     assert (out.obs["label_source"] == "disease_proxy").all()
     assert (out.obs["study_id"] == "lee_2020").all()
@@ -136,7 +136,7 @@ def test_apply_infection_status_healthy_token_case_insensitive() -> None:
     )
     out = apply_infection_status(a, study=_lee_like_study())
     assert out.n_obs == 2
-    assert (out.obs["donor_disease_status"] == "healthy").all()
+    assert (out.obs["donor_disease_status"] == "healthy_control").all()
 
 
 def test_apply_infection_status_required_columns_present() -> None:

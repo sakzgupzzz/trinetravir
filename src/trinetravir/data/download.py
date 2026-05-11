@@ -5,10 +5,15 @@ Phase 2 entry point. Loads PBMC scRNA-seq datasets defined in
 and study-specific ``virus`` + ``donor_disease_status`` annotations.
 
 Schema reality check (v1.1, PBMC scope): ``donor_disease_status`` carries
-values ``diseased`` / ``healthy``. It is a *donor-level* label inferred from
-the disease ontology, not a per-cell viral-read measurement. The ``infected``
-/ ``bystander`` / ``mock`` per-cell semantics from PLAN §2 belong to
+values ``diseased`` / ``healthy_control``. It is a *donor-level* label
+inferred from the disease ontology, not a per-cell viral-read measurement.
+``mock_control`` is reserved for future in-vitro mock-infected studies
+(no PBMC study in v1 produces that value). The ``infected`` /
+``bystander`` / ``mock`` per-cell semantics from PLAN §2 belong to
 airway-epithelium studies and are out of scope until v2.
+
+See METHODS_CHOICES.md Issue 1 for the rationale behind the label
+vocabulary (donor-level proxy, not cell-autonomous infection state).
 """
 
 from __future__ import annotations
@@ -59,7 +64,7 @@ class StudyConfig:
         How to derive cell labels. Only ``disease_proxy`` is implemented in
         v1.1: cells from a virally-infected donor are labelled
         ``donor_disease_status='diseased'``, cells from a healthy donor are
-        ``donor_disease_status='healthy'``. The rule name retains the
+        ``donor_disease_status='healthy_control'``. The rule name retains the
         historical ``infection_status_rule`` key for forward-compat with the
         v2 cell-level rule (``viral_read_threshold``) which will populate a
         separate ``infection_status`` column for airway-epithelium studies.
@@ -237,7 +242,7 @@ def apply_infection_status(
     For v1.1 the only implemented rule is ``disease_proxy``. A cell's virus
     is derived from ``adata.obs['disease']`` via ``study.virus_map``;
     ``donor_disease_status`` is ``diseased`` for cells whose disease maps to
-    a virus and ``healthy`` for cells whose disease is ``normal`` /
+    a virus and ``healthy_control`` for cells whose disease is ``normal`` /
     ``healthy``. Cells with diseases not in ``virus_map`` and not in the
     healthy token set are dropped (Census records often contain unrelated
     diseases like Alzheimer or breast carcinoma cells from atlas merges).
@@ -289,7 +294,7 @@ def apply_infection_status(
 
     healthy_match = disease.str.lower().isin(healthy_tokens)
     virus_assignment = virus_assignment.mask(healthy_match, "mock")
-    status_assignment = status_assignment.mask(healthy_match, "healthy")
+    status_assignment = status_assignment.mask(healthy_match, "healthy_control")
 
     keep = virus_assignment.notna()
     n_keep = int(keep.sum())
