@@ -859,6 +859,44 @@ Median and mean differ by <0.05 for all 5 buckets. Minimum is *substantially* lo
 
 ---
 
+### Resolved Issue 12: CellTypist model choice (MODERATE) — 2026-05-11
+
+**Final choice**: **Immune_All_Low** is the v1 primary annotation model. Immune_All_High is reserved for supplementary sensitivity at the buckets where it can resolve (monocyte + B).
+
+**Calibrated evidence** (Pearson, p99 calibrated verdicts):
+
+| Bucket | Phase 3 original labels | Phase 3.5 Low | Phase 3.5 High |
+|---|---|---|---|
+| monocyte | 0.701 PASS | 0.695 PASS | 0.700 PASS |
+| B | 0.297 FAIL | 0.309 FAIL | 0.351 FAIL |
+| NK | 0.385 FAIL | 0.373 FAIL | n/a |
+| CD4T | 0.321 PASS | 0.258 FAIL | n/a (collapsed) |
+| CD8T | 0.169 FAIL | 0.210 FAIL | n/a (collapsed) |
+| T (CD4T+CD8T) | n/a | n/a | 0.256 FAIL |
+
+**Headline finding**: monocyte calibrated verdict is robust across all three label sources. Lymphoid verdicts are stable in direction (all FAIL except Phase 3 CD4T which flips between original and unified labels — see Issue 3 for the load-bearing caveat).
+
+**Why Low over High**:
+- High collapses CD4T + CD8T → T and drops NK entirely (no NK label in Immune_All_High; NK cells route to "ILC" or "other"). Low resolves all 5 v1 buckets. The 5-bucket framing requires this resolution.
+- At buckets where both can be compared (monocyte, B), calibrated verdicts agree. High does NOT add information at the buckets it can resolve.
+- Low surfaces sub-bucket labels (Classical/Non-classical monocytes, Naive/Memory B, Tcm/Tem/Treg CD4, etc.) needed for the Issue 2 granularity sensitivity.
+
+**Asymmetric comparison caveat**: Issue 12 is NOT "Low better than High" — the two models answer different questions. On the 3 buckets where both produce verdicts (monocyte / B / T_collapsed), calibrated verdicts agree. On the 2 buckets only Low resolves (CD4T, CD8T separately, NK), there is no High comparator.
+
+**Alternatives considered and rejected**:
+- Immune_All_High as primary: rejected — cannot resolve 2 of 5 v1 buckets.
+- Azimuth: deferred to v1.5 sensitivity (different annotation framework).
+- Manual / per-study labels (no unified annotation): rejected — cross-study label vocabulary divergence in original cellxgene labels was the load-bearing cause of the Lee + Wilk lymphoid annotation gap that motivated Phase 3.5.
+
+**Validation strategy**: methods section cites Immune_All_Low as primary; Phase 3.5 High run reported as supplementary.
+
+**Reference**: Domínguez Conde C et al. 2022, *Cross-tissue immune cell analysis reveals tissue-specific features in humans*, Science.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-11
+
+---
+
 ### Resolved Issue 16: Lee cross-virus composition confound (LOAD-BEARING) — 2026-05-11
 
 **Final choice**: **per-stratum cross-virus evaluation** is pre-specified primary. Bulk-with-composition-correction is reported as supplementary sensitivity. Bulk-without-correction is documented as the *confounded baseline* and is NOT reported in headline figures.
@@ -886,6 +924,18 @@ The per-stratum primary protocol is consistent with the rest of the project's pe
 **Date resolved**: 2026-05-11
 
 ---
+
+## Methods-section paragraph (calibration framework)
+
+Lift verbatim or paraphrase for the methods section of the eventual paper:
+
+> Cross-study coherence of per-bucket donor-level response vectors is quantified by the mean off-diagonal Pearson r across study pairs (headline metric). Spearman r and top-100 differential-expression Jaccard overlap are reported as supplementary sensitivity. MMD-RBF (median-heuristic bandwidth, 500-cell subsample per study) is computed as an observed-only sensitivity. Calibration uses a donor-level empirical permutation null and a within-study donor-level split-half reliability ceiling.
+>
+> For each bucket, the permutation null is constructed by shuffling donor-level disease/healthy labels independently within each study (preserving per-study marginal class counts) and recomputing the per-study response vector + cross-study metric. N=1,000 permutations are drawn. The split-half ceiling is constructed by repeatedly partitioning each study's donors into two stratified halves preserving disease/healthy ratio, computing each half's response vector, and computing the metric on the half-1/half-2 pair (N=50 splits per study; the bucket ceiling is the mean across studies of the per-study mean). The split-half distribution is the pool of all per-study per-split metric values.
+>
+> A bucket passes the calibrated gate iff (1) observed r exceeds the 99th percentile of the permutation null (equivalently, p < 0.01) AND (2) observed r lies within the 95% CI of the split-half distribution (signal is not below within-study reliability noise floor). This combined criterion replaces a prior heuristic "observed r ≥ 0.5 × ceiling" rule; the bootstrap CI overlap approach is principled and avoids an arbitrary fraction choice. Calibration is run separately for each (bucket, metric, dataset) combination; all permutation distributions are cached at `data/processed/calibration_cache/`. The cross-study summary statistic for each bucket is the mean off-diagonal Pearson r (headline); median and minimum are reported in supplementary. Permutation null thresholds are reported at both the 95th and 99th percentile; the 99th is the headline for multiple-comparison conservatism (5 buckets × 4 metrics).
+>
+> Code: `src/trinetravir/eval/calibration.py` (`permutation_null_with_metric`, `split_half_with_metric`, `bootstrap_ci_overlap`, `calibrated_gate_verdict`) and `src/trinetravir/eval/metrics.py` (Pearson, Spearman, DE-Jaccard top-100, MMD-RBF). Seed = 42 throughout.
 
 ## Pending revisions
 

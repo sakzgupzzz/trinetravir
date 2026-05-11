@@ -1,0 +1,9 @@
+approach,bucket,pearson_r,interpretation
+bulk_pbmc_confounded_baseline,bulk,0.411,Confounded by Lee IAV vs SARS composition differences.
+per_stratum_primary,monocyte,0.6512,"Within-bucket SARS vs IAV; biology, not composition."
+per_stratum_primary,B,0.6786,"Within-bucket SARS vs IAV; biology, not composition."
+per_stratum_primary,NK,0.067,"Within-bucket SARS vs IAV; biology, not composition."
+per_stratum_primary,CD4T,0.1738,"Within-bucket SARS vs IAV; biology, not composition."
+per_stratum_primary,CD8T,0.0107,"Within-bucket SARS vs IAV; biology, not composition."
+per_stratum_primary_mean,mean_across_buckets,0.3163,Headline cross-virus value under per-stratum primary.
+bulk_with_composition_correction,bulk_reweighted,0.5534,Bulk Pearson with IAV cell-type proportions reweighted to match SARS.

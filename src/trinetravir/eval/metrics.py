@@ -46,9 +46,11 @@ def spearman_off_diag(response_vectors: dict[str, np.ndarray]) -> float:
     if len(keys) < 2:
         return float("nan")
     mat = np.stack([response_vectors[k] for k in keys], axis=1)
-    # scipy.spearmanr on a 2D array returns the correlation matrix in [0]
-    rho_mat, _ = spearmanr(mat, axis=0)
-    rho_mat = np.atleast_2d(rho_mat)
+    # scipy.spearmanr on 2 columns returns a scalar; on 3+ returns matrix.
+    rho_raw, _ = spearmanr(mat, axis=0)
+    if np.isscalar(rho_raw) or (hasattr(rho_raw, "ndim") and rho_raw.ndim == 0):
+        return float(rho_raw)
+    rho_mat = np.asarray(rho_raw)
     off = rho_mat[~np.eye(len(keys), dtype=bool)]
     return float(off.mean())
 
@@ -104,12 +106,103 @@ def de_jaccard_off_diag(
     return float(np.mean(pairs)) if pairs else float("nan")
 
 
+def mmd_rbf_off_diag(
+    embeddings_per_study: dict[str, np.ndarray],
+    *,
+    gamma: float | None = None,
+) -> float:
+    """Mean off-diagonal MMD with RBF kernel across per-study cell sets.
+
+    Unlike the response-vector metrics, MMD operates on per-cell distributions:
+    each study contributes an (n_cells, n_dims) matrix and pairwise MMD is
+    computed via the empirical biased estimator:
+
+        MMD^2 = E[k(x,x')] + E[k(y,y')] - 2*E[k(x,y)]
+
+    with k(u,v) = exp(-gamma * ||u-v||^2). Lower MMD = more similar
+    distributions. We negate so the convention matches the other metrics
+    (higher = better cross-study coherence): score = -MMD^2.
+
+    Parameters
+    ----------
+    embeddings_per_study
+        Mapping study_id -> (n_cells, n_dims) Harmony-corrected embedding
+        (typically obsm['X_harmony'] sliced to the bucket).
+    gamma
+        RBF bandwidth parameter. If None, set via median heuristic on the
+        pooled embedding: gamma = 1 / (2 * sigma^2) where sigma is the
+        median pairwise Euclidean distance in a random subsample.
+
+    Returns
+    -------
+    score : float
+        Negative mean off-diagonal pairwise MMD^2. Higher = better.
+    """
+    keys = sorted(embeddings_per_study.keys())
+    if len(keys) < 2:
+        return float("nan")
+
+    # Median heuristic gamma: subsample at most 1000 cells from pooled and
+    # compute pairwise distances. Cheap + reproducible by construction since
+    # the subsample is the first 1000 by row order.
+    if gamma is None:
+        pooled = np.concatenate(
+            [
+                embeddings_per_study[k][: max(1, min(len(embeddings_per_study[k]), 250))]
+                for k in keys
+            ],
+            axis=0,
+        )
+        # Distance via cdist; clip to a manageable size to avoid n^2 blow up.
+        n = min(len(pooled), 1000)
+        sub = pooled[:n]
+        # Pairwise distances; flat upper triangle to estimate median.
+        sq = ((sub[:, None, :] - sub[None, :, :]) ** 2).sum(axis=-1)
+        sigma_sq = float(np.median(sq[np.triu_indices(n, k=1)]))
+        if sigma_sq <= 0:
+            sigma_sq = 1.0
+        gamma = 1.0 / (2.0 * sigma_sq)
+
+    def mmd2(x: np.ndarray, y: np.ndarray) -> float:
+        # Biased empirical MMD^2.
+        n_x, n_y = len(x), len(y)
+        if n_x == 0 or n_y == 0:
+            return float("nan")
+        # Subsample to cap compute: at most 500 cells per study.
+        rng = np.random.default_rng(0)
+        if n_x > 500:
+            x = x[rng.choice(n_x, 500, replace=False)]
+        if n_y > 500:
+            y = y[rng.choice(n_y, 500, replace=False)]
+        dxx = ((x[:, None, :] - x[None, :, :]) ** 2).sum(axis=-1)
+        dyy = ((y[:, None, :] - y[None, :, :]) ** 2).sum(axis=-1)
+        dxy = ((x[:, None, :] - y[None, :, :]) ** 2).sum(axis=-1)
+        kxx = np.exp(-gamma * dxx).mean()
+        kyy = np.exp(-gamma * dyy).mean()
+        kxy = np.exp(-gamma * dxy).mean()
+        return float(kxx + kyy - 2.0 * kxy)
+
+    pairs: list[float] = []
+    for i, a in enumerate(keys):
+        for b in keys[i + 1 :]:
+            m = mmd2(embeddings_per_study[a], embeddings_per_study[b])
+            if not np.isnan(m):
+                pairs.append(m)
+    if not pairs:
+        return float("nan")
+    return float(-np.mean(pairs))
+
+
 # Registry of metric_fn used by the sensitivity tooling.
 METRICS: dict[str, MetricFn] = {
     "pearson": pearson_off_diag,
     "spearman": spearman_off_diag,
     "de_jaccard_top100": de_jaccard_off_diag,
 }
+
+# MMD operates on per-cell embeddings, not on response vectors, so it lives
+# outside the response-vector METRICS registry. Calibration runners pass it
+# as a separate code path.
 
 
 def load_phase3_response_vectors(
