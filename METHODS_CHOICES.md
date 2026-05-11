@@ -508,6 +508,100 @@ the per-stratum framing is the only defensible v1 claim.
 
 ---
 
+### Issue 27: ex vivo vs natural infection comparison protocol (Randolph 2021) — LOAD-BEARING
+
+**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B.
+
+**The choice as it stands**: Randolph 2021 is a paired ex vivo IAV challenge design (90 male donors, mock + IAV Cal/04/09 6h MOI 0.5). v1 training corpus contains only natural-infection PBMC. Comparing Randolph's response vectors to v1's IAV response (Lee 2020 within-study IAV donors) requires pre-specified protocol because (a) exposure type differs (controlled ex vivo vs natural systemic infection), (b) timing differs (6h post-exposure vs variable time-from-symptom-onset), (c) Randolph is paired-within-donor while Lee is cross-sectional.
+
+**Pre-specified protocol for Session 6B**:
+1. **Paired-design permutation null**: within each Randolph donor, permute the mock-vs-IAV label across the donor's two samples. This preserves donor-specific batch effects + transcriptional baseline. Run N=1000 permutations.
+2. **Cross-design comparison**: Randolph "shared antiviral component" (mean(IAV) - mean(mock) per donor, then averaged across donors) is compared to Lee's IAV response vector (mean(diseased) - mean(healthy) on IAV donors). Pearson r on the HVG-intersection genes.
+3. **Per-bucket evaluation**: per-cell-type bucket. CellTypist Immune_All_Low per Issue 12.
+4. **Reporting**: report Randolph's Pearson r to Lee IAV at both (a) Khatri MVS gene subset and (b) full HVG intersection. Both should be reported; MVS-subset is the calibrated anchor (per Khatri r ≈ 0.45 monocyte target).
+5. **Caveat to document explicitly**: ex vivo 6h IAV at MOI 0.5 captures the *direct cell-autonomous antiviral response* + the *paracrine signaling within PBMC*. Natural in vivo IAV captures the systemic response + circulating cell trafficking + tissue-recruited cells. These are different biologies; observed cross-context r is expected to be *lower* than v1's within-natural-infection cross-study r.
+
+**Decision rule**: if Randolph-vs-Lee monocyte cross-context Pearson r ≥ 0.40 on the MVS gene subset, the conserved-component hypothesis (H1) is supported. If r < 0.20, the hypothesis is challenged and the methods section must report the failure. Intermediate values (0.20-0.40) are reported as inconclusive.
+
+**Validation strategy**: pre-registered before Session 6B begins. The decision rule above is pre-committed; Session 6B reports the observed r and the verdict per the rule. No post-hoc threshold adjustment.
+
+**Date opened**: 2026-05-11
+**Date resolved**: pending Session 6B
+
+---
+
+### Issue 28: pediatric age stratification protocol (GSE283744)
+
+**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B.
+
+**The choice as it stands**: GSE283744 contains pediatric PBMCs (median age 2.3 months) from RSV + SARS-CoV-2 + healthy infants. v1 training corpus is exclusively adult (Wilk, Lee, Arunachalam, Schulte-Schrepping all adult cohorts; verified at schema migration). Pediatric PBMC cell-type composition differs substantially from adult (higher naive T cell fraction, different myeloid distributions, immature B cell populations). Comparing pediatric response to adult requires pre-specified treatment of the age covariate.
+
+**Pre-specified protocol for Session 6B**:
+1. **Pediatric data treated as a separate stratum**, not harmonized into the adult corpus's Harmony integration space.
+2. **Cross-age transfer evaluation**: project pediatric cells into adult corpus's per-cell-type Harmony embedding using transfer learning (compute pediatric scaled-HVG response vector + project to adult HVG space). Then compute Pearson r between adult cross-study response vector and pediatric within-cohort response vector per bucket.
+3. **Per-bucket evaluation**: monocyte + B + NK + CD4T + CD8T, using pediatric-validated CellTypist labels.
+4. **CellTypist verification step**: before harmonization, verify CellTypist Immune_All_Low label accuracy on GSE283744 against published pediatric PBMC cell-type proportions. If accuracy < 80% for the 5 v1 buckets, flag explicitly and consider alternative annotation (e.g., Azimuth pediatric-specific reference).
+5. **Reporting**: report pediatric SARS-CoV-2 cross-age Pearson r alongside adult cross-study Pearson r for the same virus. Pediatric RSV is reported as cross-virus + cross-age (no adult RSV in v1 corpus).
+6. **Age covariate modeling**: at this stage, age is a stratification variable, not a continuous covariate in any model. Continuous age modeling deferred to v1.5.
+
+**Decision rule**: if pediatric SARS-CoV-2 monocyte cross-age Pearson r to adult ≥ 0.30 on the MVS gene subset, conserved-component hypothesis transfers across age groups. If r < 0.10, the conserved component does NOT transfer to pediatric biology — methods section must report. Intermediate values reported as partial transfer.
+
+**Validation strategy**: pre-registered before Session 6B begins.
+
+**Date opened**: 2026-05-11
+**Date resolved**: pending Session 6B
+
+---
+
+### Issue 29: chronic latent carriage analysis protocol (Wang 2025 CMV)
+
+**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B.
+
+**The choice as it stands**: Wang 2025 CMV cohort is chronic latent infection (asymptomatic carriers), not acute disease. The v1 schema's `donor_disease_status = diseased` for CMV+ donors is methodologically defensible (they have an active viral infection by viral-load definition) but biologically distinct from the v1 corpus's acute symptomatic COVID disease state.
+
+**Pre-specified protocol for Session 6B**:
+1. **CMV+ vs CMV- comparison maps to diseased vs healthy_control schema** (`donor_disease_status` resolves to diseased/healthy_control even though CMV+ is chronic latent rather than acute). The new `infection_state` obs column distinguishes acute vs chronic_latent so downstream analyses can stratify.
+2. **Per-bucket cross-context Pearson r**: CMV "chronic antiviral signature" (CMV+ minus CMV- response vector) is compared to v1's acute COVID signature per bucket. Expected to be LOW for most buckets — chronic CMV signature is dominated by clonal T cell expansions (per the paper's findings), which is fundamentally different from acute IFN response.
+3. **Per-cell-type evaluation**: monocyte should show some shared ISG signal (chronic CMV induces baseline IFN tone in monocytes). T cells should show signal in CD8T (CMV-driven clonal expansion, TEMRA phenotype) but NOT shared with acute COVID CD8T response. This is biology-driven.
+4. **Explicit caveat in methods**: this is NOT a test of cross-virus transfer. It is a test of "does the conserved antiviral component capture chronic vs acute infection biology equivalently." Expectation: NO. Reporting an r ≈ 0.15-0.30 monocyte would be the *expected* outcome and would support the framework's discrimination between acute and chronic biology.
+
+**Decision rule**: if Wang CMV monocyte chronic-vs-acute Pearson r is in [0.10, 0.40] on the MVS gene subset, the conserved component appropriately discriminates acute from chronic. r > 0.50 would suggest the conserved component is just "any IFN tone" and lacks acute-disease specificity (concerning). r < 0.05 suggests no shared biology — also concerning, indicates the conserved component is acute-specific only.
+
+**Validation strategy**: pre-registered before Session 6B begins. This is an *expected-asymmetry* test, not a conserved-component-transfer test.
+
+**Date opened**: 2026-05-11
+**Date resolved**: pending Session 6B
+
+---
+
+### Issue 30: retrovirus context evaluation protocol (Lee 2025 HIV)
+
+**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B. **Marginal sample size — may fall back to qualitative-only.**
+
+**The choice as it stands**: Lee 2025 HIV-1 cohort (9 donors with early HIV <6 months) is biologically distinct from the v1 corpus (acute respiratory RNA viruses) in three ways: (a) retroviruses integrate into host genome and reverse-transcribe RNA from DNA template (entry into different molecular biology); (b) HIV-1 primarily targets CD4 T cells, not monocytes/respiratory epithelium; (c) early HIV is chronic-by-definition (no acute resolution phase like RSV or IAV).
+
+**Sample size verification step (Session 6A acquisition gate)**: confirm healthy control N ≥ 4 from Lee 2025 data on download. If N < 4, falls back to qualitative-validation-only status — reported as a single context-comparison data point, NOT as a calibrated Issue 4-compliant cohort.
+
+**Pre-specified protocol for Session 6B** (conditional on healthy N ≥ 4):
+1. **Per-bucket HIV response vector**: CD4T bucket is the primary stratum (HIV's main target). Monocyte secondary (chronic HIV induces IFN tone in monocytes). Other buckets reported for completeness.
+2. **Per-bucket cross-context Pearson r to v1 acute SARS-CoV-2**: report each bucket. Expected: very low for CD4T (HIV-CD4T biology is dominated by HIV-specific reverse transcription products + integration markers; SARS-CoV-2 CD4T is bystander IFN response).
+3. **CD4 percentage decline check**: report CD4 T cell percentage in HIV vs healthy. Should be lower in HIV donors (early infection still preserves CD4 count but baseline depression observable). This is biological-validity sanity check.
+4. **Explicit caveat in methods**: HIV is a retrovirus with fundamentally different replication biology. Failure of cross-context transfer (r < 0.10) is the *expected outcome* and supports the framework's discrimination between RNA virus and retrovirus biology. Reporting a high cross-context r would be the surprising finding requiring biological investigation.
+
+**Fall-back protocol if healthy N < 4**:
+- Report HIV cohort as a *qualitative* cross-context data point only.
+- Compute response vector relative to the *v1 corpus healthy baseline* (using the cross-corpus harmonization protocol from Session 6B).
+- Report observed Pearson r without calibrated gate; flag as below sample-size threshold.
+
+**Decision rule**: cross-context Pearson r in [0.00, 0.20] on CD4T MVS gene subset = expected (retrovirus biology distinct from RNA virus biology). r > 0.40 = surprising, requires investigation. r < -0.10 = anti-correlation, suggests HIV CD4T response is *opposite* to acute RNA virus CD4T response (also biologically interpretable).
+
+**Validation strategy**: pre-registered before Session 6B begins. Sample-size fallback explicit. The expected-low-r outcome is committed; success criterion is "framework discriminates retrovirus from RNA virus biology" not "framework transfers across all virus families."
+
+**Date opened**: 2026-05-11
+**Date resolved**: pending Session 6B
+
+---
+
 
 ## Process rules for future methodological choices
 

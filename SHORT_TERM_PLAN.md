@@ -8,9 +8,11 @@
 |---|-------|------|---------|--------|
 | 1 | **Session 3 closeout** | Inline (this file §1) | Phase35_subbucket bg job `bfs5zrjht` completion | **DONE 2026-05-11** |
 | 2 | **Session 5 (audit response)** | `SESSION_5_SPEC.md` | Block #1 fully committed | **DONE 2026-05-11** |
-| 3 | **Human decision on Issue 25** | METHODS_CHOICES.md Issue 25 entry | Block #2 complete + Issue 25 opened | BLOCKED on #2 |
-| 4 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #3 (Issue 25 human-resolved) | BLOCKED on #3 |
-| 5 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #4 complete | BLOCKED on #4 |
+| 3 | **Human decision on Issue 25** | METHODS_CHOICES.md Issue 25 entry | Block #2 complete + Issue 25 opened | **DONE 2026-05-11** (Option B hybrid) |
+| 4 | **Session 6A (held-out cohort acquisition + harmonization + schema v6)** | `SESSION_6A_CHECKLIST.md` | Block #3 (Issue 25 Option B hybrid) | IN PROGRESS 2026-05-11 — multi-session, 4-6 weeks |
+| 5 | **Session 6B (held-out calibration evaluation)** | Not yet drafted | Block #4 audit gate passes | BLOCKED on #4 |
+| 6 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #5 complete | BLOCKED on #5 |
+| 7 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #6 complete | BLOCKED on #6 |
 
 **Block #5 is the LAST block**, not the first. Session 4 (GPU/scVI work) does NOT run earlier in the pipeline.
 
@@ -23,6 +25,8 @@
 - **NEVER delete this file.** When all 5 blocks complete, replace contents with new plan; never remove the file itself.
 
 ## Current status (2026-05-11)
+
+**Pipeline rev 2 (2026-05-11)**: Issue 25 resolved as **Option B hybrid** — acquire 4 held-out cohorts (Randolph 2021 IAV, GSE283744 pediatric RSV+SARS, Wang 2025 CMV, Lee 2025 HIV) for cross-context validation, NOT to retrain v1 on. Original Wilk+Lee+Arunachalam+Schulte training corpus intact. New blocks #4 (Session 6A: acquisition + harmonization + schema v6) and #5 (Session 6B: held-out calibration) inserted before Session 3.5 + Session 4. Sessions 6A/6B span 4-6 weeks of work, multi-Claude-session.
 
 - **Block #1 (Session 3 closeout)**: **DONE 2026-05-11**
   - Phase35_subbucket calibration bg job `bfs5zrjht` completed (~80 min CPU; 12 sub-buckets × 3 metrics + 12 split-half + 12 MMD).
