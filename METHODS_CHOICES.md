@@ -1097,6 +1097,69 @@ The parent-bucket healthy reference is the methodologically appropriate comparat
 
 ---
 
+## Session 7 pre-modeling sensitivity audit (Issues 32-33) — 2026-05-11
+
+This section opens Issues 32 + 33 as **pre-specifications** before Session 7 Parts A + B run. Pre-committed decision rule tables are quoted verbatim from `references/session_7_prompt.md`. Verdicts apply mechanically; results disclosed regardless of outcome. Pattern mirrors Session 5 audit-response.
+
+### Issue 32: Pre/post-harmonization sensitivity analysis design (LOAD-BEARING) — 2026-05-11
+
+**Status**: pre-specified BEFORE Session 7 Part A runs. Committed prior to observation of pre/post-Harmony Δr values so that the methodological choice cannot be reverse-engineered to a favorable verdict.
+
+**Choice**: Compute response vectors on pre-Harmony (raw normalized log1p) counts and post-Harmony embeddings; quantify Δr per bucket per gene set. Pre-committed decision rule classifies Harmony's contribution at thresholds Δr ≤ 0.10 (biology dominant), Δr ∈ (0.10, 0.30] (mixed), Δr > 0.30 (Harmony dominant).
+
+**Rationale**: Cross-study integration could artificially inflate coherence by preserving only dominant conserved axes. Quantifying Harmony's contribution separates biological signal from integration smoothing. The critique-document concern 4 (Harmony preserving only conserved axes) requires this empirical answer before Phase 4 modeling builds on the harmonized embedding.
+
+**Pre-committed decision rule (verbatim from `references/session_7_prompt.md` Part A)**:
+
+| Δr (post minus pre) | Interpretation | Implication for manuscript |
+|---|---|---|
+| Δr ≤ 0.10 across most buckets | Harmony adds minor smoothing; biological coherence is dominant | ISG-conservation finding holds as biology; manuscript framing unchanged |
+| Δr ∈ (0.10, 0.30] across most buckets | Harmony adds substantial smoothing; mixed biological + integration contribution | ISG-conservation finding holds qualitatively but framing must explicitly acknowledge Harmony contribution; sensitivity analysis becomes a load-bearing limitation rather than reassurance |
+| Δr > 0.30 across most buckets | Harmony does most of the work | ISG-conservation finding requires significant revision; manuscript must reframe as "post-harmonization coherence" rather than "biological conservation"; reconsider whether the finding is publishable in current form |
+
+"Most buckets" = ≥3 of 5 buckets. Mixed patterns (some buckets ≤0.10, others >0.30) trigger per-bucket disclosure rather than aggregate verdict.
+
+Restricted to MVS gene set: Δr_MVS interpretation has higher stakes because the ISG-restriction finding is the load-bearing contribution. If Δr_MVS > 0.30 specifically, the methodology contribution claim weakens substantially.
+
+**Validation**: `test_calibration.py` extended with synthetic ground-truth case: known-correlated synthetic data with study-batch noise; verify pre-Harmony r < post-Harmony r as expected; verify Δr magnitude scales with noise level.
+
+**Deliverable**: `results/tables/sensitivity_pre_post_harmony.csv` with columns: bucket, gene_set (full / MVS), r_pre, r_post, delta_r, n_studies, n_donors_total.
+
+**Date opened**: 2026-05-11 (this commit — pre-spec gate before Part A run)
+**Date resolved**: TBD (Session 7 close after Part A verdict applied)
+
+---
+
+### Issue 33: Within-cohort-only sensitivity analysis design (LOAD-BEARING) — 2026-05-11
+
+**Status**: pre-specified BEFORE Session 7 Part B runs. Committed prior to observation of within-cohort response vector patterns so that the methodological choice cannot be reverse-engineered to a favorable verdict.
+
+**Choice**: Run v2 calibration framework on each v1 cohort independently (no cross-study integration). Compute per-cohort cross-bucket response vector comparisons. Aggregate to sign concordance and magnitude alignment metrics. Pre-committed decision rule classifies alignment at thresholds sign concordance ≥80% with magnitude divergence ≤0.20 (biology consistent), partial alignment, and disappear/reverse patterns.
+
+**Rationale**: If within-cohort effects don't replicate cross-study findings, the cross-study coherence may be an integration artifact. Within-cohort effects are a more conservative baseline. Concern 4 partial-overlap with concern 3 (cross-study integration assumption) requires the within-cohort no-integration baseline.
+
+**Pre-committed decision rule (verbatim from `references/session_7_prompt.md` Part B)**:
+
+| Pattern | Interpretation | Implication for manuscript |
+|---|---|---|
+| Within-cohort effects align with cross-study (sign concordance ≥80%, mean within-r within 0.20 of cross-study r) | Biology is consistent within and across studies; cross-study findings reflect real signal | ISG-conservation finding holds; cross-study integration is a useful tool but not creating the signal |
+| Within-cohort effects partially align (sign concordance 50-80%, magnitude divergence 0.20-0.50) | Biology shows within-cohort but cross-study integration changes magnitudes | Findings hold qualitatively; manuscript discusses cross-study integration as amplifying rather than creating the signal |
+| Within-cohort effects disappear or reverse (sign concordance <50%, or systematic magnitude reversal) | Cross-study findings are artifactual or dependent on integration | Major reframing required; the finding becomes "post-harmonization analysis surfaces coherence not visible in raw within-cohort data" — much weaker contribution |
+
+**Sign concordance** = fraction of bucket pairs where within-cohort mean r and cross-study harmonized r have the same sign.
+**Magnitude alignment** = mean absolute difference |r_within - r_cross| across bucket pairs.
+
+**Validation**: Per-cohort calibration uses same v2 framework as cross-study (permutation null, bootstrap CI), just restricted to within-cohort data. Framework-level validation already complete (`test_calibration.py` 8/8 passing).
+
+**Deliverables**:
+- `results/tables/sensitivity_within_cohort.csv` with columns: cohort, bucket_pair, observed_r, perm_p_raw, bootstrap_ci_low, bootstrap_ci_high, gene_set (full / MVS).
+- `results/tables/sensitivity_within_vs_cross.csv` aggregate: bucket_pair, mean_within_cohort_r, cross_study_harmonized_r, sign_concordance, magnitude_alignment.
+
+**Date opened**: 2026-05-11 (this commit — pre-spec gate before Part B run)
+**Date resolved**: TBD (Session 7 close after Part B verdict applied)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
