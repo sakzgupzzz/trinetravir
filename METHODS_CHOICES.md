@@ -573,7 +573,14 @@ the per-stratum framing is the only defensible v1 claim.
 
 **Status**: open at pre-specification level (Session 6A 2026-05-11; cohort substituted 2026-05-11 due to original cohort access blocker); resolution at Session 6B.
 
-**Cohort**: **GSE213516** (PBMC aging clocks cohort with CMV serostatus annotations). Public GEO deposition. CMV(+) vs CMV(-) healthy older adults. 10x Genomics. Used by the Science Advances aging clocks paper and the npj Aging integrated atlas.
+**Cohort**: **GSE213516** (PBMC aging clocks cohort) — initial substitution. **Substitution premise verified WRONG during C-pre.3 investigation (2026-05-11)**: GSE213516 Series Matrix file has only 4 sample characteristics fields (cell type, tissue, strain/sex, age). **No CMV serostatus characteristic field.** Series title states "PBMCs from 17 healthy donor" (all 17 samples flagged healthy; no CMV+/CMV- split). Figshare 23789844 metadata files (SE_CYCT_JOCT_WHCT_SC_meta.csv, 18.5MB, covering the 5 aging-cohort substudies including SE/GSE213516) contain columns {X, Age, sampleID, Cohort, Celltype, UMAP1, UMAP2} — also no CMV serostatus column.
+
+**Status**: Issue 29 cohort substitution INCOMPLETE pending alternative CMV PBMC scRNA-seq cohort with explicit serostatus annotation. Three paths for user decision:
+- **Path A**: investigate Science Advances paper supplement (DOI 10.1126/sciadv.abq7599) for an external CMV serostatus table not deposited to GEO or Figshare. If found, build sample → serostatus map manually.
+- **Path B**: search for alternative cohort. Candidates: Patin 2018 Milieu Intérieur (huge cohort with CMV serostatus, but bulk RNA-seq not scRNA-seq). Verschoor 2020 (some scRNA + CMV serostatus). Mogilenko 2021 GZMK+ CD8 aging (some CMV serostatus). User decision required on alternative.
+- **Path C**: defer Issue 29 to v1.5. Sessions 6B reports cross-context evaluation on only 3 cohorts (Randolph + Yoshida + GSE157829). Issue 29 stays open at pre-specification level; CMV PBMC scRNA-seq with serostatus deferred to v1.5.
+
+GSE213516 acquisition (837MB tar) is preserved on disk for future use if Path A surfaces a serostatus annotation, but NOT used for Issue 29 calibration in Session 6B unless serostatus is verified.
 
 **Substitution rationale**: original cohort (Grabauskas et al. 2025 / Wang 2025, Jackson Lab bioRxiv 2025.06.24.661167) likely under same controlled-access pattern as GSE283744 (same lab; verified blocked via bioRxiv Cloudflare challenge — data availability statement unverifiable from web). GSE213516 substituted as publicly-accessible alternative with CMV serostatus annotations explicitly available via GEO. The test now compares latent chronic herpesvirus discrimination from acute viral training distribution rather than chronic-vs-acute, but the biological intent — testing v1's discrimination capability for biologically-distant viral contexts — is preserved.
 
