@@ -525,8 +525,10 @@ the per-stratum framing is the only defensible v1 claim.
 
 **Validation strategy**: pre-registered before Session 6B begins. The decision rule above is pre-committed; Session 6B reports the observed r and the verdict per the rule. No post-hoc threshold adjustment.
 
+**C-pre.6 amendment (Session 6A harmonization, 2026-05-11)**: Randolph cohort harmonized to **3 buckets only** (monocyte 15,531 / B 12,995 / NK 5,750). CD4T + CD8T DEFERRED to v1.5. Reason: the published Seurat .rds files (Zenodo 4273999 inputs.tar.gz) needed for cell-level barcode-to-donor demultiplexing exploded during rdata parsing — CD4_T_cluster_singlets.rds (10.3 GB compressed) caused OOM on the laptop (~16 GB RAM). CD8_T_cluster_singlets.rds (2.3 GB) was not attempted after the CD4T failure. Monocyte (1.7 GB), B (1.7 GB), NK (1.0 GB) parsed successfully via per-cell-type subprocess to limit memory accumulation. **Impact on Issue 27 primary test**: NONE — the primary biological test is monocyte cross-context conserved-component (per pre-spec). CD4T + CD8T were secondary buckets. Supplementary T-cell evaluation deferred. Future v1.5 fix: streaming Seurat parser, or installing R 4.4 with prebuilt CRAN binaries to read .rds natively. 90 diseased + 90 healthy donors PASS Issue 4 with massive margin in the 3 acquired buckets. paired_within_donor design preserved via `exposure_pair_id = donor_id`.
+
 **Date opened**: 2026-05-11
-**Date resolved**: pending Session 6B
+**Date resolved**: pending Session 6B (3-bucket); CD4T/CD8T pending v1.5
 
 ---
 
