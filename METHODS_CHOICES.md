@@ -530,18 +530,22 @@ the per-stratum framing is the only defensible v1 claim.
 
 ---
 
-### Issue 28: pediatric age stratification protocol (GSE283744)
+### Issue 28: pediatric age stratification protocol (Yoshida 2022)
 
-**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B.
+**Status**: open at pre-specification level (Session 6A 2026-05-11; cohort substituted 2026-05-11 due to original cohort access blocker); resolution at Session 6B.
 
-**The choice as it stands**: GSE283744 contains pediatric PBMCs (median age 2.3 months) from RSV + SARS-CoV-2 + healthy infants. v1 training corpus is exclusively adult (Wilk, Lee, Arunachalam, Schulte-Schrepping all adult cohorts; verified at schema migration). Pediatric PBMC cell-type composition differs substantially from adult (higher naive T cell fraction, different myeloid distributions, immature B cell populations). Comparing pediatric response to adult requires pre-specified treatment of the age covariate.
+**Cohort**: **Yoshida 2022 (Nature 602:321)**, accessed via [covid19cellatlas.org](https://covid19cellatlas.org) direct h5ad download. n=93 total including pediatric + adult + healthy COVID-19 PBMCs. 10x Genomics 5' technology (matches Lee 2020 in v1 corpus). PBMC compartment: 317,854 cells. Wellcome Sanger / Human Cell Atlas team deposition.
+
+**Substitution rationale**: original cohort GSE283744 unavailable due to controlled access (Jackson Lab IRB restrictions; scRNA-seq raw files not submitted to GEO due to PII concerns — only snATAC-seq h5ads public). Yoshida 2022 substituted as biologically-equivalent design: acute primary pediatric vs adult COVID-19 PBMC scRNA-seq, 10x 5' technology matching Lee 2020 in v1 corpus, healthy controls included for both age groups. Open-access gold-standard public deposition. The biological test framing is preserved — cross-age transfer of conserved viral response component.
+
+**The choice as it stands**: Yoshida 2022 contains pediatric + adult PBMCs from acute SARS-CoV-2 infection plus healthy controls of both age groups. v1 training corpus is exclusively adult (Wilk, Lee, Arunachalam, Schulte-Schrepping all adult cohorts; verified at schema migration). Pediatric PBMC cell-type composition differs substantially from adult (higher naive T cell fraction, different myeloid distributions, immature B cell populations). Comparing pediatric response to adult requires pre-specified treatment of the age covariate.
 
 **Pre-specified protocol for Session 6B**:
 1. **Pediatric data treated as a separate stratum**, not harmonized into the adult corpus's Harmony integration space.
 2. **Cross-age transfer evaluation**: project pediatric cells into adult corpus's per-cell-type Harmony embedding using transfer learning (compute pediatric scaled-HVG response vector + project to adult HVG space). Then compute Pearson r between adult cross-study response vector and pediatric within-cohort response vector per bucket.
 3. **Per-bucket evaluation**: monocyte + B + NK + CD4T + CD8T, using pediatric-validated CellTypist labels.
-4. **CellTypist verification step**: before harmonization, verify CellTypist Immune_All_Low label accuracy on GSE283744 against published pediatric PBMC cell-type proportions. If accuracy < 80% for the 5 v1 buckets, flag explicitly and consider alternative annotation (e.g., Azimuth pediatric-specific reference).
-5. **Reporting**: report pediatric SARS-CoV-2 cross-age Pearson r alongside adult cross-study Pearson r for the same virus. Pediatric RSV is reported as cross-virus + cross-age (no adult RSV in v1 corpus).
+4. **CellTypist verification step**: before harmonization, verify CellTypist Immune_All_Low label accuracy on Yoshida 2022 pediatric cells against published pediatric PBMC cell-type proportions. If accuracy < 80% for the 5 v1 buckets, flag explicitly and consider alternative annotation (e.g., Azimuth pediatric-specific reference).
+5. **Reporting**: report pediatric SARS-CoV-2 cross-age Pearson r alongside adult cross-study Pearson r for the same virus. (RSV evaluation no longer applies under Yoshida 2022 substitution — Yoshida is SARS-CoV-2 only.)
 6. **Age covariate modeling**: at this stage, age is a stratification variable, not a continuous covariate in any model. Continuous age modeling deferred to v1.5.
 
 **Decision rule**: if pediatric SARS-CoV-2 monocyte cross-age Pearson r to adult ≥ 0.30 on the MVS gene subset, conserved-component hypothesis transfers across age groups. If r < 0.10, the conserved component does NOT transfer to pediatric biology — methods section must report. Intermediate values reported as partial transfer.
