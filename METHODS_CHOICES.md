@@ -1215,6 +1215,32 @@ Sign concordance is **perfect (100%)** across all 20 bucket-pair × gene_set agg
 
 ---
 
+## Session 3.5 pre-specifications (Issues 18-24) — 2026-05-11
+
+This section opens Issues 18-24 as **pre-specifications** for Phase 5 / Phase 7 / Phase 9 modeling work. Each issue commits a decision now so that implementation work in later phases cannot drift away from the pre-spec (Ahlmann-Eltze 2025 documents post-hoc methodology drift as the single largest confound in single-cell perturbation prediction benchmarks). Status is "open at pre-specification level"; final validation occurs at the phase named in each issue.
+
+### Issue 18: ISG gene set source for ISG-aware regularization — 2026-05-11
+
+**Status**: open at pre-specification level; final validation at Phase 5.
+
+**Decision**: Khatri Meta-Virus Signature (MVS) gene set as primary, from Andres-Terre et al. 2015 *Immunity* 43:1199. Curated set of ~400 canonical type-I interferon-stimulated genes validated across viral infections. Pre-Harmony cross-study Pearson r using the MVS subset is substantial across all buckets in v1 corpus (0.13–0.58 per Session 7 Issue 32 evidence).
+
+**Rationale**: Khatri MVS was used throughout Sessions 5, 6B, and 7 for all MVS-restricted analyses. The empirical defenses now in the audit trail are anchored on this gene set:
+- Session 5: ISG-restricted lift +0.06 to +0.23 across 4 of 5 v1 buckets.
+- Session 6B: ISG lift replicated in 4 of 5 GSE157829 buckets and 2 of 3 Randolph buckets.
+- Session 7: monocyte MVS Δr=0.08 BIOLOGY_DOMINANT verifies biological signal exists pre-Harmony at this gene set.
+
+Switching the primary to Interferome 2.0 at Session 3.5 would require re-running Sessions 5+6B+7 analyses with the different gene set, invalidating the methodology defense. Khatri MVS as primary maintains alignment between pre-spec and audit trail.
+
+**Alternative**: Interferome 2.0 canonical type-I-IFN-induced genes (high-confidence subset, ≥2-fold induction in PBMC studies) as Phase 5 supplementary sensitivity. Mostafavi et al. 2016 *Cell* ISG list as additional Phase 5 sensitivity if reviewer-requested.
+
+**Validation**: Phase 5 supplementary figure shows cross-study response coherence under all three ISG gene sets (Khatri MVS, Interferome 2.0, Mostafavi 2016). Demonstrates robustness of the ISG-conservation finding to gene set choice. If any alternative shows substantively different bucket patterns, the paper discusses the discrepancy.
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; Phase 5 sensitivity analysis to confirm)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
