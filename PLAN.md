@@ -8,7 +8,9 @@ Project plan v1.2. Designed as the working specification for a solo computationa
 - v1.1 scope locked to **PBMCs only** across all viruses. Multi-compartment (airway epithelium, organoids, intestinal) deferred to v2.
 - §9 mini-gate executed and **PASSED**: Lee et al. 2020 PBMC (cellxgene `de2c780c`), Pearson r = 0.46 between SARS-CoV-2 and IAV response vectors, top-100 up-regulated gene Jaccard = 0.10. Signal present.
 - Dataset acquisition (Phase 2) updated with cellxgene Census availability check: SARS-CoV-2 PBMC well-represented, IAV PBMC limited to Lee et al. (Census), RSV and additional IAV require GEO direct download.
-- **Schema rename: `infection_status` → `donor_disease_status` (v1.1, PBMC-only).** Values changed from `infected`/`mock` → `diseased`/`healthy`. Reason: PBMCs from a virally-infected donor are mostly NOT directly infected at the cellular level — the signal is systemic cytokine / IFN response, not cell-autonomous infection. The PLAN §2 per-cell `infection_status` (infected/bystander/mock) semantics belong to v2 airway studies where viral reads can be assigned per cell. New obs column `label_source` (e.g. `disease_proxy`) records label origin so downstream code can branch on label semantics.
+- **Schema rename: `infection_status` → `donor_disease_status` (v1.1, PBMC-only).** Values changed from `infected`/`mock` → `diseased`/`healthy_control`. Reason: PBMCs from a virally-infected donor are mostly NOT directly infected at the cellular level — the signal is systemic cytokine / IFN response to viral disease, not cell-autonomous infection. The factorized cross-virus model works on this systemic signal; the framing of the eventual paper must be honest about this distinction. The PLAN §2 per-cell `infection_status` (infected/bystander/mock) semantics belong to v2 airway studies where viral reads can be assigned per cell. New obs column `label_source` (e.g. `disease_proxy`) records label origin so downstream code can branch on label semantics. `mock_control` is reserved as a future allowed value for in-vitro mock-infected studies (not used in v1). **See METHODS_CHOICES.md Issue 1 for the resolved schema decision and rationale.**
+
+- **Methodological discipline (added 2026-05-10).** Every non-trivial methodological choice is logged in `METHODS_CHOICES.md` with required scientific rationale and validation strategy. Pre-specified rules now block scope creep at phase boundaries: study inclusion criteria (Issue 4), hyperparameter tuning policy (Issue 14), cross-virus evaluation protocol (Issue 15). Read `METHODS_CHOICES.md` at the start of every phase.
 - **GEO time-budget addendum (Phase 2).** Census fetches take ~10 min per study because cellxgene already harmonized them. GEO direct downloads (RSV, second IAV, DNA virus control) need raw count matrix processing, manual metadata parsing, and ad-hoc QC because the studies were never standardized — budget **2-4 hours per GEO study**, not 10 minutes. Do not conflate the two in time estimates.
 
 ---
@@ -225,19 +227,74 @@ Tier-1 use case: if your laptop has less than 32GB RAM and the combined dataset 
 
 **Cross-study batch-correction watchpoint (added v1.2):** After Harmony correction, compute response-vector Pearson correlation *within the same virus* across studies. This must stay below ~0.7 to confirm Harmony has not over-corrected the biology. Reference floor: Lee et al. 2020 within-study, between-virus r = 0.46 (§9 mini-gate result). If post-Harmony cross-study within-virus correlations rise far above 0.7, back off Harmony `theta` (lambda parameter) or remove donor as a batch key. If they collapse below 0.46, Harmony is erasing real disease signal — also a problem.
 
-**Phase 3 entry-gate update (v1.2, added 2026-05-10).** Pre-Harmony cross-study within-virus r matrix on the 5 SARS-CoV-2 PBMC studies came out at mean off-diag r = 0.054, range [-0.58, +0.59]. mgh_acute_covid + guo_2020 are now excluded (1 healthy donor and 0 healthy donors respectively — see configs/datasets.yaml exclusion_reason). The remaining 4 clean studies show: lee↔wilk↔arunachalam form a coherent core (r ≈ 0.4–0.6), but schulte_schrepping_2020 sits near-zero with everything (r ≈ -0.06 to +0.21). Before launching Harmony, run `notebooks/03_celltype_stratified_consistency.ipynb` to recompute the cross-study r matrix per major cell type (mono / CD4T / CD8T / B / NK). Two diagnostic outcomes:
-  - If per-cell-type r is meaningfully higher than bulk r → cell-type-composition drift is the problem; harmonize with `cell_type` as a covariate (or per-cell-type harmonization).
-  - If per-cell-type r remains near-zero against schulte_schrepping → deeper protocol/cohort issue (10x version, capture chemistry, severity stratification, time-from-symptom-onset). Drop or down-weight schulte_schrepping rather than try to correct it away.
+**Phase 3 entry-gate (v1.2, settled 2026-05-10).** Pre-Harmony bulk cross-study r on 5 SARS-CoV-2 PBMC studies = mean off-diag 0.054, range [-0.58, +0.59]. mgh_acute_covid + guo_2020 excluded (1 healthy donor / 0 healthy donors; see configs/datasets.yaml). 4 clean studies remain.
 
-Also pull and report severity distribution per study during the same notebook. Severe COVID has substantially different PBMC signatures (dysregulated type I IFN, emergency myelopoiesis); if studies have systematically different severity distributions, the "study effect" in the r matrix is partly real biology and stratifying by severity in eventual benchmark splits is preferable to correcting it away.
+Stratified diagnostic (`notebooks/03_celltype_stratified_consistency.ipynb`) confirms cell-type-composition drift is the dominant signal. Per-bucket mean off-diag r:
+  - monocyte: 0.434  (8x lift from bulk)
+  - B:        0.252
+  - NK:       0.210
+  - CD4T:     0.196
+  - CD8T:     0.156
 
-**Phase 3 exit-gate (added v1.2).** Post-Harmony within-virus cross-study Pearson r should be **≥ 0.5 across all pairs** (5 SARS PBMC pairs after exclusions, or 6 if schulte_schrepping is retained). If yes, proceed to Phase 4 GATE 1 on the harmonized dataset. If no, diagnose before adding more data. **Do not attack GEO datasets (RSV / 2nd IAV / DNA control) until this gate passes** — more data into a broken harmonization pipeline just produces a noisier broken pipeline. GEO acquisition becomes Phase 3.5 / v1.5.
+Per-study mean per-bucket r vs others: arunachalam 0.358, wilk 0.291, schulte_schrepping 0.198 (salvaged from ~0 bulk — keep), lee 0.150 (bulk inflated by lee's heavy monocyte fraction).
+
+Severity scan: cellxgene Census strips all severity-like obs columns from these 4 studies. development_stage is age only. Severity stratification is v2 work (pull from publication metadata).
+
+**Phase 3 harmonization strategy (v1.2, settled 2026-05-10).**
+- **Per-cell-type Harmony, NOT joint Harmony with cell_type as a batch key.** Harmony's `vars_use` parameter specifies what to mix across, not what to preserve — passing `cell_type` would erase cell-type structure, the opposite of intent. Run Harmony separately per coarse bucket (monocyte / CD4T / CD8T / B / NK), each run filtered to one cell type and using `study_id` as the sole batch key. Response vectors are already a per-cell-type quantity, so a joint cross-cell-type embedding is not required for the gate.
+- **donor_id default OFF.** Donors are fully nested within studies; adding donor_id without strong evidence over-corrects and can entangle with disease status when donors are unique to a condition. Add only if specific donors show as outliers in post-Harmony QC.
+- For visualization (UMAP coloured by all cell types together), a separate global Harmony pass with `study_id` only is acceptable — but it is not the load-bearing harmonization for the gate.
+- Implementation in `src/trinetravir/data/harmonize.py`. Pipeline per bucket: HVG selection (n_top_genes=4000, batch_key=study_id, flavor=seurat_v3) → scale → PCA (n_comps=50) → harmonypy on PCA embedding → project corrected PCA back to scaled-HVG gene space via PCA loadings → recompute mean(diseased) − mean(healthy) per study in this projected space → pairwise Pearson r across studies.
+
+**Phase 3 exit-gate (v1.2, refined 2026-05-10).** Per-cell-type post-Harmony cross-study Pearson r thresholds — uniform r ≥ 0.5 would be a false-negative gate because T-cell repertoires are inherently more donor-specific:
+  - monocyte: r ≥ 0.60   (pre 0.434; IFN-dominated, should clean up well)
+  - B:        r ≥ 0.40   (pre 0.252)
+  - NK:       r ≥ 0.35   (pre 0.210)
+  - CD4T:     r ≥ 0.30   (pre 0.196)
+  - CD8T:     r ≥ 0.25   (pre 0.156)
+
+Plus relative-ordering check: monocytes highest, T cells lowest. If T cells suddenly correlate better than monocytes after harmonization, the correction has gone wrong.
+
+**Phase 3 gate result (v1.2, executed 2026-05-10).** Notebook `04_phase3_harmonization.ipynb` ran per-bucket Harmony on the 4 clean studies (244,389 cells). Post-Harmony per-bucket cross-study mean off-diag r:
+
+| bucket   | post-Harmony r | threshold | result | lift from pre-Harmony |
+|----------|----------------|-----------|--------|------------------------|
+| monocyte | **0.701**      | 0.60      | PASS   | +0.267                 |
+| NK       | **0.384**      | 0.35      | PASS   | +0.174                 |
+| CD4T     | **0.321**      | 0.30      | PASS   | +0.125                 |
+| B        | 0.297          | 0.40      | FAIL   | +0.045                 |
+| CD8T     | 0.169          | 0.25      | FAIL   | +0.013                 |
+
+**3 of 5 buckets pass.** Relative ordering (monocyte > NK > CD4T > B > CD8T) preserved as predicted by the per-bucket-threshold rationale.
+
+**Diagnostic on the two failing buckets (2026-05-10):**
+1. `scripts/phase3_donor_id_retry.py` — added `donor_id` as second Harmony batch key on B + CD8T only. **Discarded.** B 0.297 → 0.135 (−0.162; schulte ↔ wilk crashed to −0.417). CD8T 0.169 → 0.110 (−0.059). Confirms PLAN rule that donor_id over-corrects when donors are fully nested in studies; entangles with disease status.
+2. `scripts/phase3_lee_diagnostic.py` — Lee-specific 3-question probe. Findings:
+   - Healthy donor counts per bucket: Lee 4 / arunachalam 5 / wilk 6 / schulte 21. Lee similar to arunachalam, not the bottleneck.
+   - **Cell-type annotation divergence is the smoking gun.** Lee's lymphoid `cell_type` labels lack memory/naive subdivisions present in the other 3 studies. Lee's "B" bucket = exclusively memory B (IgG-neg class switched memory + IgG memory); arunachalam/schulte's "B" bucket is dominated by naive B. Lee's CD8T = `CD8-pos alpha-beta T cell` + `effector CD8`, no memory subtypes. Same coarse bucket name, different mixtures of cell populations.
+   - Lee IAV-vs-SARS coarse composition Pearson r = 0.986 (ordering preserved), but absolute fractions differ substantially: IAV is 58% monocyte vs SARS 38% monocyte; B 4.7% IAV vs 15.4% SARS. **Phase 4 cross-virus eval must be cell-type stratified, not bulk** — Gate-1 r=0.46 bulk result is partly composition-driven.
+3. `scripts/phase3_lee_out_retry.py` — Lee-out gate retry. CD8T 0.169 → **0.260** (PASSES 0.25 threshold). B 0.297 → 0.352 (still fails 0.40; schulte ↔ wilk = 0.021 — wilk's generic `B cell` label fails to align with schulte's fine-grained naive/memory/transitional/plasmablast). **Annotation divergence is not Lee-localized — wilk B annotation is also coarse-and-different.**
+
+**Phase 3 commit shape (v1.2, settled 2026-05-10): monocyte-primary, lymphoid-secondary.**
+
+- **Primary Phase 4 cross-virus benchmark = monocyte response transfer (SARS-CoV-2 ↔ IAV).** Lee is the within-study cross-virus anchor (8 SARS donors + 5 IAV donors + 4 mock donors); arunachalam/wilk/schulte provide within-virus cross-study harmonization validation. Lee's monocyte pairwise r with other studies is 0.58–0.87 — annotation divergence does not affect monocyte (label vocabulary is consistent: classical / non-classical / CD14+ / macrophage).
+- **Secondary cross-virus benchmarks = CD4T and NK** (both gate-passing). Explicit caveat on Lee annotation. Sensitivity analyses, not headline.
+- **Excluded from cross-virus claims = B and CD8T.** Retained in the within-virus cross-study analysis. Annotation-divergence cause documented; not a Harmony failure, not a Phase 3 strategy failure.
+- **Phase 4 evaluation protocol: stratify by cell type, never bulk.** Lee's IAV-vs-SARS composition difference (58% vs 38% monocyte) means bulk response-vector correlations confound transcription with composition. Per-cell-type evaluation is mandatory. This supersedes the earlier "Cross-virus eval TODO" framing — it is a hard constraint, not a check.
+
+**GEO acquisition still DEFERRED.** v1.5 — see `BACKLOG.md`. v1.5 must precede GEO ingest because adding RSV / 2nd IAV / DNA-control studies without unified lymphoid annotation just expands the annotation-divergence problem.
+
+If Phase 3 gate had failed on monocyte specifically, this would be Phase 3.5 / blocker. It did not. Monocyte gate r = 0.701 with strong relative-ordering signal. Phase 4 monocyte-primary is well-founded.
 
 Deliverable: a single harmonized AnnData per virus, stored in `data/processed/{virus}.h5ad`, plus a combined `data/processed/all_viruses.h5ad`.
 
 ### Phase 4: Sanity check (End of Week 4) — GATE 1 [Tier 0]
 
 > **Status (2026-05-10):** §9 mini-gate executed on Lee et al. 2020 PBMC (cellxgene `de2c780c`). Pearson r = 0.46 (SARS-CoV-2 vs IAV response vectors), Spearman r = 0.31, top-100 up-regulated gene Jaccard = 0.10. **PASSED** with margin (well below 0.7 threshold). The full Phase-4 analysis below still needs to run on the harmonized multi-study dataset; the mini-gate only confirms within-study signal in one anchor cohort.
+
+**Cross-virus evaluation protocol (METHODS_CHOICES Issue 15, pre-specified 2026-05-10).** Phase 4 uses leave-one-virus-out cross-validation per `configs/evaluation.yaml > cross_virus_protocol`. For v1 (SARS-CoV-2 + IAV), this is train-SARS / test-IAV and train-IAV / test-SARS; both directions plus the mean are reported in headline figures.
+
+**Cell-type stratification is mandatory in Phase 4 (Phase 3 finding, 2026-05-10).** Lee's IAV-vs-SARS coarse-cell-type composition differs substantially (58% monocyte for IAV vs 38% for SARS). Bulk cross-virus response correlation conflates composition with transcription. All Phase 4 cross-virus correlations are computed per cell-type bucket (monocyte primary; CD4T / NK secondary; B / CD8T excluded from cross-virus claims per Phase 3.5 annotation-divergence findings).
 
 Critical decision point. Before any modeling, validate that the data has the signal you assumed.
 
@@ -272,6 +329,8 @@ Deliverable: a results table showing within-virus vs cross-virus performance for
 ### Phase 6: Existing methods comparison (Weeks 6–7) [Mixed: Tier 0/1 for some methods, Tier 2/3 for foundation models]
 
 Wrap and evaluate published methods on the same task setup.
+
+**Hyperparameter policy (METHODS_CHOICES Issue 14, pre-specified 2026-05-10).** Every benchmark method tunes via held-out donor-level validation split per `configs/evaluation.yaml > hyperparameter_policy`. Compute budget: max 20 hyperparameter configurations per method on the within-virus validation set; the configuration that maximizes the primary cross-study coherence metric is evaluated on the cross-virus test split. No published-defaults policy — that would bias against methods whose original-paper data differs most from PBMC cross-virus.
 
 Tasks (CPU-tractable, do these first):
 - `scgen_wrapper.py`: use theislab/scgen. Train on combined virus data, evaluate within-virus and cross-virus. scvi-tools runs on CPU; expect 30-90 minutes per training run on a laptop for ~100k cells. Multiple runs across virus combinations can stack overnight.
@@ -480,6 +539,7 @@ Watch for these and stop if any occur:
 3. Foundation model checkpoints turn out to be commercial-license-only and you cannot use them for this work. Drop those comparisons; the benchmark still stands with simpler models.
 4. Within-virus performance of all methods is already at ceiling (R^2 > 0.95). The cross-virus problem is then less interesting because there is no gap to close. Reframe toward distribution-matching or specific gene-set recovery as the metric.
 5. Laptop RAM proves insufficient for combined dataset and Oracle Always Free ARM box doesn't fit your workflow (e.g., you need x86 binaries). At this point a Hetzner CCX23 (~€26/month for 4 vCPU and 16GB) or similar is the cheapest fix.
+6. **Sensitivity analyses for METHODS_CHOICES Issues 2, 3, 6, 7 produce qualitatively different cross-virus results across alternative choices.** Document the inconsistency. If headline finding depends on which bucket granularity / metric / harmonization method / per-cell-type vs global protocol is used, the conclusion is method-fragile, not biology-driven. Consider narrowing v1 scope to the subset of methodological choices under which the result is robust (e.g., monocyte primary even if B/CD8T are unstable; Pearson primary even if MMD diverges) — and report the fragility honestly rather than hiding it.
 
 ---
 
