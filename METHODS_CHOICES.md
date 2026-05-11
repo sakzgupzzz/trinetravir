@@ -1126,7 +1126,38 @@ Restricted to MVS gene set: Δr_MVS interpretation has higher stakes because the
 **Deliverable**: `results/tables/sensitivity_pre_post_harmony.csv` with columns: bucket, gene_set (full / MVS), r_pre, r_post, delta_r, n_studies, n_donors_total.
 
 **Date opened**: 2026-05-11 (this commit — pre-spec gate before Part A run)
-**Date resolved**: TBD (Session 7 close after Part A verdict applied)
+**Date resolved**: 2026-05-11 — see Resolution below.
+
+#### Resolution 2026-05-11 — MIXED (both gene sets)
+
+Observed per bucket × gene_set (4 studies, 76 donors total):
+
+| bucket | gene_set | r_pre | r_post | Δr | Verdict |
+|---|---|---|---|---|---|
+| monocyte | full | 0.4588 | 0.7012 | 0.2424 | MIXED |
+| monocyte | MVS | 0.5754 | 0.6566 | **0.0812** | **BIOLOGY_DOMINANT** |
+| B | full | 0.1851 | 0.2971 | 0.1120 | MIXED |
+| B | MVS | 0.1297 | 0.3587 | 0.2290 | MIXED |
+| NK | full | 0.2022 | 0.3845 | 0.1822 | MIXED |
+| NK | MVS | 0.2234 | 0.4690 | 0.2456 | MIXED |
+| CD4T | full | 0.2467 | 0.3214 | **0.0747** | **BIOLOGY_DOMINANT** |
+| CD4T | MVS | 0.3274 | 0.4818 | 0.1544 | MIXED |
+| CD8T | full | 0.1437 | 0.1686 | **0.0249** | **BIOLOGY_DOMINANT** |
+| CD8T | MVS | 0.2665 | 0.4000 | 0.1335 | MIXED |
+
+**Aggregate verdict** (per pre-committed "most buckets = ≥3 of 5" rule):
+- full HVG: MIXED (bio=2, mix=3, har=0)
+- MVS: MIXED (bio=1, mix=4, har=0)
+
+**Critical finding**: NO bucket × gene_set crosses Δr > 0.30 (HARMONY_DOMINANT threshold). The worst-case "Harmony does most of the work" scenario is NOT triggered. Pre-Harmony r is already substantial (0.13–0.58 across buckets); Harmony adds 0.02–0.25 on top.
+
+**Monocyte MVS Δr=0.08 is the strongest single defense**: the canonical-ISG cross-study coherence at the load-bearing monocyte bucket is biology, not integration artifact. The ISG-restriction methodology contribution holds at its most important grain.
+
+**Manuscript impact** (per pre-committed MIXED verdict implication): "ISG-conservation finding holds qualitatively but framing must explicitly acknowledge Harmony contribution; sensitivity analysis becomes a load-bearing limitation rather than reassurance." Limitations section updated. Conditional reframing pass (Δr > 0.30 trigger) NOT required.
+
+**Pre-committed numerical decision rule UNCHANGED**.
+
+**Date of resolution**: 2026-05-11 (atomic commit with Part A code + result table)
 
 ---
 
@@ -1156,7 +1187,31 @@ Restricted to MVS gene set: Δr_MVS interpretation has higher stakes because the
 - `results/tables/sensitivity_within_vs_cross.csv` aggregate: bucket_pair, mean_within_cohort_r, cross_study_harmonized_r, sign_concordance, magnitude_alignment.
 
 **Date opened**: 2026-05-11 (this commit — pre-spec gate before Part B run)
-**Date resolved**: TBD (Session 7 close after Part B verdict applied)
+**Date resolved**: 2026-05-11 — see Resolution below.
+
+#### Resolution 2026-05-11 — BIOLOGY_CONSISTENT (both gene sets)
+
+Observed (10 bucket pairs × 4 cohorts × 2 gene_sets = 80 within-cohort r values; 20 aggregate vs cross-study rows):
+
+| Gene set | Mean sign concordance | Mean magnitude alignment | Verdict |
+|---|---|---|---|
+| full HVG | **1.000** | **0.077** | **BIOLOGY_CONSISTENT** |
+| MVS | **1.000** | **0.136** | **BIOLOGY_CONSISTENT** |
+
+Sign concordance is **perfect (100%)** across all 20 bucket-pair × gene_set aggregate tests. Every cohort, every bucket pair, has the same sign as the cross-study harmonized result. Mean magnitude divergences are small (0.03–0.22 across bucket pairs).
+
+**Key observations**:
+- Lymphoid-lymphoid coherences (B/CD4T/CD8T/NK pairs) within each cohort are strikingly high in MVS-restricted analysis (within-cohort r > 0.95 in CD8T_vs_NK, CD4T_vs_CD8T, B_vs_NK at Schulte-Schrepping). Cross-study harmonized values match.
+- Monocyte-vs-lymphoid pairs are weaker but consistent: monocyte response vector is biologically distinct from lymphoid response vectors in the same pattern within-cohort and across studies.
+- The cross-study integration framework is **amplifying** rather than **creating** the signal. Removing Harmony does not collapse the bucket-pair coherence pattern — it just makes magnitudes smaller and less precise.
+
+**Per pre-committed BIOLOGY_CONSISTENT verdict implication**: "ISG-conservation finding holds; cross-study integration is a useful tool but not creating the signal."
+
+**Combined with Issue 32 MIXED verdict**: ISG-conservation framework holds. Harmony contributes 0.02–0.25 on top of substantial pre-Harmony coherence (Issue 32 finding). Within-cohort effects fully replicate cross-study harmonized findings (Issue 33 finding). The framework's coherence findings are biology with Harmony amplification, not artifacts.
+
+**Pre-committed numerical decision rule UNCHANGED**.
+
+**Date of resolution**: 2026-05-11 (atomic commit with Part B code + result tables)
 
 ---
 
