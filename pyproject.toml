@@ -37,6 +37,8 @@ dependencies = [
     "matplotlib>=3.8",
     "seaborn>=0.13",
     "cellxgene-census>=1.17.0",
+    "harmonypy>=2.0.0",
+    "celltypist>=1.7.1",
 ]
 
 [project.optional-dependencies]
@@ -86,6 +88,7 @@ addopts = "-ra --strict-markers"
 
 [dependency-groups]
 dev = [
+    "modal>=1.4.2",
     "nbclient>=0.10.4",
     "nbconvert>=7.17.1",
 ]
