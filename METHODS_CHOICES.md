@@ -1241,6 +1241,23 @@ Switching the primary to Interferome 2.0 at Session 3.5 would require re-running
 
 ---
 
+### Issue 19: Pathway gene set source for pathway-aware regularization — 2026-05-11
+
+**Status**: open at pre-specification level; final validation at Phase 5.
+
+**Decision**: REACTOME R-HSA-913531 (interferon signaling) as primary pathway source.
+
+**Graph construction**: undirected adjacency, immediate co-members only, drop genes not in HVG space, no transitive expansion.
+
+**Rationale**: REACTOME R-HSA-913531 is the canonical interferon signaling pathway annotation. Provides gene-gene relational structure complementary to the ISG identity set in Issue 18. Pathway-aware regularization encodes that genes co-functional in the IFN pathway should have correlated factor loadings. Undirected adjacency avoids causal-graph commitments not supported by transcriptomic data alone.
+
+**Validation**: sensitivity at Phase 5; if pathway-aware weight tunes to ~0 under Issue 14 held-out validation (held-out donor split), document and consider dropping the term from the model. Report whether pathway-aware regularization contributes value beyond ISG-aware regularization alone.
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; Phase 5 tuning to confirm or drop)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
