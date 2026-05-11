@@ -45,7 +45,7 @@ The following choices were made earlier in the project with insufficient justifi
 Granularity sensitivity for this issue is therefore run as a *within-Low* sweep (Low @ 5-bucket vs Low @ sub-bucket level), not a between-model comparison. The High model is reserved for Issue 12 (model-choice sensitivity), with explicit documentation that the High-vs-Low comparison is asymmetric at the buckets where High cannot resolve (CD4T, CD8T, NK).
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 2 entry dated 2026-05-11
 
 ---
 
@@ -78,7 +78,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: Session 3 calibration framework produces per-metric calibrated verdicts. Headline reports Pearson; Spearman + DE-Jaccard + MMD-RBF are supplementary. The heuristic-threshold Session 1 output is preserved as directional concordance evidence but does not stand alone as resolution.
 
 **Date opened**: 2026-05-10
-**Date resolved**: pending Session 3
+**Date resolved**: see Resolved Issue 3 entry dated 2026-05-11
 
 ---
 
@@ -97,7 +97,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: subsumed by the permutation null calibration in Issue 9.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 5 entry dated 2026-05-11
 
 ---
 
@@ -123,7 +123,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: scVI sensitivity analysis in Phase 6 or 7; one supplementary figure showing qualitative consistency.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: open — Session 4 deliverable (scVI sensitivity vs Harmony; see SHORT_TERM_PLAN.md Block #8). Issue 6 is the only methodological open issue at Session 3.5 close.
 
 ---
 
@@ -173,7 +173,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 - Step 8b verdict table (heuristic thresholds, Pearson-only): `results/tables/harmonization_protocol_sensitivity.csv` — 5 rows, columns: `bucket, per_celltype_r, global_r, delta_global_minus_perct, threshold, per_celltype_pass, global_pass, verdict_matches`. 4 of 5 buckets have matching verdicts; NK is the lone disagreement (per-cell-type PASS 0.384, global FAIL 0.308 at threshold 0.35).
 
 **Date opened**: 2026-05-10
-**Date resolved**: pending Session 3
+**Date resolved**: see Resolved Issue 7 entry dated 2026-05-11
 
 ---
 
@@ -263,7 +263,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: methods justification + optional Immune_All_High sensitivity analysis.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 12 entry dated 2026-05-11
 
 ---
 
@@ -315,7 +315,7 @@ protocol; if it isn't, document the discrepancy and consider whether
 the per-stratum framing is the only defensible v1 claim.
 
 **Date opened**: 2026-05-10
-**Date resolved**: pending Session 3
+**Date resolved**: see Resolved Issue 16 entry dated 2026-05-11
 
 ---
 
@@ -545,7 +545,7 @@ the per-stratum framing is the only defensible v1 claim.
 The headline Issue 27 verdict uses the primary row; the other two are robustness checks.
 
 **Date opened**: 2026-05-11
-**Date resolved**: pending Session 6B (3-bucket, primary 89/90 donors); CD4T/CD8T pending v1.5
+**Date resolved**: see Resolved Issue 27 entry dated 2026-05-11 (CHALLENGES_H1 mechanically, with Issue 31 cross-bucket healthy reference correction; CD4T/CD8T still pending v1.5)
 
 ---
 
@@ -584,7 +584,7 @@ The headline Issue 27 verdict uses the primary row; the other two are robustness
 **Validation strategy**: pre-registered before Session 6B begins. Age stratification rule pre-committed before any Yoshida calibration runs (this section dated 2026-05-11).
 
 **Date opened**: 2026-05-11
-**Date resolved**: pending Session 6B
+**Date resolved**: see Resolved Issue 28 entry dated 2026-05-11
 
 ---
 
@@ -640,7 +640,7 @@ GSE213516 (837MB tar) preserved on disk as historical-attempt artifact; NOT used
 **Validation strategy**: pre-registered before Session 6B begins. This is an *expected-asymmetry* test, not a conserved-component-transfer test. Pre-committed numerical decision rule UNCHANGED from original Issue 29 framing.
 
 **Date opened**: 2026-05-11
-**Date resolved**: pending Session 6B
+**Date resolved**: see Resolved Issue 29 entry dated 2026-05-11
 
 ---
 
@@ -690,7 +690,7 @@ The peer-review track record in this field accepts cross-cohort designs with ext
 **Validation strategy**: pre-registered before Session 6B begins. GSE157829 meets Issue 4 sample size (4 healthy + 6 HIV diseased); no fallback to qualitative-only is needed. The expected-low-r outcome is committed; success criterion is "framework discriminates retrovirus from RNA virus biology" not "framework transfers across all virus families."
 
 **Date opened**: 2026-05-11
-**Date resolved**: pending Session 6B
+**Date resolved**: see Resolved Issue 30 entry dated 2026-05-11
 
 ---
 
@@ -832,9 +832,11 @@ Guo 2020 (0 healthy / 2 diseased) and MGH acute COVID (1 healthy / 14 diseased) 
 
 The following issues were added/resolved 2026-05-11 in Session 5 (audit response). See `SESSION_5_SPEC.md` for the audit scope. Key artifacts: `results/tables/calibration_*_v2.csv` (corrected bootstrap CI direction + observed-r bootstrap CI + FDR-BH correction); `src/tests/test_calibration.py` (synthetic ground-truth tests, 8/8 pass); `references/notes/external_validation_summary.md` (Khatri MVS external validation).
 
-### Issue 25: v1 paper framing decision (OPEN — requires HUMAN decision)
+### Issue 25: v1 paper framing decision — Option B hybrid resolution — 2026-05-11
 
-**Status**: OPEN — awaiting human decision. Session 5 opens this issue, presents both options with the analysis behind each, and stops. Session 3.5 and Session 4 are BLOCKED until Issue 25 is resolved.
+**Status**: **resolved 2026-05-11 via Option B hybrid choice.** See Resolution subsection at end of this entry for the chosen path; the OPEN-with-two-options content below is preserved as audit trail.
+
+**Original framing (Session 5 open state)**: Session 5 opens this issue, presents both options with the analysis behind each, and stops. Session 3.5 and Session 4 are BLOCKED until Issue 25 is resolved.
 
 **The choice as it stands**: PLAN.md frames v1 as "cross-virus generalization for single-cell host response prediction" with hypotheses H1–H5 about cross-virus transfer learning. The current corpus (Wilk, Lee, Arunachalam, Schulte-Schrepping) contains 4 SARS-CoV-2 studies and 1 IAV study (Lee). RSV and HSV/CMV are planned but not yet acquired or harmonized.
 
@@ -855,7 +857,24 @@ The following issues were added/resolved 2026-05-11 in Session 5 (audit response
 **Validation**: the chosen option's methodology pre-registered before Phase 5 launch.
 
 **Date opened**: 2026-05-11
-**Date resolved**: <pending human decision>
+**Date resolved**: 2026-05-11 — see Resolution subsection below.
+
+#### Resolution 2026-05-11 — Option B hybrid
+
+**Chosen**: **Option B hybrid** — acquire 4 held-out cohorts (Randolph 2021 IAV, Yoshida 2022 pediatric vs adult SARS-CoV-2, Allen Institute Immune Health Atlas CMV serostatus, GSE157829 chronic HIV) for **cross-context held-out validation**, NOT to retrain v1 on. Original Wilk + Lee + Arunachalam + Schulte-Schrepping training corpus is preserved intact.
+
+**Reasoning**: pure Option A reframing would lose the cross-virus / cross-context framing entirely; pure Option B retraining adds 2-4 weeks of harmonization on cohorts whose primary value is held-out validation, not training-corpus expansion. The hybrid:
+- Keeps v1's training-corpus framing as SARS-CoV-2-dominated cross-study integration (honest about the n=1 IAV training study via Lee within-study cross-virus exploration).
+- Adds pre-registered held-out validation across four biological axes (cross-context IAV, cross-age SARS-CoV-2, chronic-latent CMV, chronic HIV) per Issues 27-30 pre-specs.
+- Allows the manuscript to claim "cross-virus generalization tested against held-out cohorts with pre-committed decision rules" rather than "trained on N viruses".
+
+**Pipeline impact**: new Block #4 (Session 6A: held-out cohort acquisition + harmonization + Schema v6) and Block #5 (Session 6B: held-out calibration + verdicts) inserted before Session 3.5. Both blocks completed 2026-05-11 (Session 6A 4/4 cohorts harmonized; Session 6B Issues 27-30 verdicts at N=1000 + Issue 31 cross-bucket reference + Session 7 sensitivity audit). See SHORT_TERM_PLAN.md rev 2/3 for full pipeline tracking.
+
+**Manuscript framing impact**: MANUSCRIPT_DRAFT.md ingested 2026-05-11 with calibration framework as primary contribution and factorized model as secondary contribution. Held-out validation Section 4 reports all four Issues 27-30 verdicts mechanically per pre-committed rules.
+
+**Pre-Phase-4 gate satisfied**: Session 7 audit (Issues 32+33, 2026-05-11) empirically defends ISG-conservation framework against critique-document concern 4 before Phase 4 modeling begins.
+
+**Subsequent sessions**: Session 3.5 (pre-specs Issues 18-24) and Session 4 (GPU/scVI for Issue 6) re-scoped against the hybrid corpus design. Session 3.5 closed 2026-05-11.
 
 ---
 
