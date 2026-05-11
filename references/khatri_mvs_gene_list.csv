@@ -1,0 +1,107 @@
+# Khatri lab Meta-Virus Signature (MVS) — canonical high-confidence core subset (86 genes)
+#
+# Source paper:    Andres-Terre et al. 2015, Immunity 43:1199-1211
+# Source table:    Andres-Terre 2015 Table S2 (high-confidence core subset)
+# Parallel work:   Mostafavi et al. 2016, Cell 164(3):564-578
+# Acquired:        2026-05-11 (Session 5 Part B external validation)
+# First-use commit: d91c24e (Session 5 audit response: Calibration framework v2 + Khatri MVS external validation)
+# Canonical raw file: data/reference/khatri_mvs_module_genes.txt
+# Total unique genes: 86 (gene_symbol column; STAT1 listed once after dedup)
+#
+# Provenance: this 86-gene high-confidence core subset is shipped with the v1 repo for
+# all MVS-restricted analyses across Sessions 5, 6B, 7, and Phase 5+ modeling.
+# The full ~396-gene Khatri MVS module is at https://github.com/khatri-lab + Andres-Terre
+# 2015 Table S2 supplementary; v1 uses the core subset (canonical type-I-IFN ISGs that
+# are universally up-regulated across all Khatri group viral cohorts spanning IAV, RSV,
+# dengue, ebola, and other RNA viruses) for the most defensible cross-virus anchor.
+#
+# Referenced by METHODS_CHOICES.md Issue 18 (ISG gene set source pre-specification, 2026-05-11)
+# as the primary ISG gene set for ISG-aware regularization in the factorized model.
+#
+gene_symbol
+IFIT1
+IFIT2
+IFIT3
+IFI44
+IFI44L
+IFI6
+IFI27
+ISG15
+ISG20
+MX1
+MX2
+OAS1
+OAS2
+OAS3
+OASL
+RSAD2
+IFITM1
+IFITM2
+IFITM3
+HERC5
+HERC6
+USP18
+EIF2AK2
+DDX58
+DDX60
+IRF7
+STAT1
+STAT2
+PARP9
+PARP12
+PARP14
+SAMD9
+SAMD9L
+GBP1
+GBP2
+GBP4
+GBP5
+DTX3L
+EPSTI1
+LY6E
+LAP3
+TRIM21
+TRIM22
+TRIM25
+TRIM34
+SP100
+TAP1
+PSMB8
+PSMB9
+PLSCR1
+B2M
+HLA-A
+HLA-B
+HLA-C
+IFI35
+IFIH1
+APOBEC3A
+CMPK2
+XAF1
+CXCL10
+CXCL11
+CCL2
+TNFSF10
+TNFSF13B
+SLAMF7
+SIGLEC1
+FCGR1A
+FCGR1B
+CD163
+S100A8
+S100A9
+ANXA3
+SOCS1
+SOCS3
+NFKBIA
+IL1RN
+IL18BP
+IFI16
+PML
+RTP4
+IRF9
+IFNAR1
+IFNAR2
+JAK1
+JAK2
+TYK2

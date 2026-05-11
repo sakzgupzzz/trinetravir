@@ -1223,7 +1223,9 @@ This section opens Issues 18-24 as **pre-specifications** for Phase 5 / Phase 7 
 
 **Status**: open at pre-specification level; final validation at Phase 5.
 
-**Decision**: Khatri Meta-Virus Signature (MVS) gene set as primary, from Andres-Terre et al. 2015 *Immunity* 43:1199. Curated set of ~400 canonical type-I interferon-stimulated genes validated across viral infections. Pre-Harmony cross-study Pearson r using the MVS subset is substantial across all buckets in v1 corpus (0.13–0.58 per Session 7 Issue 32 evidence).
+**Decision**: Khatri Meta-Virus Signature (MVS) gene set as primary, from Andres-Terre et al. 2015 *Immunity* 43:1199 (Table S2 high-confidence core subset, 86 genes). Pre-Harmony cross-study Pearson r using the MVS subset is substantial across all buckets in v1 corpus (0.13–0.58 per Session 7 Issue 32 evidence).
+
+**Gene list provenance**: canonical version shipped at `references/khatri_mvs_gene_list.csv` (86 unique gene symbols + provenance header citing Andres-Terre 2015 Table S2, Mostafavi 2016 Cell parallel work, and the first-use commit `d91c24e` from Session 5 Part B external validation). Companion raw text at `data/reference/khatri_mvs_module_genes.txt` (commented format, identical content post-dedup). All MVS-restricted analyses across Sessions 5, 6B, 7 used this exact gene set. Phase 5 model code MUST load from `references/khatri_mvs_gene_list.csv` (single canonical source) to prevent gene-list drift.
 
 **Rationale**: Khatri MVS was used throughout Sessions 5, 6B, and 7 for all MVS-restricted analyses. The empirical defenses now in the audit trail are anchored on this gene set:
 - Session 5: ISG-restricted lift +0.06 to +0.23 across 4 of 5 v1 buckets.
