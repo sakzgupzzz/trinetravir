@@ -1002,6 +1002,28 @@ The pre-spec rule treated r<0.05 as "concerning because conserved component is a
 
 ---
 
+### Issue 31: Matched healthy reference for cluster-defined cell subsets (LOAD-BEARING) — 2026-05-11
+
+**Status**: pre-specified BEFORE the corrected Issue 27 Randolph re-run. Committed prior to observation of the corrected r value so that the methodological choice cannot be reverse-engineered to a favorable verdict.
+
+**Choice**: For cluster-defined subsets of a cell type (e.g., Randolph `monocyte_infected`, derived from cluster-8 IAV-responsive monocytes), the matched healthy reference comes from the **parent cell type bucket's healthy/mock condition**, not from the same cluster. The diseased side uses cluster-defined cells (n=4935 flu); the healthy side uses the parent bucket's NI/mock subset (n=9815 NI monocytes).
+
+**Rationale**: Cluster-defined subsets like "infected monocytes" do not have same-cluster non-infected counterparts — the cluster definition is itself derived from viral response. Using same-cluster matched healthy would either require artificial cluster assignment in NI samples (data-snooping) or yield zero matched healthy cells (the case that triggered the SKIP in the initial Randolph N=1000 re-run, where only 29 NI cells co-clustered with the 4935 flu cells in cluster 8, failing the ≥100 sample-size sanity gate).
+
+The parent-bucket healthy reference is the methodologically appropriate comparator because:
+1. The same donors contribute cells to both `monocyte_infected` (flu condition) and `monocyte` (NI condition).
+2. The biological question for Issue 27 is "does the v1 monocyte ISG signature predict the response of monocytes that productively engage IAV?". The contrast diseased vs healthy needs to compare *infected monocytes* against *the same donors' mock-condition monocytes*.
+3. Bystander monocytes (flu condition, non-cluster-8) become a separate sensitivity row, not the primary contrast.
+
+**Validation**: Default v2 `paired_within_donor` script is extended to support cross-bucket healthy references via an explicit `HEALTHY_REFERENCE_BUCKET` mapping. Test case: `monocyte_infected` diseased (flu, n=4935) vs `monocyte` healthy_control (NI subset, n=9815). Sample-size sanity check ≥100 per condition retained on the parent-bucket healthy side.
+
+**Scope of this rule**: applies to any cluster-defined subset where the cluster definition is itself derived from the response being measured (e.g., infected vs bystander monocytes; IFN-high vs IFN-low B cells). Does NOT apply to canonical cell-type buckets defined upstream of viral response (e.g., CD4T, CD8T, NK).
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (this commit — pre-spec gate before Randolph re-run)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.

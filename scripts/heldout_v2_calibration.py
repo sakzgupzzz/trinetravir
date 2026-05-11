@@ -69,6 +69,13 @@ PAIRED_COHORTS = {"randolph_2021"}
 # want to compare against the parent training response vector.
 BUCKET_TRAINING_ALIAS = {"monocyte_infected": "monocyte"}
 
+# Issue 31 (METHODS_CHOICES.md, pre-spec 2026-05-11): for cluster-defined
+# subsets where the cluster is itself derived from the response being measured,
+# matched healthy reference draws from the parent bucket's healthy_control
+# subset, not from the same cluster.
+#   {cluster_bucket: parent_bucket_for_healthy_reference}
+HEALTHY_REFERENCE_BUCKET = {"monocyte_infected": "monocyte"}
+
 
 def load_training_response_vectors() -> dict[str, pd.Series]:
     out = {}
@@ -327,19 +334,30 @@ def run_cohort_paired(
     donor_arr = obs["donor_id"].astype(str).values
     disease_arr = obs["donor_disease_status"].astype(str).values
     unique_donors = sorted(set(donor_arr))
-    for bucket in sorted(obs["cell_type_bucket_unified"].astype(str).unique()):
+    bucket_arr = obs["cell_type_bucket_unified"].astype(str).values
+    for bucket in sorted(set(bucket_arr)):
         if bucket == "other" or bucket not in train_rvs:
             continue
         train_rv = train_rvs[bucket]
-        bucket_mask = obs["cell_type_bucket_unified"].astype(str).values == bucket
+        bucket_mask = bucket_arr == bucket
+        # Issue 31 (METHODS_CHOICES.md, pre-spec 2026-05-11): cluster-defined
+        # subsets like monocyte_infected use the parent bucket's healthy_control
+        # cells as matched reference, not the cluster's own NI cells.
+        healthy_ref = HEALTHY_REFERENCE_BUCKET.get(bucket, bucket)
+        healthy_bucket_mask = bucket_mask if healthy_ref == bucket else (bucket_arr == healthy_ref)
 
-        # Observed: per-donor delta where IAV donors contribute mean(IAV) and mock donors contribute mean(mock)
-        # Cross-sectional within Randolph: donor is IAV or mock; just use the global label.
-        # (Randolph's true paired structure is at sample-level mock vs IAV per donor; here donor_disease_status
-        # is the per-donor label since each cell inherits its donor's condition.)
+        # Observed: diseased side from cluster bucket; healthy side from healthy_ref bucket
+        # (same bucket by default; parent bucket when bucket is a cluster-defined subset).
         d_mask = bucket_mask & (disease_arr == "diseased")
-        h_mask = bucket_mask & (disease_arr == "healthy_control")
+        h_mask = healthy_bucket_mask & (disease_arr == "healthy_control")
         if d_mask.sum() < 100 or h_mask.sum() < 100:
+            logger.info(
+                "  %s skipped: d=%d h=%d (need >=100 each; healthy_ref=%s)",
+                bucket,
+                int(d_mask.sum()),
+                int(h_mask.sum()),
+                healthy_ref,
+            )
             continue
         d_mean = np.asarray(a.X[d_mask].mean(axis=0)).flatten()
         h_mean = np.asarray(a.X[h_mask].mean(axis=0)).flatten()
@@ -348,7 +366,8 @@ def run_cohort_paired(
         r_mvs, n_mvs = pearson_on_common(rv, train_rv, restrict=mvs_genes)
 
         # Permutation null: shuffle donor labels (since each donor is single-condition in Randolph,
-        # this is conceptually shuffling which donors are "diseased" vs "healthy")
+        # this is conceptually shuffling which donors are "diseased" vs "healthy"). When
+        # healthy_ref != bucket, the permuted healthy mean is drawn from healthy_ref-bucket cells.
         donor_disease_map = {}
         for d in unique_donors:
             ds = (
@@ -367,7 +386,7 @@ def run_cohort_paired(
             perm_map = dict(zip(donors_arr, perm_labels, strict=False))
             perm_donor_labels = np.array([perm_map[d] for d in donor_arr])
             d_m = bucket_mask & (perm_donor_labels == "diseased")
-            h_m = bucket_mask & (perm_donor_labels == "healthy_control")
+            h_m = healthy_bucket_mask & (perm_donor_labels == "healthy_control")
             if d_m.sum() < 50 or h_m.sum() < 50:
                 continue
             dm = np.asarray(a.X[d_m].mean(axis=0)).flatten()
@@ -395,6 +414,7 @@ def run_cohort_paired(
             {
                 "cohort": cohort,
                 "bucket": bucket,
+                "healthy_reference_bucket": healthy_ref,
                 "n_common_genes": n_full,
                 "n_mvs_common": n_mvs,
                 "observed_r_full": round(r_full, 4),
@@ -409,6 +429,8 @@ def run_cohort_paired(
                 "perm_p_value_mvs": round(perm_p_mvs, 4),
                 "perm_n_actual": len(null_full_arr),
                 "n_excluded_donors_low_count": len(excluded_donors),
+                "n_d_cells": int(d_mask.sum()),
+                "n_h_cells": int(h_mask.sum()),
             }
         )
         logger.info(
