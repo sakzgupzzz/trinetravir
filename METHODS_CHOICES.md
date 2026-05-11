@@ -124,7 +124,7 @@ The following choices were made earlier in the project with insufficient justifi
 
 ### Issue 7: per-cell-type harmonization vs joint harmonization (MODERATE)
 
-**Status**: open — preliminary global-Harmony run completed under heuristic thresholds; calibrated comparison deferred to Session 3 Part E.
+**Status**: open — preliminary global-Harmony and per-cell-type Harmony runs completed under heuristic thresholds; embeddings for all 5 v1 buckets persisted to disk; calibrated comparison deferred to Session 3 Part E.
 
 **The choice as it stands**: Harmony is run separately on each cell-type bucket (monocyte, B, NK, CD4T, CD8T), with study_id as the batch key within each. This was chosen over global Harmony with study_id as the batch key on all cells together.
 
@@ -155,9 +155,17 @@ The following choices were made earlier in the project with insufficient justifi
 **Validation strategy**: global Harmony sensitivity analysis; supplementary figure. The Session 1 Pearson-r-only verdict under heuristic thresholds is in `results/tables/harmonization_protocol_sensitivity.csv` and is directional evidence only. Calibrated resolution (per-metric permutation null + split-half ceiling on the persisted embeddings) is deferred to Session 3 Part E. Per-cell-type Harmony embeddings for all 5 v1 buckets must also be produced via `scripts/persist_per_celltype_harmony.py` before Session 3 (only `monocyte` was persisted in Session 1).
 
 **Interim evidence file paths (for Session 3 pickup)**:
-- Per-cell-type Harmony embedding: `data/processed/harmony_per_celltype_<bucket>.h5ad` — Session 1 persisted only `monocyte` (244,389-corpus subset, 68,672 cells × 1 var, `obsm['X_harmony_scaled_hvg']`, `uns['harmonization_protocol'] = 'per_celltype_harmony'`). Buckets `B`, `NK`, `CD4T`, `CD8T` are NOT persisted; Session 3 must run `scripts/persist_per_celltype_harmony.py` for those four buckets (~3-5 min each on CPU) before the calibrated comparison can proceed.
-- Global Harmony embedding: `data/processed/harmony_global_embedding.h5ad` (244,389 cells × 4,000 HVGs, `obsm['X_harmony']`, `obsm['X_pca']`, `obsm['X_pca_harmony']`, `layers['X_harmony_scaled_hvg']`, `uns['harmonization_protocol'] = 'global_harmony_study_id_only'`, bucket assignment in `obs['coarse']`).
-- Step 8b verdict table (heuristic thresholds, Pearson-only): `results/tables/harmonization_protocol_sensitivity.csv` — 5 rows, columns: bucket, per_celltype_r, global_r, delta, threshold, per_celltype_pass, global_pass, verdict_matches. 4 of 5 buckets have matching verdicts; NK is the lone disagreement (per-cell-type PASS 0.384, global FAIL 0.308 at threshold 0.35).
+- Per-cell-type Harmony embeddings (one file per bucket, all 5 v1 buckets persisted 2026-05-10/11 via `scripts/persist_per_celltype_harmony.py`):
+  - `data/processed/harmony_per_celltype_monocyte.h5ad` — (68,672, 1), corrected matrix in `obsm['X_harmony_scaled_hvg']`.
+  - `data/processed/harmony_per_celltype_CD4T.h5ad` — (42,705, 1).
+  - `data/processed/harmony_per_celltype_CD8T.h5ad` — (29,855, 1).
+  - `data/processed/harmony_per_celltype_B.h5ad` — (26,115, 1).
+  - `data/processed/harmony_per_celltype_NK.h5ad` — (29,488, 1).
+  - Common schema for all 5: `obs = {study_id, donor_id, donor_disease_status}`, `obsm['X_harmony_scaled_hvg']` holds the Harmony-corrected scaled-HVG embedding (n_cells × 4,000), `uns['harmonization_protocol'] = 'per_celltype_harmony'`, `uns['bucket']` = bucket name string, `uns['hvg_genes']` = list of 4,000 HVG symbols selected by the bucket-specific HVG flow with `batch_key='study_id'`, `uns['studies_used']` = `['arunachalam_2020','lee_2020','schulte_schrepping_2020','wilk_2020']`.
+  - Source of truth for which bucket each file corresponds to: filename `harmony_per_celltype_<bucket>.h5ad` AND `uns['bucket']` (both consistent).
+- All 5 per-cell-type files produced under identical Harmony parameters (defaults of `harmony_per_bucket`): `n_top_genes=4000` (HVG count), `n_pcs=50` (PCA dim before Harmony), `random_state=42` (numpy + harmonypy + scanpy PCA seed), harmonypy hyperparameters `max_iter_harmony=10`, `max_iter_kmeans=4`, `epsilon_cluster=0.001`, `epsilon_harmony=0.01`, `nclust=100`, `block_size=0.05`, `lamb=dynamic(alpha=0.2)`, `theta=2.0`, `sigma=0.1`. Convergence per bucket (2026-05-11 run logs): monocyte (Session 1, identical script), CD4T 2 iter, CD8T 2 iter, B 4 iter, NK 2 iter. Post-Harmony Pearson r matches `results/tables/harmonization_protocol_sensitivity.csv` per-celltype column to 3 decimals for all 5 buckets, confirming reproducibility of the Phase 3 gate values from the persisted embeddings.
+- Global Harmony embedding: `data/processed/harmony_global_embedding.h5ad` — (244,389, 4,000), `obsm['X_harmony']` (PCA-Harmony coords), `obsm['X_pca']`, `obsm['X_pca_harmony']`, `layers['X_harmony_scaled_hvg']`, `uns['harmonization_protocol'] = 'global_harmony_study_id_only'`, bucket assignment in `obs['coarse']` (NOT `cell_type_bucket` — Session 3 loader must read `obs['coarse']`).
+- Step 8b verdict table (heuristic thresholds, Pearson-only): `results/tables/harmonization_protocol_sensitivity.csv` — 5 rows, columns: `bucket, per_celltype_r, global_r, delta_global_minus_perct, threshold, per_celltype_pass, global_pass, verdict_matches`. 4 of 5 buckets have matching verdicts; NK is the lone disagreement (per-cell-type PASS 0.384, global FAIL 0.308 at threshold 0.35).
 
 **Date opened**: 2026-05-10
 **Date resolved**: pending Session 3
