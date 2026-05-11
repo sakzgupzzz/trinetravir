@@ -1,0 +1,5 @@
+issue,primary_bucket,rule,observed_r_mvs,observed_r_full,perm_p_value_mvs,fdr_corrected_p_mvs,verdict
+27 Randolph ex vivo IAV,monocyte,"r_mvs >= 0.40 SUPPORTS_H1; < 0.20 CHALLENGES; in [0.20, 0.40] INCONCLUSIVE",0.0126,0.2864,0.4925,0.5304,CHALLENGES_H1 (r_mvs < 0.20)
+28 Yoshida pediatric vs adult cross-age,monocyte,"r_mvs >= 0.30 SUPPORTS_H1; < 0.10 CHALLENGES; in [0.10, 0.30] PARTIAL",0.591,0.3871,0.0697,0.3173,SUPPORTS_H1 (r_mvs ≥ 0.30; transfer across age groups)
+29 Allen Atlas chronic-latent CMV vs naive,monocyte,"r_mvs in [0.10, 0.40] APPROPRIATE; > 0.50 OVER_PREDICTION; < 0.05 NO_SHARED_BIOLOGY",-0.0102,0.1523,0.4925,0.5304,CONCERNING_NO_SHARED_BIOLOGY (r_mvs < 0.05; conserved component is chronic-naive non-discriminative or anti-correlated)
+30 GSE157829 HIV retrovirus context,CD4T,"r_mvs in [0.00, 0.20] EXPECTED; > 0.40 SURPRISING; < -0.10 ANTI_CORRELATION",0.2572,0.084,0.1343,0.3173,BORDERLINE (r_mvs = 0.257)

@@ -1,0 +1,2 @@
+cohort,bucket,n_common_genes,n_mvs_common,observed_r_full,observed_r_mvs,perm_p95_full,perm_p99_full,perm_p_value_full,perm_p99_mvs,perm_p_value_mvs,perm_n_actual,ci_low_full,ci_high_full,ci_low_mvs,ci_high_mvs,n_bootstrap
+allen_atlas_monocyte,monocyte,3460,57,0.1523,-0.0102,0.3116,0.3583,0.1741,0.5804,0.4925,200,-0.1644,0.3017,-0.4469,0.4197,100
