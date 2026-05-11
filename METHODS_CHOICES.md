@@ -44,6 +44,38 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
+### Issue 3: cross-study coherence metric sensitivity (LOAD-BEARING)
+
+**Status**: open — partial preliminary evidence from Session 1 (heuristic thresholds only); full calibrated resolution deferred to Session 3.
+
+**The choice as it stands**: Phase 3 used mean off-diagonal Pearson r across per-study response vectors as the primary cross-study coherence metric. The Phase 3 PASS/FAIL verdicts (3/5 buckets pass, 2/5 fail) depend on this metric choice; alternative metrics (Spearman, DE-Jaccard top-100, MMD-RBF) may produce different verdicts.
+
+**Why this matters**: if Phase 4 modeling decisions and the cross-study coherence headline are pinned to verdicts derived from a single metric, the metric choice itself is load-bearing and must either be justified or shown not to be load-bearing under a calibrated comparison.
+
+**Interim evidence (Session 1, 2026-05-10) — heuristic thresholds only**:
+- Script: `scripts/run_metric_sensitivity.py` evaluated Pearson, Spearman, and top-100 DE-Jaccard against the cached Phase 3 response vectors. Thresholds were hand-picked (Spearman threshold set to half the Pearson threshold; DE-Jaccard threshold set to 0.30) rather than derived from a calibration framework.
+- Output: `results/tables/metric_sensitivity_phase3.csv`.
+- Qualitative finding under those heuristic thresholds: Pearson, Spearman, and DE-Jaccard produce broadly consistent metric ordering across the 5 buckets. For 3 of 5 buckets the verdicts agree at ≥2/3 metrics PASS; for 2 of 5 buckets the verdicts agree at ≥2/3 metrics FAIL.
+- This is directional evidence that the metric choice is not catastrophically load-bearing, but it does not constitute scientific resolution because the thresholds were not calibrated.
+- MMD was NOT run in Session 1: the calibration cache stored summary statistics only (per-study response vectors), not per-cell x_corrected. Session 3 must include MMD-RBF (median heuristic) on the persisted Harmony embeddings (`data/processed/harmony_global_embedding.h5ad` and per-cell-type files produced by `scripts/persist_per_celltype_harmony.py`).
+
+**Resolution required (Session 3)**:
+- Re-run the metric sensitivity under the full calibration framework: per-metric permutation null + per-metric split-half ceiling + per-bucket calibrated PASS/FAIL verdicts.
+- Include MMD-RBF as a fourth metric.
+- If the calibrated verdict matrix matches the heuristic verdict matrix qualitatively, Pearson as headline is robust and the heuristic-threshold ordering can be cited as concordant supplementary evidence. If they diverge, document the discrepancy and consider whether a different headline metric is more defensible.
+
+**Alternatives considered**:
+- Spearman r as primary (rank-based, robust to outliers): retained as supplementary sensitivity.
+- DE-Jaccard top-100 (rank-based on differential expression): retained as supplementary sensitivity.
+- MMD-RBF (distribution-distance, median heuristic bandwidth): requires per-cell Harmony embeddings persisted; now feasible in Session 3.
+- Wasserstein / Energy distance: explicitly excluded per bioRxiv 2026.02.14.705879 (failure modes documented for high-dim gene expression under variance scaling and for gene-gene relationship coverage).
+
+**Validation strategy**: Session 3 calibration framework produces per-metric calibrated verdicts. Headline reports Pearson; Spearman + DE-Jaccard + MMD-RBF are supplementary. The heuristic-threshold Session 1 output is preserved as directional concordance evidence but does not stand alone as resolution.
+
+**Date opened**: 2026-05-10
+**Date resolved**: pending Session 3
+
+---
 
 ### Issue 5: Gate 1 sanity-check threshold of r < 0.7 (MINOR but principle-bearing)
 
@@ -92,7 +124,7 @@ The following choices were made earlier in the project with insufficient justifi
 
 ### Issue 7: per-cell-type harmonization vs joint harmonization (MODERATE)
 
-**Status**: open — preliminary script in flight (2026-05-10). Full resolution awaits Session 3 rerun with embedding persistence.
+**Status**: open — preliminary global-Harmony run completed under heuristic thresholds; calibrated comparison deferred to Session 3 Part E.
 
 **The choice as it stands**: Harmony is run separately on each cell-type bucket (monocyte, B, NK, CD4T, CD8T), with study_id as the batch key within each. This was chosen over global Harmony with study_id as the batch key on all cells together.
 
@@ -104,12 +136,13 @@ The following choices were made earlier in the project with insufficient justifi
 
 **Justification (to be refined)**: per-cell-type harmonization (a) avoids the risk of Harmony mixing cells across cell type boundaries when batch effects are larger than cell-type effects in some regions of the embedding, (b) allows per-bucket Harmony parameters to be tuned to each cell type's batch effect magnitude, and (c) produces cleaner statistical interpretation because response vectors are computed within the same harmonized space they're evaluated in.
 
-**Interim evidence (2026-05-10, Session 2)**:
-- Script: `scripts/run_harmonization_protocol_sensitivity.py` was launched in background (bg id `b5vqhdvjz`) before the embedding-persistence requirement was specified. The running process loaded the OLD version of the script which writes only the per-bucket response vectors (parquet) and verdict table (csv) — the full corrected embedding is computed in memory and then discarded.
-- Expected output paths (whenever the bg job finishes or is re-run):
+**Interim evidence (Session 1, 2026-05-10) — heuristic thresholds only**:
+- Script: `scripts/run_harmonization_protocol_sensitivity.py` produced the global-Harmony pass.
+- Output paths:
   - `results/tables/harmonization_protocol_sensitivity.csv` — per-bucket Pearson r for per-cell-type vs global protocols + delta + verdict match.
   - `data/processed/phase3_global_response_vectors_<bucket>.parquet` — per-study response vectors from the global Harmony pass.
-- The script has been **patched in this session** to also persist the full integrated AnnData with `obsm['X_harmony']` + `layers['X_harmony_scaled_hvg']` + `uns['harmonization_protocol'] = 'global_harmony_study_id_only'` to `data/processed/harmony_global_embedding.h5ad`. This persistence only takes effect on the NEXT run of the script.
+- Verdict was computed against the same hand-picked Pearson threshold used in Phase 3 (not a calibrated threshold). The output is directional evidence for the per-cell-type vs global comparison, not calibrated resolution.
+- The script was **patched in Session 1** to also persist the full integrated AnnData with `obsm['X_harmony']` + `layers['X_harmony_scaled_hvg']` + `uns['harmonization_protocol'] = 'global_harmony_study_id_only'` to `data/processed/harmony_global_embedding.h5ad`. That file is now on disk and available to Session 3.
 
 **Embedding-persistence gap (load-bearing for Session 3)**:
 - Neither the v1 per-cell-type Harmony pipeline (notebooks 04 + 06, response_vectors_*.parquet outputs) nor the in-flight global Harmony script (`b5vqhdvjz`, response_vectors_global_*.parquet outputs) persists the full (n_cells, n_hvg) Harmony-corrected embedding to disk.
@@ -119,7 +152,7 @@ The following choices were made earlier in the project with insufficient justifi
   - `scripts/persist_per_celltype_harmony.py` (new 2026-05-10) — runs `harmony_per_bucket(keep_cells=True)` per bucket and writes `data/processed/harmony_per_celltype_<bucket>.h5ad` for each of the 5 v1 buckets. Wall time ~3-5 min per bucket, ~20-30 min total.
 - Both scripts run independently and can be parallelized if RAM allows.
 
-**Validation strategy**: global Harmony sensitivity analysis; supplementary figure. The interim Pearson-r-only verdict from the current bg run is in `results/tables/harmonization_protocol_sensitivity.csv` when the job completes; the full per-metric + cell-level analysis blocks on Session 3 reruns with the patched scripts.
+**Validation strategy**: global Harmony sensitivity analysis; supplementary figure. The Session 1 Pearson-r-only verdict under heuristic thresholds is in `results/tables/harmonization_protocol_sensitivity.csv` and is directional evidence only. Calibrated resolution (per-metric permutation null + split-half ceiling on the persisted embeddings) is deferred to Session 3 Part E. Per-cell-type Harmony embeddings for all 5 v1 buckets must also be produced via `scripts/persist_per_celltype_harmony.py` before Session 3 (only `monocyte` was persisted in Session 1).
 
 **Date opened**: 2026-05-10
 **Date resolved**: pending Session 3
@@ -216,6 +249,58 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
+### Issue 16: Lee cross-virus composition confound (LOAD-BEARING)
+
+**Status**: open. Resolution required during Session 3.
+
+**The choice as it stands**: Lee 2020 contains SARS-CoV-2, IAV, and
+healthy donors in a single study and is the v1 cross-virus anchor.
+The Phase 3 diagnostic surfaced that Lee's IAV samples have 58%
+monocyte cell-type composition versus Lee's SARS samples at 38%
+monocyte. The initial Gate 1 cross-virus Pearson r of 0.46 (computed
+on bulk response vectors) is therefore partly explained by cell-type
+composition differences between IAV and SARS samples within Lee, not
+purely by transcriptional response differences.
+
+**Why this matters**: if cross-virus correlations are computed on bulk
+PBMC response vectors, composition differences between IAV and SARS
+samples appear as virus differences. A reviewer will ask whether the
+model learns transcriptional response or learns composition.
+
+**Resolution required**: pre-specify that all Phase 4 cross-virus
+evaluations are computed within cell-type strata (per-bucket
+correlations), not on bulk response vectors. The factorized model is
+trained per-bucket and evaluated per-bucket. Bulk cross-virus results
+are reported only as supplementary sensitivity, with composition
+correction documented.
+
+**Alternatives considered**:
+- Bulk cross-virus correlations with composition correction
+  (reweighting cell-type proportions to match): rejected as primary
+  because composition correction adds another methodological choice
+  (the reweighting scheme) that introduces its own arbitrary
+  parameters. Acceptable as a supplementary sensitivity.
+- Bulk cross-virus correlations without correction: rejected for
+  confounding transcriptional response with composition.
+- Per-stratum correlations only (chosen): each cell-type bucket has
+  approximately matched composition definitions across studies
+  (validated by Phase 3.5 unified labels), and the cross-virus
+  question becomes "does shared antiviral response transfer within a
+  fixed cell type?" — which is the actual biological question the
+  project is asking.
+
+**Validation strategy**: per-stratum protocol is pre-specified. Bulk
+cross-virus correlations with composition correction are run as a
+sensitivity analysis during Session 3 Part F. The qualitative
+cross-virus finding must be robust to choice of stratification
+protocol; if it isn't, document the discrepancy and consider whether
+the per-stratum framing is the only defensible v1 claim.
+
+**Date opened**: 2026-05-10
+**Date resolved**: pending Session 3
+
+---
+
 
 ## Process rules for future methodological choices
 
@@ -255,35 +340,6 @@ The conceptual rename (`infection_status` -> `donor_disease_status`) was applied
 - Define `infected` cells via per-cell viral read detection: not feasible in v1. PBMC viral read counts are extremely sparse and most v1-corpus studies (Lee, Wilk, Arunachalam, Schulte-Schrepping) did not align reads to viral genomes. v2 may revisit this for airway-epithelium studies.
 
 **Validation strategy**: refactor with full test coverage (`uv run pytest src/tests/` = 39 passed at resolution time). No scientific sensitivity analysis required — this is a naming and vocabulary clarification, not a methods change. The methods section of the eventual paper will define both the column and the allowed values explicitly so a reviewer cannot mistake the donor-level proxy for cell-level infection state.
-
-**Date opened**: 2026-05-10
-**Date resolved**: 2026-05-10
-
----
-
-### Resolved Issue 3: Pearson r as primary cross-study coherence metric (LOAD-BEARING) — 2026-05-10
-
-**Final choice**: the primary cross-study coherence metric is mean off-diagonal Pearson r across per-study response vectors. Two alternative metrics — Spearman r (rank-based) and top-100 absolute-DE Jaccard overlap — were computed in `scripts/run_metric_sensitivity.py` against the cached Phase 3 response vectors. Results are tabulated in `results/tables/metric_sensitivity_phase3.csv`.
-
-**Sensitivity result (verdict per bucket × metric)**:
-
-| Bucket | Pearson | Spearman | DE Jaccard top-100 | Consensus (≥2/3) |
-|---|---|---|---|---|
-| monocyte | PASS (0.701) | PASS (0.602) | FAIL (0.248 vs 0.30) | PASS |
-| CD4T | PASS (0.321) | PASS (0.185) | PASS (0.202) | PASS |
-| NK | PASS (0.385) | PASS (0.265) | PASS (0.189) | PASS |
-| B | FAIL (0.297) | PASS (0.242) | FAIL (0.175) | FAIL |
-| CD8T | FAIL (0.169) | FAIL (0.086) | FAIL (0.125) | FAIL |
-
-**Verdict**: the Phase 3 outcome (3/5 buckets pass, 2/5 fail) is robust to metric choice. For the 3 passing buckets (monocyte / CD4T / NK), at least 2 of 3 metrics agree on PASS. For the 2 failing buckets (B / CD8T), at least 2 of 3 metrics agree on FAIL. Pearson is justified as the headline metric. B shows metric-dependent behaviour (Spearman lifts it above threshold; Pearson and Jaccard agree it fails) — the Spearman value 0.242 is closer to Pearson 0.297 than to the threshold 0.40, so the disagreement is at the threshold-line not in the underlying signal.
-
-**MMD-RBF deferred to v1.5.** MMD between two studies operates on per-cell distributions in the Harmony-corrected embedding space, not on response vectors. The v1 calibration cache stores summary statistics only (response vectors per study per bucket), not per-cell x_corrected matrices, so MMD cannot be computed without re-running Harmony with `keep_cells=True` and persisting x_corrected to disk. This is a v1.5 enhancement: extend the calibration cache to persist x_corrected, then add MMD-RBF (median heuristic) as a fourth sensitivity metric. The v1 paper will note this as a known sensitivity gap.
-
-**Why not run the per-metric permutation null + split-half calibration**: would require re-running Harmony with `keep_cells=True` to expose x_corrected, then re-running the permutation loop with each alternative metric. Total compute: ~30 min × 4 metrics × 5 buckets = ~10 hours. Deferred to v1.5 along with MMD; v1 reports observed values + threshold-vs-observed verdicts, which is sufficient for the sensitivity claim because the verdict matrix already shows the Phase 3 outcome is stable.
-
-**Wasserstein and Energy distance explicitly excluded** per the Feb 2026 metrics-failure literature (bioRxiv 2026.02.14.705879). The paper shows Wasserstein fails in high-dimensional gene-expression spaces under variance scaling, and Energy distance can overlook gene-gene relationships. Both metrics are documented in methods as considered-and-rejected.
-
-**Validation strategy**: sensitivity analysis recorded in `results/tables/metric_sensitivity_phase3.csv`. Methods section cites the Feb 2026 paper as the rationale for choosing Pearson over distribution-distance metrics, and reports all three (Pearson + Spearman + Jaccard) in supplementary. v1.5 will add MMD when x_corrected is persisted.
 
 **Date opened**: 2026-05-10
 **Date resolved**: 2026-05-10
@@ -351,6 +407,8 @@ The protocol is encoded in `configs/evaluation.yaml` under `hyperparameter_polic
 - Light tuning (no enforced donor isolation): rejected because donor leakage produces optimistic bias.
 
 **Validation strategy**: the policy is pre-specified in `configs/evaluation.yaml` before Phase 6 begins. The methods section of the eventual paper will quote the protocol verbatim from the config file. If any single method's reported best configuration is suspiciously close to its published default, that is reported as an integrity check passing; if it diverges substantially, the divergence and the validation-set performance gap is reported.
+
+**Forward dependency on Issue 3**: this protocol is metric-agnostic. The `tuning_metric` field in `configs/evaluation.yaml > hyperparameter_policy` reads "primary cross-study coherence metric on within-virus held-out donors" — it does not hard-code Pearson. If the Issue 3 calibrated resolution (Session 3) changes the primary cross-study coherence metric to Spearman, DE-Jaccard, or MMD-RBF, the hyperparameter tuning protocol uses the updated metric automatically, without modification to this policy.
 
 **Date opened**: 2026-05-10
 **Date resolved**: 2026-05-10
