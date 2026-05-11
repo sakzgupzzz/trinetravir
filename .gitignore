@@ -85,3 +85,6 @@ infrastructure/terraform.tfstate.backup
 infrastructure/terraform.tfstate.*.backup
 infrastructure/crash.log
 infrastructure/crash.*.log
+
+# --- Lambda Cloud state (ephemeral; contains instance_id + IP) ---
+infrastructure/lambda_state.json
