@@ -190,7 +190,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: one sentence in methods citing the convention.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 8 entry dated 2026-05-11
 
 ---
 
@@ -209,7 +209,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: replace with bootstrap CI overlap test if practical; otherwise document the fraction choice with rationale.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 9 entry dated 2026-05-11
 
 ---
 
@@ -226,7 +226,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: methods sentence + supplementary table.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 10 entry dated 2026-05-11
 
 ---
 
@@ -243,7 +243,7 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: supplementary table.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: see Resolved Issue 11 entry dated 2026-05-11
 
 ---
 
