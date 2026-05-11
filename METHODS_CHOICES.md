@@ -1258,6 +1258,21 @@ Switching the primary to Interferome 2.0 at Session 3.5 would require re-running
 
 ---
 
+### Issue 20: Reconstruction loss for factorized model (LOAD-BEARING) — 2026-05-11
+
+**Status**: open at pre-specification level; final validation at Phase 5.
+
+**Decision**: MSE on response vectors as primary loss formulation; NB-GLM on counts as Phase 5 sensitivity analysis.
+
+**Rationale**: Response-vector aggregation is consistent with the rest of the v1 pipeline. Per-study response vectors are the unit of analysis in the calibration framework, the cross-study coherence metric, and the held-out validation tests. Training the model on the same statistical unit aligns the model with the evaluation framework. Per-cell perturbed/baseline pairing for NB across studies introduces methodological complexity (matched donor pairs across cohorts) that exceeds v1's scope and would re-open Issue 4 cohort design.
+
+**Validation**: train both MSE and NB at Phase 5; report performance comparison in supplementary. Switch headline if NB shows substantially better cross-study + held-out transfer. Define "substantially better" as: NB cross-study r exceeds MSE cross-study r by Δr ≥ 0.10 averaged across buckets AND NB held-out transfer verdict flips Issue 27 from CHALLENGES to SUPPORTS or Issue 29 from scope-limitation to appropriate-discrimination.
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; Phase 5 head-to-head MSE vs NB to confirm)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
