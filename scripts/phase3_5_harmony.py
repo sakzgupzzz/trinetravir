@@ -11,16 +11,31 @@ Produces:
   results/tables/gate_phase35_immune_all_high.csv             (mode=high)
   results/tables/gate_phase35_subbucket_granularity_low.csv   (mode=subbucket_low)
 
-Each consolidated h5ad carries:
-  obsm['X_harmony']                — Harmony-corrected PCA coords stitched
-                                     across buckets (cells outside any
-                                     surviving bucket are dropped).
-  obs[bucket_column]               — bucket label per cell.
+Each consolidated h5ad carries (one row per cell, stitched across all
+surviving buckets; cells outside any surviving bucket are dropped):
+  obs                              — cell metadata: study_id, donor_id,
+                                     donor_disease_status, bucket.
+  X                                — (n_cells, 1) placeholder. Harmony-
+                                     corrected matrices are NOT in X.
   uns['harmonization_protocol']    — 'per_celltype_harmony'.
   uns['annotation_source']         — 'celltypist_immune_all_low' or
                                      'celltypist_immune_all_high'.
   uns['bucket_column']             — name of the bucket obs col.
   uns['per_bucket_r']              — dict of bucket -> mean off-diag r.
+  uns['per_bucket_hvg']            — dict of bucket -> list of HVG symbols
+                                     selected for that bucket.
+  uns['X_corrected_<bucket>']      — (n_cells_in_bucket, n_hvg_for_bucket)
+                                     Harmony-corrected scaled-HVG embedding
+                                     in gene space. ONE KEY PER SURVIVING
+                                     BUCKET. Different buckets have
+                                     different HVG sets so a single
+                                     obsm['X_harmony'] matrix across
+                                     buckets is NOT FEASIBLE — Session 3
+                                     loaders must iterate over uns keys
+                                     matching the prefix 'X_corrected_'
+                                     and align rows to obs[bucket_column].
+                                     The corresponding HVG symbol list is
+                                     uns['per_bucket_hvg'][<bucket>].
 
 Gate values are reported FOR RECORD ONLY (heuristic 5-bucket Phase 3
 thresholds for `low`; no thresholds for other granularities — gate
@@ -202,9 +217,10 @@ def run_mode(mode: str) -> None:
 
     # Consolidated AnnData: stack cells across buckets, with bucket label in obs.
     # X stays a (n_cells, 1) placeholder; each bucket's gene-space corrected
-    # matrix lives in uns under its bucket name (different HVG sets prevent
-    # a single obsm matrix). Session 3 loaders read uns['per_bucket_x'] + the
-    # gate table for downstream calibration.
+    # matrix lives in uns under key f'X_corrected_{bucket}' (different HVG
+    # sets per bucket prevent a single obsm matrix across buckets).
+    # Session 3 loaders enumerate uns keys with prefix 'X_corrected_' and pair
+    # each with uns['per_bucket_hvg'][bucket] for column ids.
     all_obs = pd.concat(per_bucket_obs, axis=0, ignore_index=True)
     n_total = len(all_obs)
     adata_out = ad.AnnData(
