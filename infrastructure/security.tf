@@ -1,6 +1,6 @@
 resource "aws_security_group" "trinetravir_gpu" {
   name        = "trinetravir-session-4-sg"
-  description = "Trinetravir Session 4 GPU instance — SSH only from user IP"
+  description = "Trinetravir Session 4 GPU instance - SSH only from user IP"
 
   # SSH only; no public HTTP/HTTPS (pure compute job).
   ingress {
