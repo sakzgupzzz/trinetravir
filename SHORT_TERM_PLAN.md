@@ -1,6 +1,6 @@
 # Short-term plan (pipeline enforcement, read FIRST every session)
 
-**Read this file at the start of every Claude Code session before any other work.** This file defines the strict pipeline order for the next 4 work blocks. Do NOT start a block until its prerequisites are checked off.
+**Read this file at the start of every Claude Code session before any other work.** This file defines the strict pipeline order for the remaining work blocks. Do NOT start a block until its prerequisites are checked off.
 
 ## Pipeline order (LOCKED — no reordering without human approval)
 
@@ -10,11 +10,14 @@
 | 2 | **Session 5 (audit response)** | `SESSION_5_SPEC.md` | Block #1 fully committed | **DONE 2026-05-11** |
 | 3 | **Human decision on Issue 25** | METHODS_CHOICES.md Issue 25 entry | Block #2 complete + Issue 25 opened | **DONE 2026-05-11** (Option B hybrid) |
 | 4 | **Session 6A (held-out cohort acquisition + harmonization + schema v6)** | `SESSION_6A_CHECKLIST.md` | Block #3 (Issue 25 Option B hybrid) | **DONE 2026-05-11** (Parts A/B/C/D/E all complete; 4/4 cohorts harmonized; audit 14/0 PASS) |
-| 5 | **Session 6B (held-out calibration + per-stratum sensitivity + few-shot)** | inline spec (chat) | Block #4 audit gate passes | IN PROGRESS 2026-05-11 — multi-session, 3-5 weeks |
-| 6 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #5 complete | BLOCKED on #5 |
-| 7 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #6 complete | BLOCKED on #6 |
+| 5 | **Session 6B (held-out calibration + per-stratum sensitivity + few-shot)** | inline spec (chat) | Block #4 audit gate passes | **DONE 2026-05-11 (Parts A/B/C/F/G; Parts D/E deferred to Phase 5+ — require v1 factorized model)** |
+| 6 | **Session 7 (pre-modeling sensitivity audit)** | `references/session_7_prompt.md` | Block #5 closure + Session 7 prompt committed | **NEXT** — gate between 6B and 3.5; pre/post-Harmony Δr + within-cohort sensitivity with pre-committed decision rules |
+| 7 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #6 audit-confirm | BLOCKED on #6 |
+| 8 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #7 complete | BLOCKED on #7 |
 
-**Block #5 is the LAST block**, not the first. Session 4 (GPU/scVI work) does NOT run earlier in the pipeline.
+**Block #6 (Session 7) is the new gate** between Session 6B closure and Session 3.5. Triggered by critique-document concern 4 (Harmony preserving only conserved axes). Pattern mirrors Session 5 audit response: pre-committed decision rules before computation; results disclosed regardless of outcome.
+
+**Block #8 is the LAST block**, not the first. Session 4 (GPU/scVI work) does NOT run earlier in the pipeline.
 
 ## Hard rules
 
@@ -22,7 +25,7 @@
 - **Atomic commits per block.** Each block's work commits as one (or a small number of clearly-themed) commit(s). Do NOT mix work from different blocks in a single commit.
 - **Update this file before starting any block.** Mark the previous block as DONE, mark the new block as IN PROGRESS, and check the prereqs are met. If prereqs are missing, list what's missing and STOP.
 - **Update this file at end of every session** with current status of in-progress block. If a session ends mid-block, note exactly what's done and what remains.
-- **NEVER delete this file.** When all 5 blocks complete, replace contents with new plan; never remove the file itself.
+- **NEVER delete this file.** When all blocks complete, replace contents with new plan; never remove the file itself.
 
 ## Current status (2026-05-11)
 
@@ -54,6 +57,16 @@
   - Spec: not yet drafted. Likely covers scVI sensitivity analysis (Issue 6), GPU environment setup, possibly initial Phase 4 work.
   - End-state: Issue 6 resolved. Project ready for Phase 4 implementation.
 
+- **Block #6 (Session 7, pre-modeling sensitivity audit)**: NEXT, gate after Block #5 closure
+  - Spec: `references/session_7_prompt.md` (committed 2026-05-11)
+  - Pre-conditions verified: Session 6B closed (Issues 27-31 + Yoshida CI caveat + N=1000 verdicts in commits `b251057` + `777e84c`); Session 7 prompt committed (this commit).
+  - Parts:
+    - Part A — pre/post-Harmony response-vector Δr quantification with pre-committed thresholds (≤0.10 / (0.10, 0.30] / >0.30)
+    - Part B — within-cohort-only sensitivity (sign concordance ≥80% / 50-80% / <50%)
+    - Part C — audit gate before unlocking #7
+  - End-state: Issues 32 + 33 resolved with verdicts; MANUSCRIPT_DRAFT.md Methods supplementary + Limitations updated; conditional reframing pass if Δr > 0.30 or within-cohort disappears.
+  - Launch trigger: "Launch Session 7 per references/session_7_prompt.md. Open Issues 32 and 33 with the pre-committed decision rules verbatim before running any analyses."
+
 ## Enforcement protocol
 
 At the start of every Claude Code session that touches this project:
@@ -68,4 +81,6 @@ If a user prompt during a session requests work from a future block, respond: "B
 
 ## Why this file exists
 
-The pipeline has 5 blocks, each with non-trivial dependencies. Skipping a block (e.g., starting Session 3.5 before Session 5's calibration fixes) would commit pre-specifications against a known-buggy calibration framework, locking in errors that Session 5 was designed to catch. The user explicitly requires pipeline order be followed "to the dot." This file is the enforcement mechanism.
+The pipeline now has 8 blocks (rev 3, 2026-05-11), each with non-trivial dependencies. Skipping a block (e.g., starting Session 3.5 before Session 7's harmonization-bias audit) would commit pre-specifications against a known-uncertain harmonization signal contribution, locking in errors that Session 7 was designed to catch. The user explicitly requires pipeline order be followed "to the dot." This file is the enforcement mechanism.
+
+Pipeline rev 3 (2026-05-11): Session 7 inserted between Session 6B and Session 3.5. Triggered by critique-document concern 4 (Harmony preserving only conserved axes). Pattern matches Session 5 audit-response: pre-committed decision rules before run; results disclosed regardless of outcome; audit gate before unlocking next block. See `references/session_7_prompt.md` for full spec.
