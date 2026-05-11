@@ -1,0 +1,49 @@
+# Methods version pins for v1 reproducibility.
+#
+# Per METHODS_CHOICES.md Issue 23 (resolved at pre-spec 2026-05-11; final pin
+# at Phase 7 launch). This file pins exact versions for Session 4 scVI
+# sensitivity (Issue 6) and all downstream Phase 5-7 modeling work.
+#
+# CI workflow verifies these pins match installed packages.
+#
+# Updates require:
+#   1. Atomic commit per Issue 17.
+#   2. Re-run any analyses anchored on the previous pin (Session 4 scVI
+#      sensitivity if scvi-tools pin changes).
+#
+# Version source: uv.lock at commit time. Inspect via:
+#   grep -B1 -A1 "^name = \"<pkg>\"" uv.lock
+
+# --- Core scientific stack (pinned 2026-05-11, Session 4 entry) ---
+python: "3.11"
+
+scanpy: "1.11.5"
+anndata: "0.12.13"
+scvi-tools: "1.4.2"        # primary v1 scVI sensitivity (Issue 6)
+harmonypy: "2.0.0"         # primary v1 batch correction (Issue 7)
+torch: "2.11.0"            # CPU + MPS available locally; GPU at Session 4
+
+# --- Foundation model baselines (Issue 23, INFERENCE-only per Issue 35) ---
+# Pinned by HuggingFace revision hash at Phase 7 launch.
+# Session 4 Part C will test inference wall-time; if INCLUDE verdict, pins
+# go here. If DEFER, pins move to v1.5.
+foundation_models:
+  geneformer:
+    pin: TBD_at_phase_7_launch          # huggingface revision hash
+    inference_only: true                # Issue 35: fine-tuning OUT of v1
+  scgpt:
+    pin: TBD_at_phase_7_launch
+    inference_only: true
+
+# --- Existing-method baselines (Issue 23) ---
+# Pinned at Phase 7 launch per most-recent-stable-release policy.
+# Currently scvi-tools above covers scVI; scGen + CPA + scCausalVI pinned
+# when Phase 6 begins.
+existing_methods:
+  scvi: "1.4.2"            # same as scvi-tools above; canonical via scvi-tools
+  scgen: TBD_at_phase_7_launch
+  cpa: TBD_at_phase_7_launch          # Compositional Perturbation Autoencoder
+  sccausalvi: TBD_at_phase_7_launch
+
+# --- Reproducibility ---
+random_seed: 42                         # numpy + torch + scvi seeds

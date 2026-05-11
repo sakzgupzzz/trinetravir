@@ -1,0 +1,55 @@
+# GPU environment specification for v1 Session 4 (scVI sensitivity) + Phase 5+
+# modeling work.
+#
+# Per METHODS_CHOICES.md Issue 23 + Issue 34 (reproducibility policy).
+# Documents the GPU instance, OS image, driver, CUDA version, and Python
+# version used for Session 4 scVI training runs. Pinned for re-runs.
+#
+# Status at file creation (2026-05-11): GPU instance NOT yet provisioned.
+# Fields below marked TBD must be filled in BEFORE Session 4 Part A compute
+# launches. Update is an atomic commit (Issue 17).
+#
+# Recommended providers (cost order):
+#   - Lambda Cloud A100 40GB:  ~$1.30/hr
+#   - RunPod A100 80GB:        ~$1.50-2.00/hr
+#   - Vast.ai marketplace:     ~$0.34-0.67/hr (variable reliability)
+#
+# Session 4 GPU budget: ~9-11h GPU wall-time (Part A + B + C) → ~$15-50.
+
+# --- Provider + instance ---
+provider: TBD                            # Lambda | RunPod | Vast.ai | other
+instance_type: TBD                       # e.g. "A100 PCIe 40GB"
+region: TBD
+ssh_key_path: TBD
+
+# --- OS + driver stack ---
+os_image: TBD                            # e.g. "Ubuntu 22.04 with CUDA 12.4"
+nvidia_driver: TBD                       # e.g. "550.107.02"
+cuda_version: TBD                        # e.g. "12.4"
+nvcc_version: TBD                        # e.g. "12.4.131"
+
+# --- Python + package stack (must match configs/methods_versions.yaml) ---
+python_version: "3.11"                   # matches .python-version
+package_manager: "uv"                    # matches local dev env
+lockfile: "uv.lock"                      # pinned at commit time
+
+# --- Storage ---
+# v1 corpus + held-out cohorts: ~10-30GB on disk (h5ad gzip-compressed).
+# scVI training checkpoints + intermediate outputs: ~5-10GB per bucket sweep.
+# Total Session 4 storage budget: ~50GB persistent + ~30GB scratch.
+persistent_storage_gb: TBD               # mount at /workspace
+scratch_storage_gb: TBD
+
+# --- Session 4 specific notes ---
+session_4:
+  expected_wall_time_hours: "9-11"       # Part A (~6.5-7h) + Part B (~2-4h) + Part C (~2-3h)
+  expected_cost_usd_max: 50              # at $1.50/hr × 11h × 1.5 buffer
+  cost_cap_for_issue_35: 100             # Issue 35 INCLUDE threshold
+  random_seed: 42                        # matches configs/methods_versions.yaml
+
+# --- Reproducibility checklist (post-Session-4) ---
+# After Session 4 closes, this file must contain:
+#   [ ] provider + instance_type filled
+#   [ ] os_image + nvidia_driver + cuda_version filled
+#   [ ] persistent + scratch storage filled
+#   [ ] Actual wall-time + actual cost recorded for audit trail
