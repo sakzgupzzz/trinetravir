@@ -30,3 +30,37 @@ metrics:
 reproducibility:
   seed: 42
   n_bootstrap: 100
+
+# Hyperparameter policy. See METHODS_CHOICES.md Issue 14. Pre-specified before Phase 6
+# begins so the protocol is symmetric across every benchmarked method and no post-hoc
+# rationalization is possible. Held-out validation is the standard ML protocol and the
+# most defensible choice of the three alternatives (published-defaults, light-tuning,
+# held-out validation).
+hyperparameter_policy:
+  protocol: held_out_validation
+  validation_split_fraction: 0.2
+  validation_donors_per_class: "minimum 2 donors per disease class held out from training, drawn at random with seed"
+  tuning_budget_per_method: 20      # max hyperparameter configurations evaluated per method
+  tuning_metric: "primary cross-study coherence metric on within-virus held-out donors"
+  rationale: |
+    Each method tunes its hyperparameters using a within-virus held-out validation
+    split (donor-level, seeded). The best configuration per method is then evaluated
+    on the cross-virus test split. The within-virus held-out donors are never seen by
+    the cross-virus evaluation, which is the standard ML protocol for fair comparison.
+
+    Each method gets the same compute budget (≤20 hyperparameter configurations).
+    Reporting both the best configuration's cross-virus performance AND the
+    configuration choice itself avoids the "tune until publication-worthy" failure
+    mode that biases benchmark results in favour of methods the authors tuned hardest.
+  alternatives_rejected:
+    - published_defaults: |
+        Symmetric across methods and reflects out-of-the-box performance, but does not
+        let each method demonstrate its best-achievable performance. Rejected because
+        out-of-the-box defaults are often tuned for the original paper's dataset, not
+        ours, which biases against methods whose original-paper data differs most from
+        PBMC cross-virus.
+    - light_tuning: |
+        Same protocol as held_out_validation but without enforcing a hard donor-level
+        validation split. Rejected because without explicit donor-level isolation, the
+        same donors can appear in training, tuning, and test pools, producing
+        optimistically biased results.

@@ -242,28 +242,6 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
-### Issue 14: hyperparameter defaults for benchmark methods (LOAD-BEARING)
-
-**Status**: open. Resolution required before Phase 6.
-
-**The choice as it stands**: to be determined. When scGen, scCausalVI, CoupleVAE, and foundation models are run in Phase 6, hyperparameters must be chosen.
-
-**Why this is a problem**: tuning hyperparameters favors the methods we tune the hardest. Using published defaults treats all methods symmetrically but may not reflect each method's best achievable performance.
-
-**Resolution required**: pre-specify the hyperparameter policy before Phase 6 begins. Choose one of:
-- *Published defaults policy*: every method is run at its published default hyperparameters from the original paper or GitHub repo. No tuning. Justification: this protocol is symmetric across methods and reflects out-of-the-box performance, which is the relevant comparison for a new user evaluating which method to adopt.
-- *Light tuning policy*: each method gets a small hyperparameter sweep (≤20 configurations) on a held-out validation set. The best configuration per method is used for evaluation. Justification: this gives each method a fair shot at its best performance.
-- *Held-out validation policy*: each method tunes hyperparameters using a within-virus held-out validation split, and the tuned hyperparameters are evaluated on the cross-virus test split. Justification: this is the standard ML protocol and most defensible scientifically.
-
-The held-out validation policy is the most defensible but adds compute cost. Decide before Phase 6 begins and document the chosen policy here with rationale.
-
-**Validation strategy**: pre-specified policy; methods section explicitly states the protocol.
-
-**Date opened**: 2026-05-10
-**Date resolved**: <fill in>
-
----
-
 ### Issue 15: cross-virus training/test split protocol (LOAD-BEARING)
 
 **Status**: open. Resolution required before Phase 4.
@@ -322,6 +300,27 @@ The conceptual rename (`infection_status` -> `donor_disease_status`) was applied
 - Define `infected` cells via per-cell viral read detection: not feasible in v1. PBMC viral read counts are extremely sparse and most v1-corpus studies (Lee, Wilk, Arunachalam, Schulte-Schrepping) did not align reads to viral genomes. v2 may revisit this for airway-epithelium studies.
 
 **Validation strategy**: refactor with full test coverage (`uv run pytest src/tests/` = 39 passed at resolution time). No scientific sensitivity analysis required — this is a naming and vocabulary clarification, not a methods change. The methods section of the eventual paper will define both the column and the allowed values explicitly so a reviewer cannot mistake the donor-level proxy for cell-level infection state.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-10
+
+---
+
+### Resolved Issue 14: hyperparameter policy for benchmark methods (LOAD-BEARING) — 2026-05-10
+
+**Final choice**: every benchmark method tunes hyperparameters using a within-virus held-out validation split, then evaluates on the cross-virus test split. Each method receives the same compute budget — at most 20 hyperparameter configurations evaluated on the validation set. The configuration that minimizes the primary cross-study coherence metric on within-virus held-out donors is selected; the cross-virus test split then evaluates that single configuration. The validation split is donor-level (not cell-level), seeded, and holds out at least 2 donors per disease class.
+
+The protocol is encoded in `configs/evaluation.yaml` under `hyperparameter_policy:` with `protocol: held_out_validation`, `validation_split_fraction: 0.2`, `tuning_budget_per_method: 20`, and an explicit rationale block.
+
+**Why held-out validation rather than published defaults or light tuning**: published defaults are typically tuned for the original paper's dataset (not ours), which biases against methods whose original-paper data differs most from PBMC cross-virus — that is a *measurement* bias, not a methodological strength. Light tuning without enforced donor-level isolation lets the same donor appear in tuning and test pools, producing optimistically biased results. Held-out validation with donor-level isolation is the standard ML protocol and the most defensible of the three.
+
+**Why a 20-config budget**: a finite, equal budget per method is what makes the comparison symmetric. The number itself is empirical — large enough for typical method-specific hyperparameter spaces (learning rate, latent dim, batch size, regularization weight) to be reasonably explored, small enough to fit within the project's compute envelope when summed over 6-8 methods. If a reviewer pushes, the budget can be doubled in a sensitivity run; the comparison framework is unchanged.
+
+**Alternatives considered and rejected**:
+- Published defaults: rejected because of original-paper-data bias described above.
+- Light tuning (no enforced donor isolation): rejected because donor leakage produces optimistic bias.
+
+**Validation strategy**: the policy is pre-specified in `configs/evaluation.yaml` before Phase 6 begins. The methods section of the eventual paper will quote the protocol verbatim from the config file. If any single method's reported best configuration is suspiciously close to its published default, that is reported as an integrity check passing; if it diverges substantially, the divergence and the validation-set performance gap is reported.
 
 **Date opened**: 2026-05-10
 **Date resolved**: 2026-05-10
