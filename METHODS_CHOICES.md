@@ -1322,6 +1322,33 @@ Switching the primary to Interferome 2.0 at Session 3.5 would require re-running
 
 ---
 
+### Issue 23: Comparison method versions and reproducibility — 2026-05-11
+
+**Status**: open at pre-specification level; final pin at Phase 7 launch.
+
+**Decision**: pin exact versions in `configs/methods_versions.yaml` before Phase 7 begins. At the time of Phase 7 launch, use each method's most recent stable release. Pin foundation model checkpoints by HuggingFace revision hash.
+
+**Methods to include**:
+- scVI (latest stable from scvi-tools)
+- scGen
+- scCausalVI
+- CPA (Compositional Perturbation Autoencoder)
+- Geneformer (foundation model baseline)
+- scGPT (foundation model baseline)
+
+**Implementation policy**: each method's published defaults used as starting point, then tuned per Issue 14 policy (held-out validation, 20-config budget per method).
+
+**Wrapper code**: any modifications to original training loops documented in `src/trinetravir/methods/<method>_wrapper.py` with rationale.
+
+**Rationale**: Pinning versions at Phase 7 launch (not earlier) avoids freezing on stale releases while ensuring reproducibility from the documented launch point. Foundation model baselines added per critique concern 2 (deep learning necessity); Geneformer + scGPT are the strongest published PBMC-applicable foundation models at v1 timeline.
+
+**Validation**: reproducibility from pinned versions + released code + released corpus. CI workflow verifies version pins match installed packages.
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; final pins at Phase 7 launch)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
