@@ -28,6 +28,7 @@ Per-cohort design overrides:
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -46,9 +47,13 @@ PROC = REPO / "data" / "processed"
 TABLES = REPO / "results" / "tables"
 MVS_FILE = REPO / "data" / "reference" / "khatri_mvs_module_genes.txt"
 
-N_PERM = 200  # reduced from 1000 for wall-time; p resolution to ~0.005
-N_BOOTSTRAP = 100  # reduced from 200; CI to ~0.05 precision
+# Env-var overrides for v1.5 tightening runs.
+# Defaults 200/100 = Session 6B Step 3 baseline (~2.5h/cohort).
+# Recommended v1.5: HELDOUT_N_PERM=1000 HELDOUT_N_BOOTSTRAP=500 (~12h/cohort).
+N_PERM = int(os.environ.get("HELDOUT_N_PERM", "200"))
+N_BOOTSTRAP = int(os.environ.get("HELDOUT_N_BOOTSTRAP", "100"))
 SEED = 42
+OUT_SUFFIX = os.environ.get("HELDOUT_OUT_SUFFIX", "")  # e.g., "_n1000" → _<cohort>_n1000.csv
 
 COHORT_FILES = {
     "yoshida_2022": PROC / "yoshida_2022_processed_v6.h5ad",
@@ -425,7 +430,7 @@ def main() -> int:
             df = run_cohort_cross_sectional(cohort, train_rvs, mvs_genes)
         if df.empty:
             continue
-        out = TABLES / f"heldout_v2_calibration_{cohort}.csv"
+        out = TABLES / f"heldout_v2_calibration_{cohort}{OUT_SUFFIX}.csv"
         df.to_csv(out, index=False)
         logger.info("wrote %s: %d rows", out.name, len(df))
         all_rows.append(df)
@@ -440,9 +445,10 @@ def main() -> int:
             combined["calibrated_pass_p99_mvs_fdr"] = (combined["fdr_corrected_p_mvs"] < 0.01) & (
                 combined["observed_r_mvs"] >= combined.get("ci_low_mvs", combined["observed_r_mvs"])
             )
-        out_combined = TABLES / "heldout_v2_calibration_combined.csv"
+        out_combined = TABLES / f"heldout_v2_calibration_combined{OUT_SUFFIX}.csv"
         combined.to_csv(out_combined, index=False)
         logger.info("wrote %s: %d rows", out_combined.name, len(combined))
+    logger.info("config: N_PERM=%d, N_BOOTSTRAP=%d, suffix='%s'", N_PERM, N_BOOTSTRAP, OUT_SUFFIX)
     return 0
 
 
