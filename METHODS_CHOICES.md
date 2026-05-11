@@ -557,21 +557,27 @@ the per-stratum framing is the only defensible v1 claim.
 
 ---
 
-### Issue 29: chronic latent carriage analysis protocol (Wang 2025 CMV)
+### Issue 29: chronic-latent-vs-naive discrimination protocol (GSE213516)
 
-**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B.
+**Status**: open at pre-specification level (Session 6A 2026-05-11; cohort substituted 2026-05-11 due to original cohort access blocker); resolution at Session 6B.
 
-**The choice as it stands**: Wang 2025 CMV cohort is chronic latent infection (asymptomatic carriers), not acute disease. The v1 schema's `donor_disease_status = diseased` for CMV+ donors is methodologically defensible (they have an active viral infection by viral-load definition) but biologically distinct from the v1 corpus's acute symptomatic COVID disease state.
+**Cohort**: **GSE213516** (PBMC aging clocks cohort with CMV serostatus annotations). Public GEO deposition. CMV(+) vs CMV(-) healthy older adults. 10x Genomics. Used by the Science Advances aging clocks paper and the npj Aging integrated atlas.
+
+**Substitution rationale**: original cohort (Grabauskas et al. 2025 / Wang 2025, Jackson Lab bioRxiv 2025.06.24.661167) likely under same controlled-access pattern as GSE283744 (same lab; verified blocked via bioRxiv Cloudflare challenge — data availability statement unverifiable from web). GSE213516 substituted as publicly-accessible alternative with CMV serostatus annotations explicitly available via GEO. The test now compares latent chronic herpesvirus discrimination from acute viral training distribution rather than chronic-vs-acute, but the biological intent — testing v1's discrimination capability for biologically-distant viral contexts — is preserved.
+
+**Biological test (revised wording)**: chronic-latent CMV(+) vs naive CMV(-) discrimination. v1 is trained on acute SARS-CoV-2 (+ Lee within-study IAV); the test asks whether v1's conserved antiviral component appropriately discriminates between latent chronic herpesvirus signature in CMV(+) carriers and the naive baseline in CMV(-) controls.
+
+**The choice as it stands**: GSE213516 CMV cohort is chronic latent infection (asymptomatic seropositive carriers) vs naive seronegative controls. The v1 schema's `donor_disease_status = diseased` for CMV+ donors is methodologically defensible (they have an active viral seropositivity) but biologically distinct from the v1 corpus's acute symptomatic COVID disease state.
 
 **Pre-specified protocol for Session 6B**:
 1. **CMV+ vs CMV- comparison maps to diseased vs healthy_control schema** (`donor_disease_status` resolves to diseased/healthy_control even though CMV+ is chronic latent rather than acute). The new `infection_state` obs column distinguishes acute vs chronic_latent so downstream analyses can stratify.
-2. **Per-bucket cross-context Pearson r**: CMV "chronic antiviral signature" (CMV+ minus CMV- response vector) is compared to v1's acute COVID signature per bucket. Expected to be LOW for most buckets — chronic CMV signature is dominated by clonal T cell expansions (per the paper's findings), which is fundamentally different from acute IFN response.
+2. **Per-bucket cross-context Pearson r**: CMV "chronic antiviral signature" (CMV+ minus CMV- response vector) is compared to v1's acute COVID signature per bucket. Expected to be LOW for most buckets — chronic CMV signature is dominated by clonal T cell expansions, which is fundamentally different from acute IFN response.
 3. **Per-cell-type evaluation**: monocyte should show some shared ISG signal (chronic CMV induces baseline IFN tone in monocytes). T cells should show signal in CD8T (CMV-driven clonal expansion, TEMRA phenotype) but NOT shared with acute COVID CD8T response. This is biology-driven.
-4. **Explicit caveat in methods**: this is NOT a test of cross-virus transfer. It is a test of "does the conserved antiviral component capture chronic vs acute infection biology equivalently." Expectation: NO. Reporting an r ≈ 0.15-0.30 monocyte would be the *expected* outcome and would support the framework's discrimination between acute and chronic biology.
+4. **Explicit caveat in methods**: this is NOT a test of cross-virus transfer. It is a test of "does the conserved antiviral component appropriately discriminate latent chronic herpesvirus biology from naive baseline." Expectation: partial overlap on monocyte ISG tone only. Reporting an r ≈ 0.15-0.30 monocyte would be the *expected* outcome and would support the framework's discrimination capability.
 
-**Decision rule**: if Wang CMV monocyte chronic-vs-acute Pearson r is in [0.10, 0.40] on the MVS gene subset, the conserved component appropriately discriminates acute from chronic. r > 0.50 would suggest the conserved component is just "any IFN tone" and lacks acute-disease specificity (concerning). r < 0.05 suggests no shared biology — also concerning, indicates the conserved component is acute-specific only.
+**Decision rule**: if CMV monocyte chronic-latent-vs-naive Pearson r is in [0.10, 0.40] on the MVS gene subset, the conserved component appropriately discriminates. r > 0.50 would suggest the conserved component is just "any IFN tone" and lacks acute-disease specificity (concerning). r < 0.05 suggests no shared biology — also concerning, indicates the conserved component is acute-specific only.
 
-**Validation strategy**: pre-registered before Session 6B begins. This is an *expected-asymmetry* test, not a conserved-component-transfer test.
+**Validation strategy**: pre-registered before Session 6B begins. This is an *expected-asymmetry* test, not a conserved-component-transfer test. Pre-committed numerical decision rule UNCHANGED from original Issue 29 framing.
 
 **Date opened**: 2026-05-11
 **Date resolved**: pending Session 6B
