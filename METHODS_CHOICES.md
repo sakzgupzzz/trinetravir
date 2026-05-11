@@ -1399,6 +1399,118 @@ If the factorized model fails to beat Category 2 baselines by ≥0.05 cross-stud
 
 ---
 
+## Session 4 pre-specifications (Issues 34-35) — 2026-05-11
+
+This section opens Issues 34 + 35 as **pre-specifications** before Session 4 compute begins. Issue 34 commits the scVI comparison design (hyperparameter grid, output normalization, four-tier verdict thresholds) so the comparison cannot be reverse-engineered to a favorable verdict post-compute. Issue 35 commits the foundation model compute-envelope decision rule (INFERENCE-only scope) so v1 baseline inclusion is gated on a measured budget, not retrospective rationalization. Pattern mirrors Sessions 5/6B/7 audit-response design.
+
+### Issue 34: scVI comparison design pre-spec (LOAD-BEARING) — 2026-05-11
+
+**Status**: pre-specified BEFORE Session 4 Part A + B compute. Committed prior to observation of scVI Δr values so that hyperparameter grid, output recipe, and verdict thresholds cannot be reverse-engineered to a favorable conclusion.
+
+**Decision**: scVI sensitivity vs per-cell-type Harmony (primary) + scVI vs global Harmony (supplementary). Compares method-level integration quality with protocol family fixed in primary, addresses scVI-under-resourced reviewer concern in supplementary.
+
+**Hyperparameter search space (16 configs, fits within Issue 14's 20-config budget)**:
+- `n_latent` ∈ {10, 20, 30, 50} (most sensitive on immune; Feb 2026 bioRxiv benchmark)
+- `n_hidden` ∈ {128, 256} (256 best for PBMC per Lopez 2019 hyperopt)
+- `n_layers` ∈ {1, 2} (captures BC-vs-bio trade-off)
+
+Fixed at scvi-tools defaults:
+- `dropout_rate = 0.1`
+- `learning_rate = 1e-3`
+- `weight_decay = 1e-6`
+- `optimizer = Adam`
+- `gene_likelihood = 'zinb'` (appropriate for PBMC)
+- `dispersion = 'gene'` (per-batch is harder to train reliably)
+- `latent_distribution = 'normal'`
+- `n_epochs_kl_warmup = 400`
+- `batch_key = 'study_id'`
+
+Reproducibility:
+- `random_state = 42` (numpy + torch + scvi seeds)
+- `max_epochs = 400` with early stopping
+- `patience = 50`
+- `monitor = 'reconstruction_loss_validation'`
+
+Selection: held-out donor validation per Issue 14 policy (80/20 donor split stratified by `donor_disease_status` to preserve diseased/healthy proportions).
+
+**Output space + normalization recipe**:
+```python
+scvi_normalized = model.get_normalized_expression(library_size=1e4, return_numpy=True)
+scvi_log = np.log1p(scvi_normalized)
+scvi_scaled = sc.pp.scale(scvi_log, zero_center=True, max_value=10, copy=True)
+```
+Matches Harmony's `X_harmony_scaled_hvg` layer normalization. Without matching normalization, Δr partly measures scale difference rather than integration difference. `library_size=1e4` puts scVI output on TPM-like scale comparable to `normalize_total(target_sum=1e4) + log1p`.
+
+**Four-tier verdict thresholds** (per-bucket signed Δr = scVI minus per-bucket Harmony on Pearson MVS-subset primary metric):
+
+| Tier | Rule | Action |
+|---|---|---|
+| **I — HARMONY_ADEQUATE** | `max(Δr) ≤ 0.05` across all 5 buckets | Harmony stays as v1 primary. No re-run. |
+| **II — MIXED** | At least one bucket Δr ∈ (0.05, 0.10], no bucket Δr > 0.10 | Harmony adequate for v1; scVI flagged for v2. |
+| **III — SCVI_PREFERRED** | ≥3 of 5 buckets Δr > 0.10 OR any single bucket Δr > 0.20 | scVI replaces Harmony as v1 primary. Re-run Sessions 5/6B/7 on scVI output. |
+| **IV — HARMONY_PREFERRED** | Δr < −0.10 on ≥3 of 5 buckets | Harmony stays. Document support in supplementary. |
+
+Threshold anchors:
+- 0.05 = Session 7 BIOLOGY_CONSISTENT band.
+- 0.10 = ~1.25× Session 7 BIOLOGY_DOMINANT threshold (Δr=0.08).
+- 0.20 = ~2.5× Session 7 BIOLOGY_DOMINANT threshold.
+- −0.10 symmetric with Tier III's +0.10 to avoid asymmetric-threshold cognitive trap.
+- Asymmetric Tier I (+0.05) vs Tier IV (−0.10): different decision-action symmetry. Tier I avoids costly re-runs at small lifts; Tier IV needs meaningful Harmony advantage to assert support.
+
+**Tie-break rule**: if verdict matrix produces ambiguous classification (e.g., exactly 2 buckets with Δr > 0.10), default to the more conservative tier (Tier II MIXED over Tier III SCVI_PREFERRED). Document boundary case in audit trail.
+
+**Calibration framework**: applied identically per Issues 8-11 + 26 v2 (permutation null N=1000, bootstrap CI N=1000 on observed r, within-study split-half ceiling N=50, FDR-BH correction across buckets). MVS-subset Pearson r from `references/khatri_mvs_gene_list.csv` is the calibrated anchor matching Sessions 5/6B/7 empirical defenses.
+
+**Literature anchors**:
+- scIB benchmark (Luecken 2022 *Nat Methods*): Harmony among best performers on human immune integration; scVI competitive but not dominant.
+- *Briefings in Bioinformatics* 2022: "The performance of scVI is similar to Harmony" on immune integration. Direct evidence scVI ≈ Harmony.
+- Hyperparameter benchmark (Feb 2026 bioRxiv): n_latent most sensitive; n_hidden marginal; n_layers shows BC-vs-bio trade-off.
+
+**Validation**: Part A + B verdict at Session 4 close. If verdict is Tier III SCVI_PREFERRED, Sessions 5/6B/7 re-run on scVI output adds ~1-2 weeks before Phase 4.
+
+**Date opened**: 2026-05-11 (this commit — pre-spec gate before Part A compute)
+**Date resolved**: TBD (Session 4 close after Part A + B verdict applied)
+
+---
+
+### Issue 35: Foundation model compute-envelope decision (INFERENCE-only) — 2026-05-11
+
+**Status**: pre-specified BEFORE Session 4 Part C compute. Operationalizes the Session 3.5 Issue 23 contingency that foundation model baselines (Geneformer, scGPT) are gated on measured compute envelope.
+
+**Scope clarification (load-bearing)**: v1 Issue 23 foundation model baselines are **INFERENCE-only**. Pre-trained Geneformer + scGPT checkpoints used as-is to produce frozen embeddings; a linear head is trained per-bucket per-virus on those frozen embeddings. **End-to-end fine-tuning of foundation models is out of v1 scope**; deferred to v1.5 or v2 if reviewer feedback warrants.
+
+**Decision rule**:
+
+INCLUDE in v1 Phase 7 baselines if:
+- Geneformer + scGPT pre-trained inference (frozen embeddings + linear head per bucket per virus) total wall-time ≤ 2 × scVI sensitivity wall-time, AND
+- Total GPU cost ≤ $100.
+
+DEFER to v1.5 if:
+- Inference budget exceeded (unlikely at A100 throughput of 1-5K cells/sec; 244K cells → 1-4 min per pass), OR
+- Foundation model fine-tuning is requested by reviewer (definitely exceeds v1 envelope; ~$200-1000 budget needed for full fine-tuning).
+
+**Cell-count math (per-pass)**:
+- v1 training corpus: 244K cells per inference pass.
+- Held-out cohort eval passes: Yoshida ~168K, Allen Atlas ~301K, GSE157829 ~36K, Randolph ~39K.
+- Per-evaluation-pass max: 301K cells (Allen Atlas) at upper end; typical 36-244K.
+- Cumulative across all eval passes ≠ binding constraint for single-run budgeting.
+
+**Explicitly OUT of v1 scope**:
+- End-to-end fine-tuning of Geneformer or scGPT on v1 corpus.
+- Custom foundation model training from scratch.
+- Foundation model architecture modifications.
+
+v1 evaluates pre-trained models as-is. v1.5 or v2 may revisit fine-tuning if v1 reviewer feedback warrants.
+
+**Rationale**: foundation model baselines per critique concern 2 were committed at pre-spec in Session 3.5 with the contingency that final inclusion is gated on Session 4 compute envelope. This issue operationalizes that gate. Avoids committing v1 to compute it can't fit.
+
+**Validation**: Part C measurement at Session 4 close. Test-run Geneformer + scGPT inference on monocyte bucket (68K cells) with pretrained base checkpoint (frozen weights; embeddings only). Extrapolate to per-pass corpus size. Apply INCLUDE/DEFER rule mechanically.
+
+**Date opened**: 2026-05-11 (this commit — pre-spec gate before Part C compute)
+**Date resolved**: TBD (Session 4 close after Part C measurement applied)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
