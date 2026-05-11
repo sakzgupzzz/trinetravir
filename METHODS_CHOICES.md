@@ -584,28 +584,25 @@ the per-stratum framing is the only defensible v1 claim.
 
 ---
 
-### Issue 30: retrovirus context evaluation protocol (Lee 2025 HIV)
+### Issue 30: retrovirus context evaluation protocol (GSE157829)
 
-**Status**: open at pre-specification level (Session 6A 2026-05-11); resolution at Session 6B. **Marginal sample size — may fall back to qualitative-only.**
+**Status**: open at pre-specification level (Session 6A 2026-05-11; cohort substituted 2026-05-11 due to original cohort access blocker + missing healthy controls); resolution at Session 6B.
 
-**The choice as it stands**: Lee 2025 HIV-1 cohort (9 donors with early HIV <6 months) is biologically distinct from the v1 corpus (acute respiratory RNA viruses) in three ways: (a) retroviruses integrate into host genome and reverse-transcribe RNA from DNA template (entry into different molecular biology); (b) HIV-1 primarily targets CD4 T cells, not monocytes/respiratory epithelium; (c) early HIV is chronic-by-definition (no acute resolution phase like RSV or IAV).
+**Cohort**: **GSE157829 (Wang 2020 HIV exhaustion atlas)**, public GEO deposition (PMC7646563). 4 healthy donors + 6 HIV-infected donors (3 high viral load + 3 low viral load). **Meets Issue 4 (≥4 healthy + ≥4 diseased; the diseased pool of 6 satisfies ≥4)**. 10x Genomics. ~66,000 PBMCs total.
 
-**Sample size verification step (Session 6A acquisition gate)**: confirm healthy control N ≥ 4 from Lee 2025 data on download. If N < 4, falls back to qualitative-validation-only status — reported as a single context-comparison data point, NOT as a calibrated Issue 4-compliant cohort.
+**Substitution rationale**: original cohort (Lee 2025 HIV, Korea KRA KAP230707) blocked on TWO grounds: (a) gated access via 2-4 week Korea National Research Data Archive data-use review with no guaranteed approval, and (b) **no healthy controls per published abstract** — automatically triggering Issue 30 fallback to qualitative-only even if access granted. GSE157829 substituted: chronic HIV rather than acute primary infection — biologically MORE distant from v1's acute respiratory virus training (T cell exhaustion programs, IFN desensitization, established viral reservoir biology), making the discrimination test HARDER rather than easier. The pre-committed expected-range decision rule (r ∈ [0.00, 0.20]) applies even more strongly to chronic HIV biology. Issue 30 fallback to qualitative-only is no longer needed since GSE157829 has sufficient healthy controls (n=4 meets Issue 4).
 
-**Pre-specified protocol for Session 6B** (conditional on healthy N ≥ 4):
+**The choice as it stands**: GSE157829 HIV cohort (4 healthy + 6 chronic HIV donors, mixed high/low viral load) is biologically distinct from the v1 corpus (acute respiratory RNA viruses) in three ways: (a) retroviruses integrate into host genome and reverse-transcribe RNA from DNA template (entry into different molecular biology); (b) HIV-1 primarily targets CD4 T cells, not monocytes/respiratory epithelium; (c) chronic HIV adds T cell exhaustion + IFN desensitization + viral reservoir biology that is further from v1's acute IFN response than acute primary HIV would be.
+
+**Pre-specified protocol for Session 6B**:
 1. **Per-bucket HIV response vector**: CD4T bucket is the primary stratum (HIV's main target). Monocyte secondary (chronic HIV induces IFN tone in monocytes). Other buckets reported for completeness.
-2. **Per-bucket cross-context Pearson r to v1 acute SARS-CoV-2**: report each bucket. Expected: very low for CD4T (HIV-CD4T biology is dominated by HIV-specific reverse transcription products + integration markers; SARS-CoV-2 CD4T is bystander IFN response).
-3. **CD4 percentage decline check**: report CD4 T cell percentage in HIV vs healthy. Should be lower in HIV donors (early infection still preserves CD4 count but baseline depression observable). This is biological-validity sanity check.
-4. **Explicit caveat in methods**: HIV is a retrovirus with fundamentally different replication biology. Failure of cross-context transfer (r < 0.10) is the *expected outcome* and supports the framework's discrimination between RNA virus and retrovirus biology. Reporting a high cross-context r would be the surprising finding requiring biological investigation.
+2. **Per-bucket cross-context Pearson r to v1 acute SARS-CoV-2**: report each bucket. Expected: very low for CD4T (chronic HIV-CD4T biology is dominated by exhaustion + integration markers; SARS-CoV-2 CD4T is bystander IFN response).
+3. **CD4 percentage decline check**: report CD4 T cell percentage in HIV vs healthy. Should be lower in chronic HIV donors (more pronounced CD4 depression than early HIV would show). This is biological-validity sanity check.
+4. **Explicit caveat in methods**: HIV is a retrovirus with fundamentally different replication biology; chronic HIV adds exhaustion biology atop the retrovirus baseline. Failure of cross-context transfer (r < 0.10) is the *expected outcome* and supports the framework's discrimination between RNA virus and retrovirus biology. Reporting a high cross-context r would be the surprising finding requiring biological investigation.
 
-**Fall-back protocol if healthy N < 4**:
-- Report HIV cohort as a *qualitative* cross-context data point only.
-- Compute response vector relative to the *v1 corpus healthy baseline* (using the cross-corpus harmonization protocol from Session 6B).
-- Report observed Pearson r without calibrated gate; flag as below sample-size threshold.
+**Decision rule**: cross-context Pearson r in [0.00, 0.20] on CD4T MVS gene subset = expected (retrovirus biology distinct from RNA virus biology). r > 0.40 = surprising, requires investigation. r < -0.10 = anti-correlation, suggests HIV CD4T response is *opposite* to acute RNA virus CD4T response (also biologically interpretable). Pre-committed numerical decision rule UNCHANGED from original Issue 30 framing.
 
-**Decision rule**: cross-context Pearson r in [0.00, 0.20] on CD4T MVS gene subset = expected (retrovirus biology distinct from RNA virus biology). r > 0.40 = surprising, requires investigation. r < -0.10 = anti-correlation, suggests HIV CD4T response is *opposite* to acute RNA virus CD4T response (also biologically interpretable).
-
-**Validation strategy**: pre-registered before Session 6B begins. Sample-size fallback explicit. The expected-low-r outcome is committed; success criterion is "framework discriminates retrovirus from RNA virus biology" not "framework transfers across all virus families."
+**Validation strategy**: pre-registered before Session 6B begins. GSE157829 meets Issue 4 sample size (4 healthy + 6 HIV diseased); no fallback to qualitative-only is needed. The expected-low-r outcome is committed; success criterion is "framework discriminates retrovirus from RNA virus biology" not "framework transfers across all virus families."
 
 **Date opened**: 2026-05-11
 **Date resolved**: pending Session 6B
