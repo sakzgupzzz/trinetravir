@@ -1299,6 +1299,29 @@ Switching the primary to Interferome 2.0 at Session 3.5 would require re-running
 
 ---
 
+### Issue 22: Few-shot adaptation protocol (LOAD-BEARING for H5) — 2026-05-11
+
+**Status**: open at pre-specification level; final validation at Phase 9.
+
+**Decision**:
+- Sample sizes: 50, 100, 200, 500, 1000 cells per virus per adaptation run.
+- Random seeds: 5 per (sample_size, virus) combination for variance estimation across selection randomness.
+- Frozen: f_shared weights, f_specific weights, existing virus embeddings.
+- Trained: only the new virus embedding via Adam, lr=1e-3, early stopping on held-out fraction (20% of adaptation set).
+- Selection strategy: random sampling without replacement from target virus cells.
+- Held-out evaluation: remaining cells per virus after adaptation set extraction, stratified by cell-type bucket.
+
+**Rationale**: Few-shot adaptation tests the v1 model's ability to incorporate a new virus context with limited data. Freezing shared/specific weights and training only the new virus embedding is the minimal-adaptation regime, isolating the embedding's role in cross-virus transfer.
+
+**Validation**: data-efficiency curves with mean±SD across seeds in Phase 9 evaluation. Per-bucket data-efficiency reported. Curve inflection point reported (sample size at which adaptation saturates relative to full-data training).
+
+**Note**: this is the original Session 6B Part E work, correctly deferred to Phase 9 per pipeline rev 3 (requires v1 factorized model to exist; not buildable until Phase 5 completes).
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; Phase 9 data-efficiency curves to confirm H5)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
