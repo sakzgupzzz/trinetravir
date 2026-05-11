@@ -154,6 +154,11 @@ The following choices were made earlier in the project with insufficient justifi
 
 **Validation strategy**: global Harmony sensitivity analysis; supplementary figure. The Session 1 Pearson-r-only verdict under heuristic thresholds is in `results/tables/harmonization_protocol_sensitivity.csv` and is directional evidence only. Calibrated resolution (per-metric permutation null + split-half ceiling on the persisted embeddings) is deferred to Session 3 Part E. Per-cell-type Harmony embeddings for all 5 v1 buckets must also be produced via `scripts/persist_per_celltype_harmony.py` before Session 3 (only `monocyte` was persisted in Session 1).
 
+**Interim evidence file paths (for Session 3 pickup)**:
+- Per-cell-type Harmony embedding: `data/processed/harmony_per_celltype_<bucket>.h5ad` — Session 1 persisted only `monocyte` (244,389-corpus subset, 68,672 cells × 1 var, `obsm['X_harmony_scaled_hvg']`, `uns['harmonization_protocol'] = 'per_celltype_harmony'`). Buckets `B`, `NK`, `CD4T`, `CD8T` are NOT persisted; Session 3 must run `scripts/persist_per_celltype_harmony.py` for those four buckets (~3-5 min each on CPU) before the calibrated comparison can proceed.
+- Global Harmony embedding: `data/processed/harmony_global_embedding.h5ad` (244,389 cells × 4,000 HVGs, `obsm['X_harmony']`, `obsm['X_pca']`, `obsm['X_pca_harmony']`, `layers['X_harmony_scaled_hvg']`, `uns['harmonization_protocol'] = 'global_harmony_study_id_only'`, bucket assignment in `obs['coarse']`).
+- Step 8b verdict table (heuristic thresholds, Pearson-only): `results/tables/harmonization_protocol_sensitivity.csv` — 5 rows, columns: bucket, per_celltype_r, global_r, delta, threshold, per_celltype_pass, global_pass, verdict_matches. 4 of 5 buckets have matching verdicts; NK is the lone disagreement (per-cell-type PASS 0.384, global FAIL 0.308 at threshold 0.35).
+
 **Date opened**: 2026-05-10
 **Date resolved**: pending Session 3
 
