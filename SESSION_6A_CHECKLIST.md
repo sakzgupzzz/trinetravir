@@ -81,12 +81,47 @@ Atomic per Issue 17: migration script + tests + docs in single commit.
 
 ## Part C — per-cohort harmonization (1.5-2 weeks; multi-session)
 
-For each of the 4 cohorts:
+**Pre-conditions for next Claude session executing Part C** (added 2026-05-11):
 
+### C-pre.1 Pre-specify Yoshida 2022 age stratification rule in Issue 28 BEFORE calibration
+- [ ] **Primary stratification rule**: pediatric = age ≤ 18; adult = age 18-65 (matching v1 corpus). **Drop neonate (≤2 yr) and elderly (≥65 yr) from primary test.** Yoshida's `Age_group` column maps as: Neonate → drop; Infant (1-2 yr cutoff) → drop if Yoshida defines Infant as ≤2 yr; Young child / Child / Adolescent → pediatric; Adult → adult; Elderly → drop.
+- [ ] Verify Yoshida's `Age_group` value boundaries via cellxgene metadata or paper supplement before applying the rule.
+- [ ] **Supplementary sensitivity**: report alternative cutoffs (e.g., pediatric = ≤12, adult = 18-65; pediatric = ≤18, adult = ≤80) in supplementary table. Headline = the primary rule above.
+- [ ] Commit Issue 28 age-stratification pre-specification BEFORE running any Yoshida calibration. Atomic per Issue 17.
+
+### C-pre.2 GSE157829 C1 demultiplexing investigation
+- [ ] Investigate paper supplementary / GitHub for C1 healthy-donor demultiplexing approach (hashtag IDs, scrublet calls, or pre-demuxed cell-donor map). PMC7646563.
+- [ ] **If clean per-donor extraction is possible**: apply, get 4 healthy donors. Issue 4 satisfied directly.
+- [ ] **If C1 is unsplittable pseudo-pool**: two paths:
+  - (a) Substitute alternative HIV cohort (Cohn 2020 backup; verify accession before substituting). Repeat Issue 30 substitution commit pattern.
+  - (b) Treat C1 as a single pseudo-donor for purposes of cross-cohort comparison. Document Issue 4 deviation rationale explicitly in METHODS_CHOICES Issue 30 amendment. Risk: pseudo-donor inflates sample-size appearance without true biological replication.
+- [ ] Decision recorded in METHODS_CHOICES Issue 30 before any calibration.
+
+### C-pre.3 GSE213516 CMV serostatus map (BEFORE calibration)
+- [ ] Download Figshare 23789844 (cell type annotations) — verify whether CMV serostatus is in that annotation table OR in GEO Series Matrix file.
+- [ ] Parse Series Matrix for sample-level CMV serostatus mapping. Build `data/raw/gse213516/cmv_serostatus_map.csv` linking each GSM sample to {CMV_positive, CMV_negative, unknown}.
+- [ ] Document any sample-ID ambiguity in `cohort_inventory.csv` (rows where serostatus cannot be cleanly assigned).
+- [ ] If <4 CMV+ or <4 CMV- donors after mapping, flag as Issue 4 deviation and consider substitution.
+
+### C-pre.4 Apply v2 calibration framework per cohort
+- [ ] Use Session 5 v2 framework: bootstrap CI direction fix (≥ lower CI bound, not in-CI), observed-r bootstrap CI, FDR-BH correction, MVS-restricted analysis per Khatri MVS gene set.
+- [ ] Output: `results/tables/cohort_calibration_{cohort}_v2.csv` per cohort.
+
+### C-pre.5 CellTypist annotation consistency check (Yoshida-specific)
+- [ ] Yoshida 2022 h5ad ships with pre-annotated cell types. **Consistency check**: map Yoshida's annotations to v1's Immune_All_Low scheme. Document mismatches in `cohort_inventory.csv`.
+- [ ] Decision: use Yoshida's annotations directly (faster, but may mismatch v1 buckets) OR re-run Immune_All_Low for cross-corpus consistency (slower, guarantees identical annotation pipeline). Default = re-run for cross-corpus consistency unless mismatch is < 5%.
+- [ ] For other 3 cohorts (raw mtx/tsv): run CellTypist Immune_All_Low per Issue 12.
+
+### C-pre.6 Standard Part C steps per cohort
 - [ ] **C1** QC per Issue 4 thresholds. Document per-cohort pass rate in `results/tables/cohort_qc_inventory.csv`.
-- [ ] **C2** CellTypist Immune_All_Low annotation (per Issue 12). For GSE283744 pediatric: verify CellTypist label accuracy against published pediatric PBMC composition.
-- [ ] **C3** Apply `schema_v6_migration.py` to set new obs columns appropriately per cohort.
+- [ ] **C2** CellTypist Immune_All_Low annotation (per C-pre.5 decision).
+- [ ] **C3** Apply `schema_v6_migration.py` to set new obs columns appropriately per cohort:
+  - Randolph: `donor_response_design = paired_within_donor`, `exposure_pair_id` per donor, `exposure_type = ex_vivo_challenge`, `exposure_duration_hours = 6.0`, `age_group_category = adult`.
+  - Yoshida 2022: `age_years` populated from cellxgene metadata, `age_group_category` per C-pre.1 mapping, `exposure_type = natural_infection`, `infection_state = acute` for COVID-19 / `naive` for normal.
+  - GSE157829: `exposure_type = retroviral_infection`, `infection_state = chronic_latent` for HIV+ donors, `age_group_category = adult`.
+  - GSE213516: `exposure_type = chronic_carriage`, `infection_state = chronic_latent` for CMV+ / `naive` for CMV-, `donor_serostatus = positive` for CMV+ / `negative` for CMV-, `age_group_category = older_adult_>65yr`.
 - [ ] **C4** Save per-cohort processed h5ads: `data/processed/<cohort>_processed_v6.h5ad`. Inventory in `results/tables/cohort_inventory_v6.csv`.
+- [ ] **STOP** at end of Part C. Report state. Do not auto-launch Part E audit gate (user-confirmed gate).
 
 **Note**: cross-corpus harmonization (projecting held-out cohorts into training corpus integration space) is Session 6B work. Session 6A produces per-cohort processed h5ads ready for that projection.
 
