@@ -139,17 +139,21 @@ Title finalizes after Session 4 closes Issue 6.
 - ⚠ GPU environment NOT yet provisioned (user TODO before launching Part A)
 - ⚠ scvi-tools NOT yet pinned in `configs/methods_versions.yaml` (Session 4 atomic commit #4)
 
-**Atomic commit sequence (10 expected in Session 4):**
+**Atomic commit sequence (10 logical commits; physical commits may pair):**
 1. ✅ `references/session_4_prompt.md` (DONE, `d3b2a6b`)
-2. Issue 34 pre-spec
-3. Issue 35 pre-spec
-4. `configs/methods_versions.yaml` + `configs/gpu_environment.yaml`
-5. `scripts/extract_per_bucket_counts.py` + 5 `scvi_input_<bucket>.h5ad`
-6. Part A scVI per-bucket sweep results
-7. Part B scVI global supplementary results
-8. Issue 6 resolution
-9. Part C compute-envelope + Issue 35 resolution
-10. Session 4 pipeline closure
+2. ✅ Issue 34 pre-spec (DONE — paired in physical commit `1120716`)
+3. ✅ Issue 35 pre-spec (DONE — paired in physical commit `1120716`)
+4. ✅ `configs/methods_versions.yaml` + `configs/gpu_environment.yaml` (DONE, `e8efca2`)
+5. ✅ `scripts/extract_per_bucket_counts.py` + 5 `scvi_input_<bucket>.h5ad` (DONE, `f70b0ed`; h5ads NOT committed per gitignore)
+6. ⏸ Part A scVI per-bucket sweep results (GPU-blocked)
+7. ⏸ Part B scVI global supplementary results (GPU-blocked)
+8. ⏸ Issue 6 resolution (GPU-blocked)
+9. ⏸ Part C compute-envelope + Issue 35 resolution (GPU-blocked)
+10. ⏸ Session 4 pipeline closure
+
+**Physical-vs-logical mapping:** Issues 34+35 (logical #2+#3) landed in one physical commit `1120716` as a paired pre-compute gate (both gates trigger on same condition; splitting would just split a cohesive section header per Issue 17 logical-unit principle). Task list metadata preserves logical numbering for fresh-chat orientation.
+
+**Pre-Part-A watch item: Wilk sequencing depth.** Extraction revealed Wilk X.max 158-293 (vs Arunachalam/Lee/Schulte 1500-3600). Not a blocker — scVI's NB likelihood handles per-cell library size; `get_normalized_expression(library_size=1e4)` normalizes output. **Inspect per-study response vectors in Part A verdict table for Wilk-specific outliers** before locking Issue 6 verdict. See `references/session_4_prompt.md` Part A.5b for the verdict-review checklist.
 
 **Estimated wall-time:** ~7-14h GPU + 4-6h focused work, 2-3 chat sessions over 1-2 calendar days.
 

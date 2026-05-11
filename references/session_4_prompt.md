@@ -237,6 +237,19 @@ If verdict matrix produces ambiguous classification (e.g., exactly 2 buckets wit
 
 ---
 
+### A.5b Wilk sequencing-depth watchpoint (informational)
+
+Pre-Part-A extraction (commit `f70b0ed`, 2026-05-11) revealed Wilk has X.max range 158-293 across buckets vs Arunachalam/Lee/Schulte X.max 1500-3600. Wilk's per-cell sequencing depth is ~5-10× lower than the other three studies.
+
+**Not a blocker.** scVI's NB/ZINB likelihood handles per-cell library size internally via `size_factor`; `get_normalized_expression(library_size=1e4)` normalizes output for downstream comparison. At the response-vector level (mean across many cells per (study, status)), depth differences should normalize out.
+
+**Verdict-review checklist** at Part A close:
+- Inspect per-study response vectors (Wilk vs each of Arunachalam/Lee/Schulte) for the selected scVI configuration per bucket.
+- If Wilk's response vector shows outlier pattern (e.g., dominated by housekeeping genes; orthogonal to other studies) NOT present in Harmony's per-study response vectors, flag as a Wilk-specific scVI artifact in Issue 6 resolution.
+- If Wilk's response vector is qualitatively consistent with the other 3 studies (similar gene-level direction), depth difference is properly handled and Δr verdict applies as-is.
+
+This is a watch item, not a pre-compute decision. Document outcome in Part A verdict table as an additional column or in Issue 6 resolution caveat.
+
 ### A.6 Wall-time estimate
 
 Per-bucket (16 configs each, single A100):
@@ -378,7 +391,7 @@ Report:
 
 ---
 
-## Atomic commit sequence (expected 10 commits)
+## Atomic commit sequence (10 logical commits; physical commits may pair tightly coupled gates)
 
 1. `references/session_4_prompt.md` (this document)
 2. Issue 34 opening in METHODS_CHOICES.md
@@ -390,6 +403,19 @@ Report:
 8. Issue 6 resolution (one of four verdicts)
 9. Part C Issue 23 compute-envelope assessment + Issue 35 resolution
 10. Session 4 pipeline closure (mirrors commit `ec3dfe9` from Session 3.5)
+
+**Physical-vs-logical commit mapping (executed 2026-05-11):**
+- Logical #1 = `d3b2a6b` (this spec)
+- Logical #2 + #3 = `1120716` (paired physical commit; Issues 34+35 are tightly coupled pre-compute gates with same trigger — must both commit before Parts A/B/C compute; splitting would just split a cohesive section header per Issue 17 logical-unit principle).
+- Logical #4 = `e8efca2` (configs)
+- Logical #5 = `f70b0ed` (extract_per_bucket_counts.py)
+- Logical #6 → TBD (Part A GPU)
+- Logical #7 → TBD (Part B GPU)
+- Logical #8 → TBD (Issue 6 resolution)
+- Logical #9 → TBD (Part C GPU)
+- Logical #10 → TBD (pipeline closure)
+
+Fresh-chat Claude should reference logical commit numbers (1-10) when planning next steps; task list metadata preserves this numbering. Physical commit hashes are tracked separately and may diverge from logical numbering when tightly coupled commits are paired.
 
 ---
 
