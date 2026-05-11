@@ -18,40 +18,51 @@ Acquisition + harmonization + schema work only. No Phase 4 / Phase 5 / Session 6
 
 ## Part A — held-out cohort acquisition (1.5-2 weeks; multi-session)
 
-For each cohort: log source URL, accession, download size + timing, per-donor cell counts in `results/tables/cohort_inventory.csv`, donor metadata (age, sex, disease, severity, time-from-infection, treatment), acquisition issues.
+**State (2026-05-11)**: original cohorts A2/A3/A4 BLOCKED. Substitutions made per Issues 28/29/30 cohort-substitution commits (2a0f322 / da40558 / 840f3db). New acquisition order below.
 
-### A1. Randolph 2021 (PRIMARY) — IAV ex vivo challenge
-- [ ] Citation: Randolph HE et al., Science 374, 1127-1133 (2021).
-- [ ] GEO: **GSE162632**
-- [ ] Design: 90 male donors, paired mock + IAV Cal/04/09 (H1N1), 6h ex vivo, MOI 0.5, 10x.
-- [ ] Cells: 235,161 high-quality / 255,731 raw.
-- [ ] Sample size: vastly exceeds Issue 4 threshold.
-- [ ] Acquisition: GEO direct download, 4-6h. **bg job needed**.
-- [ ] Storage: `data/raw/randolph_2021/` + `data/processed/randolph_2021_*.h5ad`
+For each cohort: log source URL, accession, download size + timing, per-donor cell counts in `results/tables/cohort_inventory.csv`, donor metadata, acquisition issues.
 
-### A2. GSE283744 (SECONDARY) — pediatric RSV + SARS-CoV-2
-- [ ] Citation: Research Square 2025 "Comparative Single-Cell Analyses in Infants..." (verify final publication state)
-- [ ] GEO: **GSE283744**
-- [ ] Design: 19 RSV-infected (mild=5, moderate=7, severe=7) + 30 SARS-CoV-2 + 17 healthy infants. Median age 2.3 months. 66 scRNA-seq + 51 snATAC-seq.
-- [ ] Modality: scRNA-seq primary; snATAC-seq deferred to v1.5.
-- [ ] Sample size: 19 RSV + 17 healthy → passes Issue 4; 30 SARS-CoV-2 + 17 healthy → passes Issue 4.
-- [ ] Acquisition: GEO direct, 4-6h. **bg job needed**.
-- [ ] Storage: `data/raw/gse283744/` + `data/processed/gse283744_*.h5ad`
+### A1. Randolph 2021 (PRIMARY) — IAV ex vivo challenge — **ACQUIRED**
+- [x] Citation: Randolph HE et al., Science 374, 1127-1133 (2021).
+- [x] GEO: **GSE162632**
+- [x] Design: 90 male donors, paired mock + IAV Cal/04/09 (H1N1), 6h ex vivo, MOI 0.5, 10x.
+- [x] Cells: 235,161 high-quality / 255,731 raw.
+- [x] Acquisition: 789MB GSE162632_RAW.tar downloaded + extracted to data/raw/randolph_2021/.
+- [x] State: 30 multiplexed 10x pools on disk; awaiting Session 6B demultiplexing.
 
-### A3. Wang 2025 (TERTIARY) — chronic CMV carriage
-- [ ] Citation: bioRxiv 2025.06.24.661167 (verify final publication).
-- [ ] Accession: GEO accession TBD (verify on download) + project GitHub linked in preprint.
-- [ ] Design: 19 CMV(-) + 17 CMV(+) older adults, median age 71. 10x scRNA-seq + flow cytometry.
-- [ ] Sample size: 17/19 meets Issue 4 with chronic-carriage caveat (see B3).
-- [ ] Acquisition: 4-6h. **bg job needed**.
-- [ ] Storage: `data/raw/wang_2025_cmv/` + `data/processed/wang_2025_cmv_*.h5ad`
+### A2. Yoshida 2022 (SUBSTITUTE for GSE283744) — pediatric + adult SARS-CoV-2 — **PENDING**
+- [ ] Citation: Yoshida M et al. Nature 602:321 (2022).
+- [ ] Source: **covid19cellatlas.org** direct h5ad (open-access Wellcome Sanger / HCA team deposition).
+- [ ] Design: pediatric + adult + healthy acute primary SARS-CoV-2 PBMC. n=93 total. 10x 5' (matches Lee 2020 in v1 corpus). PBMC compartment: 317,854 cells.
+- [ ] Sample size: pediatric + adult cohorts each have healthy controls; passes Issue 4 within each age stratum.
+- [ ] Acquisition: covid19cellatlas.org direct h5ad download. Expected size: few GB.
+- [ ] Storage: `data/raw/yoshida_2022/` + `data/processed/yoshida_2022_*.h5ad`
 
-### A4. Lee 2025 (TERTIARY) — HIV-1 early infection
-- [ ] Citation: eLife 2025, PMC12370253.
-- [ ] Design: 9 individuals with early HIV (<6 months), 5 scRNA-seq + 4 snRNA-seq multiome. 10x.
-- [ ] Sample size: 9 HIV donors; healthy control N **TBD on download** — may not meet Issue 4. Fall back to qualitative validation if healthy N < 4. **Flag explicitly.**
-- [ ] Acquisition: 3-4h. **bg job needed**.
-- [ ] Storage: `data/raw/lee_2025_hiv/` + `data/processed/lee_2025_hiv_*.h5ad`
+### A3. GSE213516 (SUBSTITUTE for Wang 2025 CMV) — chronic-latent CMV — **PENDING**
+- [ ] Source: **GSE213516** (PBMC aging clocks cohort with CMV serostatus).
+- [ ] Design: CMV(+) vs CMV(-) healthy older adults. 10x Genomics. Used by Science Advances aging clocks + npj Aging integrated atlas.
+- [ ] Acquisition: GEO standard download.
+- [ ] Storage: `data/raw/gse213516/` + `data/processed/gse213516_*.h5ad`
+- [ ] Verify CMV serostatus annotation is in sample metadata for clean harmonization.
+
+### A4. GSE157829 (SUBSTITUTE for Lee 2025 HIV) — chronic HIV exhaustion — **PENDING**
+- [ ] Citation: Wang J et al. (2020) HIV exhaustion atlas (PMC7646563).
+- [ ] Source: **GSE157829** public GEO.
+- [ ] Design: 4 healthy + 6 HIV-infected (3 high VL + 3 low VL). 10x Genomics. ~66k PBMCs.
+- [ ] Sample size: **meets Issue 4** (≥4 healthy + ≥4 diseased). No fallback to qualitative-only needed.
+- [ ] Acquisition: GEO standard download.
+- [ ] Storage: `data/raw/gse157829/` + `data/processed/gse157829_*.h5ad`
+
+### A-extra. PBMCpedia investigation (30-min time-box, NON-BLOCKING)
+- [ ] Check PBMCpedia (NAR Nov 2025, DOI 10.1093/nar/gkaf1245) for pre-harmonized versions of Yoshida 2022, GSE157829, GSE213516. If included in PBMCpedia's 24-study collection with standardized preprocessing, document alternative access path + note potential Part C time savings. Do NOT switch to PBMCpedia as primary access yet — requires verifying PBMCpedia preprocessing matches v1 methodology (CellTypist Immune_All_Low + per-cell-type Harmony).
+
+### A-extra. Grabauskas/Ucar GEO probe (15-min, NON-BLOCKING)
+- [ ] Search GEO for "Ucar" + "Grabauskas" CMV deposits. If Grabauskas 2025 Cohort 1 (19 CMV- + 17 CMV+) publicly available under different accession than the controlled-access pattern, document as POTENTIAL additional CMV cohort. If not findable, skip. GSE213516 remains primary substitute for Issue 29.
+
+### A-blocked. Original cohorts (deferred; replaced)
+- ❌ GSE283744 pediatric (controlled access; replaced by Yoshida 2022)
+- ❌ Wang 2025 CMV Jackson Lab (likely controlled access; replaced by GSE213516)
+- ❌ Lee 2025 HIV KRA (gated 2-4wk review + no healthy controls; replaced by GSE157829)
 
 ---
 
