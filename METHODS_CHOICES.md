@@ -1273,6 +1273,32 @@ Switching the primary to Interferome 2.0 at Session 3.5 would require re-running
 
 ---
 
+### Issue 21: Factorized model architecture hyperparameters — 2026-05-11
+
+**Status**: open at pre-specification level; final validation at Phase 5.
+
+**Decision**: pre-specified search space within Issue 14's 20-config budget:
+- Shared latent dimensionality: ∈ {16, 32, 64}
+- Virus embedding dimensionality: ∈ {8, 16, 32}
+- Encoder/decoder depth: ∈ {2, 3} layers
+- Hidden width: ∈ {128, 256, 512}
+- Dropout: ∈ {0.1, 0.2, 0.3}
+- Activation: GELU (fixed)
+- Optimizer: Adam, lr ∈ {1e-3, 5e-4}, weight_decay=1e-5
+- Batch size: ∈ {32, 64, 128} donor-cell aggregates
+- Early stopping: patience 20 epochs, max 200 epochs
+
+**Selection**: held-out donor validation per Issue 14, donor-level split (80/20), primary cross-study coherence metric (Pearson per Issue 3 resolution) as tuning target. 20-config sweep with random search; document selected configuration in supplementary.
+
+**Rationale**: Search space spans an order of magnitude on key architectural choices (latent dim 16× range) without over-specifying. 20-config budget per Issue 14 is enforced; larger sweeps risk overfitting to corpus-specific patterns.
+
+**Validation**: report final hyperparameters with selection criterion in supplementary. Report sensitivity to ±1 setting on each hyperparameter (held fixed at selected values for other hyperparams).
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; Phase 5 sweep within this space)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
