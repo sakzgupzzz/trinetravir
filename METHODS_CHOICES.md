@@ -548,9 +548,21 @@ the per-stratum framing is the only defensible v1 claim.
 5. **Reporting**: report pediatric SARS-CoV-2 cross-age Pearson r alongside adult cross-study Pearson r for the same virus. (RSV evaluation no longer applies under Yoshida 2022 substitution — Yoshida is SARS-CoV-2 only.)
 6. **Age covariate modeling**: at this stage, age is a stratification variable, not a continuous covariate in any model. Continuous age modeling deferred to v1.5.
 
+**Age stratification rule (pre-specified 2026-05-11 BEFORE any Yoshida calibration)**:
+- **Primary stratification**:
+  - Pediatric = Yoshida `Age_group ∈ {Young child, Child, Adolescent}` (development_stage spans 3-18 yr range; pediatric stage / juvenile stage 5-14 yo / postnatal stage). n=5 COVID donors + 17 normal donors → Issue 4 PASSES.
+  - Adult = Yoshida `Age_group = Adult` (development_stage spans 25-66 yo). n=4 COVID donors + 9 normal donors → Issue 4 PASSES (boundary 4 = threshold).
+  - **Drop from primary test**: Neonate (newborn 0-28 days), Infant (child stage 1-4 yo — overlaps ≤2 yr cutoff; excluded for boundary cleanliness), Elderly (late adult / 70-92 yr stages). 46,499 + 49,034 + 121,296 = 216,829 cells excluded from primary headline.
+  - post-COVID-19 disorder donors are excluded from primary (different disease state from acute COVID-19 + healthy comparison in v1 corpus).
+- **Supplementary sensitivity**: report alternative cutoffs in supplementary table:
+  - alt1: pediatric ≤12 (Young child + Child only), adult 18-65 (excludes Adolescent)
+  - alt2: pediatric ≤18 (Young child + Child + Adolescent), adult ≤80 (Adult + Elderly combined)
+  - alt3: bulk pediatric + bulk adult including Infant (pediatric = Infant + Young child + Child + Adolescent)
+- **Headline figures**: primary stratification rule above only.
+
 **Decision rule**: if pediatric SARS-CoV-2 monocyte cross-age Pearson r to adult ≥ 0.30 on the MVS gene subset, conserved-component hypothesis transfers across age groups. If r < 0.10, the conserved component does NOT transfer to pediatric biology — methods section must report. Intermediate values reported as partial transfer.
 
-**Validation strategy**: pre-registered before Session 6B begins.
+**Validation strategy**: pre-registered before Session 6B begins. Age stratification rule pre-committed before any Yoshida calibration runs (this section dated 2026-05-11).
 
 **Date opened**: 2026-05-11
 **Date resolved**: pending Session 6B
