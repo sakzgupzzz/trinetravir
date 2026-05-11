@@ -160,6 +160,18 @@ def main() -> int:
     )
 
     # ---- CellTypist Immune_All_Low (per Issue 12) ----
+    # CellTypist requires gene symbols as var_names. Swap from ENSG -> gene_symbol.
+    if "gene_symbol" in combined.var.columns:
+        gs = combined.var["gene_symbol"].astype(str).values
+        # Dedup gene_symbol (some symbols map to multiple ENSG)
+        new_idx = pd.Index(gs)
+        dup = new_idx.duplicated(keep="first")
+        if dup.any():
+            keep = ~dup
+            combined = combined[:, keep].copy()
+            gs = gs[keep]
+        combined.var_names = pd.Index(gs)
+        combined.var.index.name = "gene_symbol"
     logger.info("running CellTypist Immune_All_Low")
     combined = annotate_unified(combined, model_name="Immune_All_Low.pkl", majority_voting=True)
     bucket_counts = combined.obs["cell_type_bucket_unified"].value_counts()
