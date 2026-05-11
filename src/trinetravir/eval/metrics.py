@@ -110,6 +110,7 @@ def mmd_rbf_off_diag(
     embeddings_per_study: dict[str, np.ndarray],
     *,
     gamma: float | None = None,
+    seed: int = 42,
 ) -> float:
     """Mean off-diagonal MMD with RBF kernel across per-study cell sets.
 
@@ -163,13 +164,16 @@ def mmd_rbf_off_diag(
             sigma_sq = 1.0
         gamma = 1.0 / (2.0 * sigma_sq)
 
+    # Session 5 Part A5: thread caller seed through. Prior implementation
+    # hardcoded default_rng(0) which ignored the caller's seed parameter.
+    rng = np.random.default_rng(seed)
+
     def mmd2(x: np.ndarray, y: np.ndarray) -> float:
         # Biased empirical MMD^2.
         n_x, n_y = len(x), len(y)
         if n_x == 0 or n_y == 0:
             return float("nan")
         # Subsample to cap compute: at most 500 cells per study.
-        rng = np.random.default_rng(0)
         if n_x > 500:
             x = x[rng.choice(n_x, 500, replace=False)]
         if n_y > 500:

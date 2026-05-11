@@ -45,6 +45,18 @@ Single-cell foundation models (scGPT, Geneformer, scPRINT-2, STATE, Stack) and p
 - Superinfection / coinfection prediction. Different problem.
 - **Multi-compartment scope (v1.1).** PBMCs only for v1.1. Airway epithelium, organoid, and intestinal datasets deferred to v2. Rationale: PBMC IFN response is monocyte-dominated, fast, clean; airway epithelial response is slower and contaminated by bystander tissue damage signals. Mixing compartments risks cross-compartment signal swamping cross-virus signal in v1 modeling.
 
+### 1.8 Exploratory vs confirmatory evidence (added v1.3, 2026-05-11)
+
+The v1 paper distinguishes two categories of evidence in its methods + results sections. The distinction was added in Session 5 after a hostile-reviewer audit identified that Phase 3 gate thresholds were set post-Harmony (annotated as "above the pre-Harmony r"), which is fit-to-data, not pre-specification.
+
+**Phases 1-3 produce exploratory/discovery evidence.** These phases identified which buckets have cross-study signal worth pursuing. The thresholds applied in Phase 3 (monocyte 0.60, B 0.40, NK 0.35, CD4T 0.30, CD8T 0.25) were chosen after observing Harmony output and are therefore not pre-specified. Calibrated Session 3 verdicts on the Phase 3 + Phase 3.5 data confirm which buckets have signal under permutation null + split-half ceiling criteria, but those verdicts are still computed against thresholds and on data that informed the gate design. They are exploratory and reported as such.
+
+**Phases 4 onward produce confirmatory evidence at pre-registered thresholds.** Phase 5 thresholds will be set from external literature (Khatri MVS r≈0.45 monocyte module preservation; Pan et al. 2023 cross-virus monocyte r≈0.55-0.65) BEFORE running Phase 5. The Phase 5 pre-registration commits the v1 paper's primary claims to those thresholds in advance. Sessions 3.5 (pre-specifications for Phases 5/7/9) and Session 4 (scVI sensitivity) are scoped to make this distinction enforceable.
+
+The methods section will state: "Phase 3 + Phase 3.5 calibrated verdicts are exploratory and were used to scope the v1 corpus. Phase 5 onward applies pre-registered thresholds set from external literature; Phase 5+ verdicts are confirmatory."
+
+This distinction is the v1 paper's response to the post-hoc-threshold concern. See METHODS_CHOICES.md Issue 26 (Phase 3 threshold provenance) for the full audit-response acknowledgment.
+
 ---
 
 ## 2. Repository structure

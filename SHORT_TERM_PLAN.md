@@ -7,7 +7,7 @@
 | # | Block | Spec | Prereqs | Status |
 |---|-------|------|---------|--------|
 | 1 | **Session 3 closeout** | Inline (this file §1) | Phase35_subbucket bg job `bfs5zrjht` completion | **DONE 2026-05-11** |
-| 2 | **Session 5 (audit response)** | `SESSION_5_SPEC.md` | Block #1 fully committed | READY (not started) |
+| 2 | **Session 5 (audit response)** | `SESSION_5_SPEC.md` | Block #1 fully committed | **DONE 2026-05-11** |
 | 3 | **Human decision on Issue 25** | METHODS_CHOICES.md Issue 25 entry | Block #2 complete + Issue 25 opened | BLOCKED on #2 |
 | 4 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #3 (Issue 25 human-resolved) | BLOCKED on #3 |
 | 5 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #4 complete | BLOCKED on #4 |

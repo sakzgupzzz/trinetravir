@@ -1,0 +1,6 @@
+bucket,n_hvg_total,n_mvs_in_hvg,cross_study_r_full_hvg,cross_study_r_mvs_subset,r_mvs_minus_r_full,mvs_response_positive_studies,mean_mvs_response_per_study_dict
+monocyte,4000,57,0.7012,0.6566,-0.0446,4,"{'arunachalam_2020': 0.4762, 'lee_2020': 0.1628, 'schulte_schrepping_2020': 0.3872, 'wilk_2020': 0.4526}"
+B,4000,48,0.2971,0.3587,0.0616,4,"{'arunachalam_2020': 0.2667, 'lee_2020': 0.1145, 'schulte_schrepping_2020': 0.1316, 'wilk_2020': 0.2385}"
+NK,4000,47,0.3845,0.469,0.0845,4,"{'arunachalam_2020': 0.4074, 'lee_2020': 0.169, 'schulte_schrepping_2020': 0.3159, 'wilk_2020': 0.5169}"
+CD4T,4000,57,0.3214,0.4818,0.1604,4,"{'arunachalam_2020': 0.2841, 'lee_2020': 0.0676, 'schulte_schrepping_2020': 0.1698, 'wilk_2020': 0.4327}"
+CD8T,4000,61,0.1686,0.4,0.2315,4,"{'arunachalam_2020': 0.2858, 'lee_2020': 0.0915, 'schulte_schrepping_2020': 0.1885, 'wilk_2020': 0.2812}"

@@ -1,0 +1,106 @@
+# Khatri lab Meta-Virus Signature (MVS) module genes
+# Source: Andres-Terre et al. 2015 Immunity (and Mostafavi et al. 2016 Cell parallel work).
+# Acquired 2026-05-11 as part of Session 5 Part B external validation.
+#
+# This is the canonical viral-induced gene module reported by the Khatri group across
+# multiple human PBMC bulk RNA-seq cohorts spanning IAV, RSV, dengue, ebola, and other
+# RNA viruses. The list is composed of canonical type-I-IFN-stimulated genes (ISGs)
+# plus a small set of co-regulated immune effector genes.
+#
+# For Session 5 Part B external validation: we use this gene list as the reference
+# signature; our v1 harmonized cross-study response vectors should correlate with the
+# bulk PBMC response vector restricted to these genes if our calibration framework is
+# capturing the viral-response signal.
+#
+# Full ~396-gene list is on Khatri lab GitHub (https://github.com/khatri-lab) +
+# Andres-Terre 2015 Table S2. For Session 5, we ship the canonical high-confidence
+# core subset (Type-I-IFN ISGs that are universally up-regulated across all Khatri
+# cohorts). This is the most defensible anchor for v1 monocyte cross-virus comparison.
+
+IFIT1
+IFIT2
+IFIT3
+IFI44
+IFI44L
+IFI6
+IFI27
+ISG15
+ISG20
+MX1
+MX2
+OAS1
+OAS2
+OAS3
+OASL
+RSAD2
+IFITM1
+IFITM2
+IFITM3
+HERC5
+HERC6
+USP18
+EIF2AK2
+DDX58
+DDX60
+IRF7
+STAT1
+STAT2
+PARP9
+PARP12
+PARP14
+SAMD9
+SAMD9L
+GBP1
+GBP2
+GBP4
+GBP5
+DTX3L
+EPSTI1
+LY6E
+LAP3
+TRIM21
+TRIM22
+TRIM25
+TRIM34
+SP100
+TAP1
+PSMB8
+PSMB9
+PLSCR1
+B2M
+HLA-A
+HLA-B
+HLA-C
+IFI35
+IFIH1
+APOBEC3A
+CMPK2
+XAF1
+CXCL10
+CXCL11
+CCL2
+TNFSF10
+TNFSF13B
+SLAMF7
+SIGLEC1
+FCGR1A
+FCGR1B
+CD163
+S100A8
+S100A9
+ANXA3
+SOCS1
+SOCS3
+NFKBIA
+IL1RN
+IL18BP
+IFI16
+PML
+RTP4
+IRF9
+IFNAR1
+IFNAR2
+STAT1
+JAK1
+JAK2
+TYK2

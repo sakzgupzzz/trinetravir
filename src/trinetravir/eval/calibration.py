@@ -700,16 +700,36 @@ def bootstrap_ci_overlap(
     *,
     alpha: float = 0.05,
 ) -> dict:
-    """Test whether ``observed`` is within (1-alpha) CI of split-half distribution.
+    """Test whether ``observed`` is AT-OR-ABOVE lower bound of split-half CI.
 
-    Returns {'in_ci': bool, 'ci_low': float, 'ci_high': float}.
-    Replaces the heuristic 50%-of-ceiling rule.
+    Session 5 Part A1 correction: the prior implementation treated observed
+    *within* the (1-alpha) split-half CI as PASS and *above* the upper CI
+    as FAIL. That was wrong — observed r > split-half upper CI represents
+    cross-study coherence that EXCEEDS within-study reliability, which is
+    the strongest possible signal (interesting, not failure).
+
+    The corrected criterion: observed ≥ lower bound of split-half (1-alpha)
+    CI. Above the upper bound is still PASS. Returns the CI bounds plus the
+    ``at_or_above_ci_low`` flag (replaces the old ``in_ci`` flag).
+
+    Returns {'at_or_above_ci_low': bool, 'in_ci': bool (legacy, retained
+    for audit trail in v1 tables), 'ci_low': float, 'ci_high': float}.
     """
     if len(split_half_distribution) == 0:
-        return {"in_ci": False, "ci_low": float("nan"), "ci_high": float("nan")}
+        return {
+            "at_or_above_ci_low": False,
+            "in_ci": False,
+            "ci_low": float("nan"),
+            "ci_high": float("nan"),
+        }
     lo = float(np.percentile(split_half_distribution, 100 * alpha / 2))
     hi = float(np.percentile(split_half_distribution, 100 * (1 - alpha / 2)))
-    return {"in_ci": bool(lo <= observed <= hi), "ci_low": lo, "ci_high": hi}
+    return {
+        "at_or_above_ci_low": bool(observed >= lo),
+        "in_ci": bool(lo <= observed <= hi),
+        "ci_low": lo,
+        "ci_high": hi,
+    }
 
 
 def calibrated_gate_verdict(
@@ -719,38 +739,156 @@ def calibrated_gate_verdict(
     *,
     percentile: float = 99,
     alpha: float = 0.05,
+    use_corrected_ci: bool = True,
 ) -> dict:
-    """Two-criterion verdict per Issue 9.
+    """Two-criterion calibrated gate verdict.
 
     Pass iff:
       (1) observed exceeds (percentile)th percentile of null distribution
           (equivalently, permutation p < (1-percentile/100)).
-      (2) observed within (1-alpha) bootstrap CI of split-half distribution
-          (signal is not below within-study reliability noise floor).
+      (2) (corrected) observed ≥ lower bound of (1-alpha) split-half CI.
+          (legacy) observed within (1-alpha) split-half CI.
 
-    Returns {'pass': bool, 'null_threshold': float, 'p_value': float,
-             'in_split_half_ci': bool, 'ci_low': float, 'ci_high': float}.
+    The corrected criterion (Session 5 Part A1) is the default. The legacy
+    "in CI" criterion remains accessible via use_corrected_ci=False for
+    audit-trail v1 verdict reproduction.
+
+    Returns dict with keys: ``pass``, ``null_threshold``, ``p_value``,
+    ``at_or_above_ci_low``, ``in_split_half_ci`` (legacy), ``ci_low``,
+    ``ci_high``.
     """
     if len(null_dist) == 0:
         return {
             "pass": False,
             "null_threshold": float("nan"),
             "p_value": float("nan"),
+            "at_or_above_ci_low": False,
             "in_split_half_ci": False,
             "ci_low": float("nan"),
             "ci_high": float("nan"),
         }
     thr = float(np.percentile(null_dist, percentile))
     p = float(((null_dist >= observed).sum() + 1) / (len(null_dist) + 1))
-    in_ci = bootstrap_ci_overlap(observed, split_half_dist, alpha=alpha)
+    ci = bootstrap_ci_overlap(observed, split_half_dist, alpha=alpha)
+    ci_pass = ci["at_or_above_ci_low"] if use_corrected_ci else ci["in_ci"]
     return {
-        "pass": bool(observed >= thr and in_ci["in_ci"]),
+        "pass": bool(observed >= thr and ci_pass),
         "null_threshold": thr,
         "p_value": p,
-        "in_split_half_ci": in_ci["in_ci"],
-        "ci_low": in_ci["ci_low"],
-        "ci_high": in_ci["ci_high"],
+        "at_or_above_ci_low": ci["at_or_above_ci_low"],
+        "in_split_half_ci": ci["in_ci"],
+        "ci_low": ci["ci_low"],
+        "ci_high": ci["ci_high"],
     }
+
+
+def bootstrap_observed_r(
+    x_corrected: np.ndarray,
+    cell_obs: pd.DataFrame,
+    *,
+    metric_fn: Callable[[dict[str, np.ndarray]], float],
+    n_bootstrap: int = 1000,
+    seed: int = 42,
+) -> dict:
+    """Donor-level bootstrap CI on observed cross-study r.
+
+    Session 5 Part A2. Each iteration resamples donors WITH REPLACEMENT
+    within each study (preserving per-study donor count) and computes
+    bootstrap mean(diseased donors) - mean(healthy donors) by averaging
+    pre-computed per-donor cell means. Per-iteration cost is O(n_donors *
+    n_genes), independent of n_cells. Returns dict with observed_ci_low,
+    observed_ci_high, n_bootstrap_completed, bootstrap_values.
+    """
+    rng = np.random.default_rng(seed)
+    per_study = _per_study_donor_status(cell_obs)
+    cell_study = cell_obs["study_id"].astype(str).to_numpy()
+    cell_donor = cell_obs["donor_id"].astype(str).to_numpy()
+
+    studies = sorted(per_study.keys())
+    # Pre-compute per-donor mean for each (study, donor). Bootstrap then
+    # resamples donor-level means rather than re-aggregating cells.
+    per_study_donor_means: dict[str, dict[str, np.ndarray]] = {}
+    per_study_donor_status: dict[str, dict[str, str]] = {}
+    for sid in studies:
+        m = cell_study == sid
+        sub_x = x_corrected[m]
+        sub_donor = cell_donor[m]
+        ds = per_study[sid].to_dict()
+        donor_means: dict[str, np.ndarray] = {}
+        for d in set(sub_donor.tolist()):
+            mask_d = sub_donor == d
+            donor_means[d] = sub_x[mask_d].mean(axis=0)
+        per_study_donor_means[sid] = donor_means
+        per_study_donor_status[sid] = ds
+
+    boot_values: list[float] = []
+    for _ in range(n_bootstrap):
+        rvs: dict[str, np.ndarray] = {}
+        for sid in studies:
+            donor_means = per_study_donor_means[sid]
+            ds = per_study_donor_status[sid]
+            donors = np.array(list(donor_means.keys()))
+            if len(donors) < 2:
+                continue
+            sampled = rng.choice(donors, size=len(donors), replace=True)
+            d_means, h_means = [], []
+            for d in sampled:
+                if ds.get(d) == "diseased":
+                    d_means.append(donor_means[d])
+                elif ds.get(d) == "healthy_control":
+                    h_means.append(donor_means[d])
+            if not d_means or not h_means:
+                continue
+            rv = np.mean(np.stack(d_means, axis=0), axis=0) - np.mean(
+                np.stack(h_means, axis=0), axis=0
+            )
+            rvs[sid] = rv
+        if len(rvs) < 2:
+            continue
+        v = metric_fn(rvs)
+        if not np.isnan(v):
+            boot_values.append(v)
+    arr = np.asarray(boot_values, dtype=np.float64)
+    if len(arr) == 0:
+        return {
+            "observed_ci_low": float("nan"),
+            "observed_ci_high": float("nan"),
+            "n_bootstrap_completed": 0,
+            "bootstrap_values": arr,
+        }
+    return {
+        "observed_ci_low": float(np.percentile(arr, 2.5)),
+        "observed_ci_high": float(np.percentile(arr, 97.5)),
+        "n_bootstrap_completed": len(arr),
+        "bootstrap_values": arr,
+    }
+
+
+def fdr_bh(p_values: np.ndarray) -> np.ndarray:
+    """Benjamini-Hochberg FDR correction.
+
+    Session 5 Part A3. Standard step-up BH on the input p-value array.
+    NaN inputs propagate to NaN outputs. Returns the FDR-corrected
+    (adjusted) p-values.
+    """
+    p = np.asarray(p_values, dtype=np.float64)
+    out = np.full_like(p, np.nan)
+    mask = ~np.isnan(p)
+    pv = p[mask]
+    n = len(pv)
+    if n == 0:
+        return out
+    order = np.argsort(pv)
+    ranks = np.arange(1, n + 1, dtype=np.float64)
+    sorted_p = pv[order]
+    bh = sorted_p * n / ranks
+    # Step-up: enforce monotonicity (running min from right).
+    bh = np.minimum.accumulate(bh[::-1])[::-1]
+    bh = np.clip(bh, 0.0, 1.0)
+    inv = np.empty_like(order)
+    inv[order] = np.arange(n)
+    out[mask] = bh[inv]
+    return out
 
 
 def summary_stats_off_diag(rvs: dict[str, np.ndarray]) -> dict:
