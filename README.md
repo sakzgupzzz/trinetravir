@@ -6,6 +6,10 @@ Single-cell foundation models and perturbation prediction methods are typically 
 
 Status: early development. See [PLAN.md](./PLAN.md) for the current project specification.
 
+## Methodological choices
+
+Every methodological decision in this project is logged with scientific rationale in [METHODS_CHOICES.md](./METHODS_CHOICES.md).
+
 ## License
 
 MIT License
