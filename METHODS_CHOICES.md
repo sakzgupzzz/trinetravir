@@ -69,32 +69,6 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
-### Issue 4: study exclusion criteria for Guo and MGH (MODERATE)
-
-**Status**: open. Resolution required before Phase 4.
-
-**The choice as it stands**: Guo 2020 was excluded because it has 2 diseased donors and 0 healthy controls. MGH was excluded because it has 14 diseased and 1 healthy donor. The exclusions were made on a case-by-case basis after seeing the data.
-
-**Why this is a problem**: the exclusion criterion was not pre-specified. A reviewer could ask whether the exclusions are post-hoc rationalizations or principled.
-
-**Resolution required**:
-- Pre-specify the exclusion rule and document it in this file.
-- Apply the rule retroactively to confirm Guo and MGH exclusions are consistent with it.
-
-**Pre-specified rule (to be confirmed by the user)**: "A study is included in the harmonization corpus if and only if it has at least 4 healthy donors and at least 4 diseased donors. The threshold of 4 is set by the requirement that within-study donor-level split-half analysis (for the threshold calibration in Issue 9) produces at least 2 donors per split per class."
-
-**Alternatives considered**:
-- Lower threshold (≥3 donors): rejected because donor-level statistical analysis becomes unstable.
-- Higher threshold (≥6 donors): rejected because it would unnecessarily exclude studies like Wilk that have 6 healthy and 7 diseased donors.
-- No threshold, include all studies: rejected because Guo (0 healthy) cannot produce a response vector and MGH (1 healthy donor) produces donor-confounded response vectors.
-
-**Validation strategy**: the criterion is pre-specified before the rest of the analysis; the rule justifies both exclusions cleanly.
-
-**Date opened**: 2026-05-10
-**Date resolved**: <fill in>
-
----
-
 ### Issue 5: Gate 1 sanity-check threshold of r < 0.7 (MINOR but principle-bearing)
 
 **Status**: open. Resolution required for paper.
@@ -348,6 +322,26 @@ The conceptual rename (`infection_status` -> `donor_disease_status`) was applied
 - Define `infected` cells via per-cell viral read detection: not feasible in v1. PBMC viral read counts are extremely sparse and most v1-corpus studies (Lee, Wilk, Arunachalam, Schulte-Schrepping) did not align reads to viral genomes. v2 may revisit this for airway-epithelium studies.
 
 **Validation strategy**: refactor with full test coverage (`uv run pytest src/tests/` = 39 passed at resolution time). No scientific sensitivity analysis required — this is a naming and vocabulary clarification, not a methods change. The methods section of the eventual paper will define both the column and the allowed values explicitly so a reviewer cannot mistake the donor-level proxy for cell-level infection state.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-10
+
+---
+
+### Resolved Issue 4: study exclusion criteria (MODERATE) — 2026-05-10
+
+**Final choice**: a study is included in the harmonization corpus if and only if it has at least 4 healthy donors and at least 4 diseased donors. The criterion is encoded in `configs/datasets.yaml` under the top-level `inclusion_criteria:` section with `min_healthy_donors: 4` and `min_diseased_donors: 4`. A retroactive application table records the donor counts and the resulting include/exclude verdict for every study currently in the registry.
+
+Guo 2020 (0 healthy / 2 diseased) and MGH acute COVID (1 healthy / 14 diseased) fail the rule and remain excluded. Lee 2020 (4/13), Wilk 2020 (6/7), Arunachalam 2020 (5/7), and Schulte-Schrepping 2020 (21/18) satisfy the rule and remain included.
+
+**Why this threshold**: donor-level statistical analyses — within-study split-half reliability (Issue 9 calibration) and donor-level permutation null (Issue 9) — require at least 2 donors per split per class for stable estimates. A 4/4 minimum is the smallest donor count compatible with that requirement. A higher threshold (e.g. 6/6) would unnecessarily exclude Lee (anchor cross-virus study) and Wilk. A lower threshold (3/3) would admit Lee but produce split-half estimates with only 1-2 donors per half — statistically unstable.
+
+**Alternatives considered and rejected**:
+- Threshold of 3 donors per class: rejected because split-half analysis on 3 donors produces 1-2 donors per half per class, too small for stable reliability estimates.
+- Threshold of 6 donors per class: rejected because it would exclude Lee (4 healthy donors) — Lee is the only cross-virus anchor (SARS + IAV + healthy in one study); excluding it would kill v1.
+- No threshold (include everything): rejected because Guo (0 healthy) cannot compute a within-study response vector at all, and MGH (1 healthy donor) produces donor-confounded response vectors with strongly negative cross-study r (the Phase 3 prep notebook surfaced this empirically; see memory/phase3_decisions.md).
+
+**Validation strategy**: pre-specified in the registry; enforced by `src/tests/test_datasets.py` (4 tests, all passing). The test fails informatively if a future study is added that violates the rule, so the criterion cannot silently drift. The methods section of the paper will quote the rule verbatim from `inclusion_criteria.rationale`.
 
 **Date opened**: 2026-05-10
 **Date resolved**: 2026-05-10

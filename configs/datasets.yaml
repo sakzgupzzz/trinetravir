@@ -33,6 +33,27 @@ defaults:
     healthy_tokens: [normal, healthy]
     bystander_definition: not_applicable_for_pbmc_disease_proxy
 
+inclusion_criteria:
+  # Pre-specified study inclusion rule. See METHODS_CHOICES.md Issue 4.
+  # A study is included in the harmonization corpus if and only if it has at
+  # least 4 healthy donors AND at least 4 diseased donors.
+  min_healthy_donors: 4
+  min_diseased_donors: 4
+  rationale: |
+    Donor-level statistical analyses — within-study split-half reliability
+    (Issue 9 calibration) and donor-level permutation null — require at least
+    2 donors per split per class for stable estimates. A 4/4 minimum is the
+    smallest donor count compatible with that requirement. Three studies
+    in the v1 corpus have exactly 4-6 healthy donors (Lee 4, Arunachalam 5,
+    Wilk 6); a higher threshold would exclude them unnecessarily.
+  retroactive_application:
+    - {study: guo_2020,        healthy_donors: 0,  diseased_donors: 2,  meets_criterion: false}
+    - {study: mgh_acute_covid, healthy_donors: 1,  diseased_donors: 14, meets_criterion: false}
+    - {study: lee_2020,        healthy_donors: 4,  diseased_donors: 13, meets_criterion: true}
+    - {study: wilk_2020,       healthy_donors: 6,  diseased_donors: 7,  meets_criterion: true}
+    - {study: arunachalam_2020, healthy_donors: 5, diseased_donors: 7,  meets_criterion: true}
+    - {study: schulte_schrepping_2020, healthy_donors: 21, diseased_donors: 18, meets_criterion: true}
+
 studies:
 
   lee_2020:
