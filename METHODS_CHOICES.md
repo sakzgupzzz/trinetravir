@@ -20,7 +20,7 @@ The following choices were made earlier in the project with insufficient justifi
 
 ### Issue 2: cell-type bucket granularity (LOAD-BEARING)
 
-**Status**: open. Resolution required before Phase 6.
+**Status**: resolved 2026-05-11 via within-Immune_All_Low granularity sweep. See **Session 3 calibrated resolution** at the bottom of this file. Headline finding: 5-bucket level is conservative; sub-bucket level surfaces ADDITIONAL B-cell signal (B_naive + B_memory both PASS calibrated where 5-bucket B FAILS). v1 reports 5-bucket as primary + sub-bucket as supplementary.
 
 **The choice as it stands**: cells are bucketed into five coarse-grained categories — monocyte, B, NK, CD4T, CD8T — for all downstream analyses including the Phase 3 gate check and the eventual cross-virus benchmark.
 
@@ -695,6 +695,54 @@ retroactive documentation and remediation.
 ## Session 3 calibrated resolutions
 
 The following issues were resolved 2026-05-11 by the Session 3 calibration framework. Evidence is in `results/tables/calibration_*.csv` + `results/tables/harmonization_protocol_calibrated_comparison.csv` + `results/tables/gate1_composition_sensitivity.csv`. Framework code: `src/trinetravir/eval/calibration.py` (permutation_null_with_metric, split_half_with_metric, bootstrap_ci_overlap, calibrated_gate_verdict) + `src/trinetravir/eval/metrics.py` (Pearson, Spearman, DE-Jaccard top-100, MMD-RBF median heuristic).
+
+### Resolved Issue 2: cell-type bucket granularity (LOAD-BEARING) — 2026-05-11
+
+**Final choice**: 5-bucket level (monocyte / B / NK / CD4T / CD8T) remains the v1 primary granularity for all downstream phases. Sub-bucket level (12 sub-buckets via Immune_All_Low: mono_classical, mono_nonclassical, B_naive, B_memory, NK_cd16pos, CD4T_naive_cm, CD4T_em, CD4T_treg, CD8T_naive_cm, CD8T_em_temra, CD8T_em_trm, CD8T_mait + 4 skipped for <2 studies meeting min_per_group) is reported as supplementary sensitivity.
+
+**Calibrated evidence** (Pearson, p99 calibrated verdicts) — sub-bucket level vs 5-bucket parent:
+
+| Sub-bucket | r | p99 verdict | 5-bucket parent | parent r | parent verdict |
+|---|---|---|---|---|---|
+| mono_classical | 0.658 | **PASS** | monocyte | 0.695 | PASS |
+| mono_nonclassical | 0.561 | **PASS** | monocyte | 0.695 | PASS |
+| B_naive | 0.313 | **PASS** | B | 0.309 | FAIL |
+| B_memory | 0.259 | **PASS** | B | 0.309 | FAIL |
+| NK_cd16pos | 0.366 | FAIL† | NK | 0.373 | FAIL |
+| CD4T_naive_cm | 0.274 | FAIL | CD4T | 0.258 | FAIL |
+| CD4T_em | 0.112 | FAIL | CD4T | 0.258 | FAIL |
+| CD4T_treg | 0.288 | FAIL | CD4T | 0.258 | FAIL |
+| CD8T_em_temra | 0.240 | FAIL | CD8T | 0.210 | FAIL |
+| CD8T_em_trm | 0.100 | FAIL | CD8T | 0.210 | FAIL |
+| CD8T_naive_cm | 0.110 | FAIL | CD8T | 0.210 | FAIL |
+| CD8T_mait | 0.122 | FAIL | CD8T | 0.210 | FAIL |
+
+†NK_cd16pos observed r=0.366 exceeds permutation p99=0.284 (criterion 1 passes) but lies outside split-half 95% CI lower bound 0.405 (criterion 2 fails) — same NK CI-width pattern as 5-bucket NK at per-celltype Harmony.
+
+**Headline finding — bucket granularity is NOT load-bearing for the qualitative cross-study coherence picture, but DOES surface additional B-cell structure**:
+- monocyte signal robust across granularities (5-bucket 0.695 PASS; sub-buckets 0.658 + 0.561 both PASS).
+- **B-cell signal upgraded under finer granularity**: 5-bucket B FAILS (r=0.309) but BOTH B_naive (0.313) and B_memory (0.259) PASS calibrated. The 5-bucket B aggregation masks within-sublineage coherence. This is the load-bearing finding of the Issue 2 sensitivity.
+- T-cell + NK signals remain weak at both granularities (no sub-bucket flips from FAIL to PASS).
+- 4 sub-buckets skipped (B_plasma, NK_cd16neg, NK_unspecified, mono_macrophage) for <2 studies meeting min_per_group=50 cells per disease class. Documented in `calibration_phase35_subbucket.csv` `error` column.
+
+**Why 5-bucket remains the v1 primary** (and not sub-bucket):
+- The factorized model trains on per-bucket response vectors. At sub-bucket granularity, per-bucket per-donor cell counts in some sub-buckets drop below the min_per_group=50 floor (B_plasma, NK subtypes, monocyte macrophages). The 4 skipped sub-buckets cannot contribute to cross-study evaluation at all — v1's cross-virus framing requires all 4 included studies to have data in every analyzed bucket.
+- The 5-bucket level satisfies the pre-specified criterion in this entry: (a) all 4 studies' annotations map to the same vocabulary, (b) each bucket contains ≥200 cells per donor per study on average, (c) prior PBMC integration literature (Khatri MVS, scIB) reports comparable groupings.
+- The sub-bucket evidence is *additive* — it tells us the 5-bucket B aggregation hides signal that finer granularity reveals. This is a supplementary finding for the paper, NOT a reason to switch the primary analysis grain.
+
+**Pre-specified criterion (from original Issue 2 entry, verified)**: "Bucket granularity is the coarsest level at which (a) all four studies' annotations can be reliably mapped to the same vocabulary, (b) each bucket contains at least N=200 cells per donor per study on average, and (c) prior PBMC integration literature (Khatri MVS, scIB benchmark) reports comparable groupings." — 5-bucket level satisfies all three; sub-bucket level fails (b) for 4 sub-buckets.
+
+**Alternatives considered**:
+- Sub-bucket as primary: rejected because 4 of 16 sub-buckets cannot contribute to cross-study evaluation (insufficient per-bucket-per-disease-class cells).
+- Fine-grained labels throughout (15-20 buckets at the cell subtype level): rejected for v1 because per-bucket per-donor cell counts become too small in some studies to compute stable response vectors. Documented as a v2 extension.
+- Bulk PBMC response without bucketing: rejected because Phase 3 stratified diagnostic showed bulk cross-study correlation (r=0.054) is dominated by composition drift.
+
+**Validation strategy**: methods section cites 5-bucket as primary; sub-bucket sensitivity in supplementary with the B-naive + B-memory PASS finding flagged as a notable supplementary observation. Paper's discussion will note that finer granularity surfaces additional B-cell structure invisible at the 5-bucket level.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-11
+
+---
 
 ### Resolved Issue 3: cross-study coherence metric sensitivity (LOAD-BEARING) — 2026-05-11
 
