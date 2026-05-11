@@ -1,0 +1,2 @@
+bucket,n_common_genes,n_mvs_common_genes,heldout_vs_training_r_full,heldout_vs_training_r_mvs,r_mvs_minus_r_full,cohort
+monocyte,3460,57,0.1523,-0.0102,-0.1625,allen_atlas_monocyte

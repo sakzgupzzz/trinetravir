@@ -1,0 +1,4 @@
+bucket,n_common_genes,n_mvs_common_genes,heldout_vs_training_r_full,heldout_vs_training_r_mvs,r_mvs_minus_r_full,cohort
+B,3351,48,0.3008,0.4829,0.182,randolph_2021
+NK,3486,47,0.4808,0.5764,0.0956,randolph_2021
+monocyte,3456,57,0.2865,0.0132,-0.2732,randolph_2021

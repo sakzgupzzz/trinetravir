@@ -9,8 +9,8 @@
 | 1 | **Session 3 closeout** | Inline (this file §1) | Phase35_subbucket bg job `bfs5zrjht` completion | **DONE 2026-05-11** |
 | 2 | **Session 5 (audit response)** | `SESSION_5_SPEC.md` | Block #1 fully committed | **DONE 2026-05-11** |
 | 3 | **Human decision on Issue 25** | METHODS_CHOICES.md Issue 25 entry | Block #2 complete + Issue 25 opened | **DONE 2026-05-11** (Option B hybrid) |
-| 4 | **Session 6A (held-out cohort acquisition + harmonization + schema v6)** | `SESSION_6A_CHECKLIST.md` | Block #3 (Issue 25 Option B hybrid) | IN PROGRESS 2026-05-11 — multi-session, 4-6 weeks |
-| 5 | **Session 6B (held-out calibration evaluation)** | Not yet drafted | Block #4 audit gate passes | BLOCKED on #4 |
+| 4 | **Session 6A (held-out cohort acquisition + harmonization + schema v6)** | `SESSION_6A_CHECKLIST.md` | Block #3 (Issue 25 Option B hybrid) | **DONE 2026-05-11** (Parts A/B/C/D/E all complete; 4/4 cohorts harmonized; audit 14/0 PASS) |
+| 5 | **Session 6B (held-out calibration + per-stratum sensitivity + few-shot)** | inline spec (chat) | Block #4 audit gate passes | IN PROGRESS 2026-05-11 — multi-session, 3-5 weeks |
 | 6 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #5 complete | BLOCKED on #5 |
 | 7 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #6 complete | BLOCKED on #6 |
 

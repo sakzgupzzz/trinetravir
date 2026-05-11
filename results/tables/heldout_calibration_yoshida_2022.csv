@@ -1,0 +1,6 @@
+bucket,n_common_genes,n_mvs_common_genes,heldout_vs_training_r_full,heldout_vs_training_r_mvs,r_mvs_minus_r_full,cohort
+B,366,0,0.2129,,,yoshida_2022
+CD4T,270,0,0.2532,,,yoshida_2022
+CD8T,249,0,0.3885,,,yoshida_2022
+NK,234,0,0.1364,,,yoshida_2022
+monocyte,268,0,0.5535,,,yoshida_2022
