@@ -39,6 +39,11 @@ The following choices were made earlier in the project with insufficient justifi
 
 **Pre-specified criterion to be written**: "Bucket granularity is the coarsest level at which (a) all four studies' annotations can be reliably mapped to the same vocabulary, (b) each bucket contains at least N=200 cells per donor per study on average, and (c) prior PBMC integration literature (Khatri MVS, scIB benchmark) reports comparable groupings."
 
+**Note on CellTypist model semantics (2026-05-11)**: an earlier framing in this project's planning notes assumed that CellTypist's `Immune_All_High` produces a *finer* granularity than `Immune_All_Low`. That assumption is wrong. In CellTypist's naming convention, "Low" and "High" refer to *hierarchy depth*, not label granularity:
+- `Immune_All_Low` (98 labels) is the *finer* model and surfaces sub-types such as Classical/Non-classical monocytes, Naive/Memory B cells, Tcm/Tem/Treg CD4 subsets, MAIT cells, CD16+/CD16- NK subsets.
+- `Immune_All_High` (32 labels) is the *coarser* model and produces top-level labels: Monocytes, B cells, T cells (no CD4/CD8 split), no NK subtype (NK is folded into ILC / not surfaced as a top-level immune class).
+Granularity sensitivity for this issue is therefore run as a *within-Low* sweep (Low @ 5-bucket vs Low @ sub-bucket level), not a between-model comparison. The High model is reserved for Issue 12 (model-choice sensitivity), with explicit documentation that the High-vs-Low comparison is asymmetric at the buckets where High cannot resolve (CD4T, CD8T, NK).
+
 **Date opened**: 2026-05-10
 **Date resolved**: <fill in>
 
