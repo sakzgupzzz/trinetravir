@@ -1,6 +1,14 @@
 # Cross-Virus Generalization for Single-Cell Host Response Prediction
 
-Project plan v1.2. Designed as the working specification for a solo computational research project producing a bioRxiv preprint plus open-source code release. Timeline target: 12–14 weeks of focused work. Compute strategy: CPU-first, escalate to GPU only when CPU becomes prohibitive.
+Project plan v1.3. Designed as the working specification for a solo computational research project producing a bioRxiv preprint plus open-source code release. Timeline target: 12–14 weeks of focused work. Compute strategy: CPU-first, escalate to GPU only when CPU becomes prohibitive.
+
+**v1.3 changes (2026-05-11):**
+- §1.1 Scientific motivation expanded from single paragraph to four subsections (§1.1.1 immunology, §1.1.2 methodological gap, §1.1.3 evaluation gap, §1.1.4 PBMC-only scope rationale). Cites Session 5+6B+7 empirical evidence anchoring the ISG-conservation finding (METHODS_CHOICES Issues 18-33) + Ahlmann-Eltze 2025 + PertEval-scFM as field-default-evaluation precedents motivating Issue 24 baseline expansion.
+- §1.5 v1.5 forward planning pointer added (one-paragraph reference to `v1_5_PLAN.MD`).
+- §1.6 Related work + competitive positioning added (5 buckets: existing perturbation prediction methods, foundation model baselines, cross-virus PBMC transfer learning prior work, single-cell calibration precedents, cross-cohort integration with external healthy controls).
+- §1.7 Factorized model architecture (motivation-tier specification) added. References Issues 18-24 pre-specs. §4 Phase 8 retains implementation-tier pseudocode; §1.7 is motivation-tier. Frames model as secondary contribution per post-Session 7 manuscript framing.
+- §1.8 Exploratory vs confirmatory evidence framing (originally added 2026-05-11 in Session 5 audit-response) retained as-is.
+- Does NOT change v1 scope, deliverables, non-goals, or hypotheses. References Session 5+6B+7 empirical findings where applicable.
 
 **v1.2 changes (2026-05-10):**
 - Repo and Python package renamed `trinetravir` (was `cross-virus-scrna` / `crossvirus`).
@@ -19,7 +27,35 @@ Project plan v1.2. Designed as the working specification for a solo computationa
 
 ### 1.1 Scientific motivation
 
-Single-cell foundation models (scGPT, Geneformer, scPRINT-2, STATE, Stack) and perturbation prediction methods (scGen, scCausalVI, CoupleVAE) are typically evaluated on within-virus or within-perturbation generalization: held-out cell types, held-out doses, held-out donors. Cross-virus transfer — training on virus A and predicting host response to virus B without any virus B data during training — has not been benchmarked as a standardized task despite the obvious biological premise that conserved antiviral programs (interferon-stimulated genes, type I IFN signaling, NF-kB inflammation) should transfer while virus-specific programs (entry receptor activation, viral hijack pathways) should not.
+#### 1.1.1 Immunology — shared antiviral programs across respiratory viruses
+
+Type-I interferon-stimulated gene (ISG) induction is the canonical conserved component of the antiviral response across DNA and RNA viruses (Schoggins 2014 *Curr Opin Virol*; Schneider 2014 *Annu Rev Immunol*). In peripheral blood, monocytes dominate the early systemic IFN response; lymphoid compartments (B / NK / CD4T / CD8T) carry a downstream paracrine ISG signal whose magnitude and timing differ from monocytes. The biological premise of cross-virus generalization at the response-vector level is that this conserved component should transfer across viruses while virus-specific entry- and replication-associated signatures should not.
+
+The v1 corpus empirically supports this premise. Per Session 5 audit + Session 6B held-out validation, ISG-restricted cross-study Pearson r exceeds full-HVG r by +0.06 to +0.23 across 4 of 5 v1 buckets (Khatri MVS subset; see `METHODS_CHOICES.md` Issue 18 + `references/khatri_mvs_gene_list.csv`). Pre-Harmony cross-study coherence is substantial (0.13–0.58, Session 7 Issue 32), and within-cohort effects are 100% sign-concordant with cross-study harmonized findings (Session 7 Issue 33). The ISG-conservation finding is biology with Harmony amplification, not an integration artifact.
+
+#### 1.1.2 Methodological gap — single-virus evaluation as field default
+
+Single-cell perturbation prediction methods (scGen, scCausalVI, CPA, CoupleVAE) and gene-expression foundation models (scGPT, Geneformer, scPRINT-2, STATE) are typically evaluated on within-virus or within-perturbation generalization: held-out cell types, held-out doses, held-out donors. Cross-virus transfer — training on virus A and predicting host response to virus B without any virus B training data — has not been benchmarked as a standardized task.
+
+Recent work has documented that simple baselines often match or beat more complex methods on standard perturbation benchmarks when evaluation rigor is high. Ahlmann-Eltze et al. 2025 (*Nature Methods*) analyzed scPerturb-style benchmarks and showed that linear delta + per-cell-type-mean baselines are competitive with neural perturbation prediction methods. The PertEval-scFM benchmark (Tu et al. 2024) reported that gene-expression foundation models do not consistently outperform simpler baselines on cross-cell-type perturbation tasks. The implication for v1: the factorized model must clear a higher bar than "neural beats predict-mean" — it must beat simpler factorization baselines (`METHODS_CHOICES.md` Issue 24 Category 2: Sparse PCA, NMF, ISG-score regression) to justify the architectural complexity.
+
+#### 1.1.3 Evaluation gap — calibration framework, sensitivity audit, pre-registered held-out validation
+
+Three field gaps that v1 directly addresses, each demonstrated empirically across Sessions 5+6B+7:
+
+- **Calibration framework.** Cross-study response-vector coherence reported in single-cell PBMC viral integration papers is typically a single Pearson r with no calibration against a permutation null, no bootstrap CI, and no FDR correction across multiple bucket-cohort tests. v1's `src/trinetravir/eval/calibration.py` (v2) implements donor-level permutation null, bootstrap CI on observed r, split-half ceiling, and FDR-BH correction; unit tests at `src/tests/test_calibration.py` (8/8 passing). All Session 5+6B+7 verdicts use this framework. Cross-study coherence claims become "passes FDR-corrected confirmatory threshold at observed effect size" rather than "r=0.X looks high".
+
+- **Sensitivity audit.** Session 7 (Issues 32+33) quantified per-cell-type Harmony's contribution to cross-study coherence (Δr 0.02–0.25 on top of pre-Harmony baseline; aggregate MIXED both gene sets; monocyte MVS Δr=0.08 BIOLOGY_DOMINANT at the load-bearing grain) and verified within-cohort sign concordance with cross-study findings (100% across 20 aggregate bucket-pair × gene_set tests). The audit lives in the git audit trail; the manuscript discloses the Δr range honestly in Limitations.
+
+- **Pre-registered held-out validation.** v1's cross-context, cross-age, chronic-CMV, and chronic-HIV decision rules (`METHODS_CHOICES.md` Issues 27-30) were committed to the audit trail before observing the held-out cohort data. Mechanical application of those rules produces verdicts (SUPPORTS_H1 / CHALLENGES_H1 / scope-limitation / BORDERLINE) that the manuscript reports as-is with no interpretation latitude. Issue 31 (cross-bucket healthy reference for cluster-defined subsets) was pre-specified before the corrected Randolph re-run.
+
+These three practices are sparse in the field. v1 demonstrates them as a publishable methodology contribution; the factorized model is a secondary contribution (Phase 5/6 empirical question, Issue 24).
+
+#### 1.1.4 PBMC-only scope rationale
+
+v1.1 locks scope to PBMC compartments across all viruses for two reasons. First, PBMC IFN response is monocyte-dominated, fast (acute paracrine cascade within 24-72h), and clean — direct viral PAMP sensing is rare; the dominant signal is systemic IFN-α/β cascade. Airway epithelial response is slower, contaminated by bystander tissue-damage signals, and confounded by per-tissue ACE2 / TMPRSS2 expression heterogeneity for SARS-CoV-2. Second, available SARS-CoV-2 + IAV PBMC scRNA-seq cohorts pass Issue 4 inclusion criteria (≥4 healthy + ≥4 diseased per study); airway cohorts at v1 scale do not.
+
+v1.5 extends scope to engineered adenovirus vector PBMC data (see §1.5 + `v1_5_PLAN.MD`). v2 extends to airway epithelium + organoid + intestinal compartments.
 
 ### 1.2 Project deliverables
 
@@ -44,6 +80,58 @@ Single-cell foundation models (scGPT, Geneformer, scPRINT-2, STATE, Stack) and p
 - Engineered viral vectors (AAV, oncolytic, gene therapy). Discussion section only.
 - Superinfection / coinfection prediction. Different problem.
 - **Multi-compartment scope (v1.1).** PBMCs only for v1.1. Airway epithelium, organoid, and intestinal datasets deferred to v2. Rationale: PBMC IFN response is monocyte-dominated, fast, clean; airway epithelial response is slower and contaminated by bystander tissue damage signals. Mixing compartments risks cross-compartment signal swamping cross-virus signal in v1 modeling.
+
+### 1.5 v1.5 forward planning
+
+v1.5 applies the v1 methodology framework (calibration framework + factorized model + ISG-aware regularization) to engineered adenovirus vector PBMC scRNA-seq cohorts (Ad5-nCoV, Ad26.COV2.S, ChAdOx1, heterologous prime-boost). Full specification at `v1_5_PLAN.MD` in the repo root. v1.5 is a follow-on bioRxiv preprint, not a v1 dependency; v1 references v1.5 in its Discussion as planned future work, and v1.5 does not block v1 submission.
+
+### 1.6 Related work and competitive positioning
+
+#### 1.6.1 Existing perturbation prediction methods
+
+scVI (Lopez 2018 *Nat Methods*), scGen (Lotfollahi 2019 *Nat Methods*), CPA (Lotfollahi 2023 *Mol Syst Biol*), and scCausalVI (Wang 2024) are the established single-cell perturbation prediction frameworks. Each predicts per-cell response to a stimulation/perturbation, typically benchmarked on within-stimulation tasks (held-out cells from the same condition) or limited cross-stimulation tasks (e.g., transferring across drug doses). Cross-virus transfer is outside their default evaluation scope. v1 evaluates these as Issue 23 baselines against the factorized model under identical calibration framework + held-out validation.
+
+#### 1.6.2 Foundation models (Geneformer, scGPT)
+
+Geneformer (Theodoris 2023 *Nature*) and scGPT (Cui 2024 *Nat Methods*) are gene-expression foundation models trained on millions of single cells. v1 includes them as Issue 23 baselines per critique-document concern 2 (deep learning necessity). Foundation model fine-tuning + inference is GPU-dependent; the v1 evaluation of these baselines is gated on Session 4 GPU setup + compute envelope. PertEval-scFM (Tu 2024) found that foundation models do not consistently outperform simpler baselines on cross-cell-type perturbation tasks; v1 will report whether the cross-virus task admits a similar pattern. Foundation model checkpoints pinned by HuggingFace revision hash per Issue 23.
+
+#### 1.6.3 Cross-virus PBMC transfer learning prior work
+
+A direct prior literature on cross-virus PBMC scRNA-seq transfer learning is largely absent. Cross-condition perturbation prediction in PBMCs (e.g., LPS vs PolyI:C stimulation) has been explored at the bulk RNA-seq + monocyte level (Khatri MVS, Andres-Terre 2015 *Immunity*; Mostafavi 2016 *Cell*) but not at single-cell resolution with held-out viral context evaluation. This absence is the novelty hook for v1: a standardized cross-virus PBMC scRNA-seq benchmark with pre-registered held-out validation across four biological axes (cross-context IAV, cross-age SARS-CoV-2, chronic-latent CMV, chronic HIV).
+
+#### 1.6.4 Single-cell calibration and pre-registered evaluation precedents
+
+Pre-registered evaluation protocols and calibration frameworks (permutation null + bootstrap CI + FDR correction) are standard in GWAS and clinical-trial statistics but are sparse in single-cell methods papers. The scIB benchmark (Luecken 2022 *Nat Methods*) reports a panel of integration metrics across methods but does not pre-register thresholds for "successful integration"; the Open Problems in Single-Cell Analysis benchmark (Lance 2024) reports method rankings but does not apply formal multiple-testing correction across rank changes. v1's calibration framework v2 — donor-level permutation null + bootstrap CI + FDR-BH + literature-anchored thresholds set BEFORE Phase 5 — sits in this gap and is documented as a methodology contribution.
+
+#### 1.6.5 Cross-cohort integration with external healthy controls
+
+The GSE157829 chronic HIV held-out cohort (Issue 30 primary contrast) has n=1 within-cohort healthy donor, below the Issue 4 inclusion criterion. v1's design pairs GSE157829 HIV donors against the v1 corpus aggregated healthy donors as cross-cohort baseline. This design follows established field precedent for low-control chronic viral cohorts:
+
+- *eBioMedicine* 2025 chronic-viral PBMC scRNA-seq integration paper used external SARS-CoV-2 corpus healthy aggregate as cross-cohort baseline.
+- PMC10040851 (HIV-on-ART vs external healthy PBMC corpus single-cell comparison).
+- PMC9434837 (inflammatory chronic disease cross-cohort GSE healthy aggregate baseline).
+
+The cross-cohort design is documented in `METHODS_CHOICES.md` Issue 30 resolution with explicit citations to these precedents. v1's choice is methodologically defensible, not a compromise.
+
+### 1.7 Factorized model architecture (motivation-tier specification)
+
+The factorized model is v1's **secondary contribution** (Phase 5/6 empirical question; primary contribution is the calibration framework + methodology audit trail). Whether the model architecture adds value over simpler baselines (Issue 24 Category 2: Sparse PCA, NMF, ISG-score regression) is a question for the Phase 5+ empirical results, not a foregone conclusion of the design.
+
+**Decomposition.** Predicted per-bucket response vector = `f_shared(baseline)` + `f_specific(baseline, virus_id)`. The shared component is a single neural encoder/decoder trained on all-virus training data; it captures the conserved antiviral component (canonical ISG response). The virus-specific component is a virus-conditioned encoder/decoder; it captures virus-specific signatures (entry-receptor effects, viral hijack pathways, type-of-virus-specific transcriptional programs).
+
+**Virus embedding.** Each virus is represented by a learned embedding vector concatenated into the `f_specific` input. Embedding dimensionality per Issue 21 pre-specification: ∈ {8, 16, 32}. Few-shot adaptation (Issue 22) freezes `f_shared` + `f_specific` weights and trains only a new virus embedding for an unseen virus, isolating the embedding's role in cross-virus transfer.
+
+**Regularization.**
+- *ISG-aware regularization* (Issue 18): the `f_shared` component is regularized to align with the Khatri MVS gene set (`references/khatri_mvs_gene_list.csv`, 86 genes from Andres-Terre 2015 Table S2 high-confidence core subset); the `f_specific` component is penalized for nonzero output on MVS genes. The constraint encodes the empirical observation that canonical-ISG response is conserved (Session 7 Issue 32 monocyte MVS Δr=0.08 BIOLOGY_DOMINANT) and should reside in the shared component.
+- *Pathway-aware regularization* (Issue 19): factor loadings on REACTOME R-HSA-913531 (interferon signaling) co-members are penalized for divergence from each other. Undirected adjacency only; no transitive expansion. Encodes pathway-level functional structure beyond identity-set membership. If pathway-aware weight tunes to ~0 at Phase 5 under held-out donor validation, the term is dropped (Issue 19 validation strategy).
+
+**Reconstruction loss.** MSE on response vectors as primary (Issue 20; aligns the training unit with the calibration framework + cross-study coherence metric + held-out validation tests, all of which operate on per-study response vectors). NB-GLM on counts as Phase 5 sensitivity; switch headline if NB exceeds MSE by Δr ≥ 0.10 cross-study AND flips a held-out verdict (Issue 27 CHALLENGES→SUPPORTS or Issue 29 scope-limitation→appropriate-discrimination).
+
+**Training and evaluation.** Per-bucket training per Issue 16 (lymphoid stratification): separate `f_shared` + `f_specific` per cell-type bucket (monocyte, B, NK, CD4T, CD8T). Hyperparameter search per Issue 21 (20-config budget per Issue 14; held-out donor 80/20 split). Cross-virus evaluation per Issue 15 (leave-one-virus-out, both directions reported). Comparison method versions pinned per Issue 23 at Phase 7 launch.
+
+**Bar to beat.** Per Issue 24 Category 2: factorized model must exceed sparse PCA + NMF + ISG-score-regression by Δr ≥ 0.05 cross-study Pearson averaged across buckets. If it does not, the paper acknowledges that the model architecture does not add value beyond gene-set restriction; the methodology contribution carries the paper.
+
+**Implementation specification** (pseudocode, hyperparameter tuning workflow, debugging notes, GPU compute envelope): see §4 Phase 8 in this document. §1.7 is motivation-tier; §4 Phase 8 is implementation-tier.
 
 ### 1.8 Exploratory vs confirmatory evidence (added v1.3, 2026-05-11)
 
