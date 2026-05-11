@@ -1349,6 +1349,35 @@ Switching the primary to Interferome 2.0 at Session 3.5 would require re-running
 
 ---
 
+### Issue 24: Baseline implementations — EXPANDED per critique concern 2 — 2026-05-11
+
+**Status**: open at pre-specification level; final validation at Phase 5.
+
+**Decision**: TWO categories of baselines, both implemented as stubs at Session 3.5, full implementation at Phase 5.
+
+**Category 1 — Trivial baselines (lower bound)**:
+- **Predict-mean**: per-cell-type per-virus mean across training cells in HVG space. Strongest predict-mean baseline.
+- **Linear-delta**: ridge regression on baseline expression in HVG space + cell-type one-hot + virus one-hot for within-virus training; alpha cross-validated within Issue 14's 20-config budget.
+- **KNN**: cosine distance on log-normalized HVG expression, k=10 with distance-weighted predictions, within-virus training neighbors only for cross-virus evaluation per Issue 15 protocol. k sensitivity at k=5 and k=20 in supplementary.
+
+**Category 2 — Simpler factorization baselines (key comparison)**:
+- **Sparse PCA**: scikit-learn SparsePCA with α tuned via held-out validation, k components ∈ {16, 32, 64} matching factorized model's shared latent dim search.
+- **NMF**: scikit-learn NMF on log-normalized HVG counts (max(0, log1p(x))), k components matching shared latent dim search, `init='nndsvd'` for reproducibility.
+- **Linear ISG-score regression**: per-donor ISG signature score (mean expression of Khatri MVS genes per Issue 18) as single feature; linear regression to predict virus identity + cell-type. The simplest possible "ISG explains everything" baseline.
+
+**Rationale**: Critique-document concern 2 raised whether the factorized neural architecture adds value beyond gene-set restriction. Category 1 baselines test whether the model beats trivial bars (predict-mean, KNN). Category 2 baselines test the harder question — whether nonlinear factorization adds value over linear factorization (sparse PCA, NMF) or over the simplest ISG-score-based linear model.
+
+If the factorized model fails to beat Category 2 baselines by ≥0.05 cross-study Pearson r averaged across buckets, the paper acknowledges that the model architecture does not add value beyond gene-set restriction; the methodology contribution (calibration framework) carries the paper.
+
+**Stub files**: skeleton files created at `src/trinetravir/baselines/{predict_mean,linear_delta,knn,sparse_pca,nmf,isg_score_regression}.py` with docstrings citing this issue's decision. Each stub raises `NotImplementedError`. Implementation deferred to Phase 5. Atomic schema-change rule (Issue 17) applies — stubs + this issue's resolution land in same commit.
+
+**Validation**: pre-specified baselines. Phase 5 reports each as the bar to beat. Phase 6 compares factorized model against full baseline panel with calibration framework applied identically.
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (pre-specification committed; stubs created; Phase 5 implementation + factorized model bar-to-beat)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
