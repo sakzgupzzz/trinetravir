@@ -573,14 +573,36 @@ the per-stratum framing is the only defensible v1 claim.
 
 **Status**: open at pre-specification level (Session 6A 2026-05-11; cohort substituted 2026-05-11 due to original cohort access blocker); resolution at Session 6B.
 
-**Cohort**: **GSE213516** (PBMC aging clocks cohort) — initial substitution. **Substitution premise verified WRONG during C-pre.3 investigation (2026-05-11)**: GSE213516 Series Matrix file has only 4 sample characteristics fields (cell type, tissue, strain/sex, age). **No CMV serostatus characteristic field.** Series title states "PBMCs from 17 healthy donor" (all 17 samples flagged healthy; no CMV+/CMV- split). Figshare 23789844 metadata files (SE_CYCT_JOCT_WHCT_SC_meta.csv, 18.5MB, covering the 5 aging-cohort substudies including SE/GSE213516) contain columns {X, Age, sampleID, Cohort, Celltype, UMAP1, UMAP2} — also no CMV serostatus column.
+**Cohort**: **Allen Institute Immune Health Atlas (AIFI)** — second substitution, resolved 2026-05-11.
 
-**Status**: Issue 29 cohort substitution INCOMPLETE pending alternative CMV PBMC scRNA-seq cohort with explicit serostatus annotation. Three paths for user decision:
-- **Path A**: investigate Science Advances paper supplement (DOI 10.1126/sciadv.abq7599) for an external CMV serostatus table not deposited to GEO or Figshare. If found, build sample → serostatus map manually.
-- **Path B**: search for alternative cohort. Candidates: Patin 2018 Milieu Intérieur (huge cohort with CMV serostatus, but bulk RNA-seq not scRNA-seq). Verschoor 2020 (some scRNA + CMV serostatus). Mogilenko 2021 GZMK+ CD8 aging (some CMV serostatus). User decision required on alternative.
-- **Path C**: defer Issue 29 to v1.5. Sessions 6B reports cross-context evaluation on only 3 cohorts (Randolph + Yoshida + GSE157829). Issue 29 stays open at pre-specification level; CMV PBMC scRNA-seq with serostatus deferred to v1.5.
+**Substitution path documented**: GSE283744 (original Jackson Lab cohort, controlled access) → GSE213516 (first attempt, had no CMV serostatus field) → **Allen Institute Immune Health Atlas (final)**.
 
-GSE213516 acquisition (837MB tar) is preserved on disk for future use if Path A surfaces a serostatus annotation, but NOT used for Issue 29 calibration in Session 6B unless serostatus is verified.
+**Source**: [Allen Institute Immune Health Atlas](https://apps.allenimmunology.org/aifi/resources/imm-health-atlas/downloads/scrna/). Public open access (no controlled-access restrictions, no IRB application required). 8 per-bucket h5ad files + batch control + QC reports. CMV serostatus available as per-donor metadata field `subject.cmv` ("The CMV Status of the subject, as determined by an HCMV assay").
+
+**Atlas specifications**:
+- ~1,821,725 PBMC cells total (full atlas).
+- 108 subjects, 108 samples.
+- 10x Genomics 3' v3.1 (matches v1's tech — Wilk + Arunachalam + Schulte are all 10x 3'; Lee 2020 is the only 5' study in v1).
+- Per-donor metadata: `subject.cmv` (CMV status from HCMV assay), `subject.ageGroup` (Young Adult vs Older Adult), age at first draw, sex, BMI, race, ethnicity.
+- Per-bucket file sizes: full 40GB, monocyte 11GB, CD4T 16GB, CD8T 8.9GB, NK 3.5GB, B 3.4GB, DC 1GB.
+
+**Why GSE213516 didn't work + why Allen Atlas does**: GSE213516 Series Matrix has only 4 sample characteristics (cell type, tissue, sex, age) and no CMV serostatus. The Grabauskas 2025 paper itself notes: "CMV serostatus is often unreported in single-cell studies of immune aging." This is a known field-wide gap. The Allen Atlas is the major public exception — it explicitly deposits CMV serostatus as per-donor metadata. With ~50% CMV seropositivity rate in adults (CDC), the CMV(+) vs CMV(-) split should comfortably exceed Issue 4 ≥4/≥4 requirement at 108 subjects.
+
+**Biological test (refined wording)**: chronic-latent CMV(+) vs naive CMV(-) discrimination **in adult healthy donors stratified by CMV serostatus, no acute infection confound**. This is biologically cleaner than what GSE213516 would have provided — isolates the latent CMV signature from confounders like aging-induced inflammation or concurrent acute disease.
+
+**Pre-specified protocol for Session 6B (UNCHANGED)**:
+1. CMV+ vs CMV- comparison maps to diseased vs healthy_control schema via `donor_serostatus` obs column. `infection_state = chronic_latent` for CMV+, `naive` for CMV-.
+2. Per-bucket cross-context Pearson r: CMV "chronic antiviral signature" (CMV+ minus CMV- response vector) vs v1's acute COVID signature per bucket.
+3. Per-cell-type evaluation: monocyte primary (shared ISG tone test), CD8T (TEMRA + GZMK+ expansion under chronic CMV per Grabauskas 2025 + Mogilenko 2021), other buckets reported.
+4. Caveat: test of "does conserved antiviral component appropriately discriminate latent chronic herpesvirus biology from naive baseline" — expected partial overlap on monocyte ISG tone only.
+
+**Decision rule (UNCHANGED)**: CMV monocyte chronic-latent-vs-naive Pearson r in [0.10, 0.40] on MVS gene subset = appropriate discrimination. r > 0.50 = concerning (over-prediction). r < 0.05 = concerning (no shared biology).
+
+**Status**: Allen Atlas acquisition in progress (monocyte 11GB primary bucket downloading 2026-05-11). Full atlas (40GB) deferred to next session pending monocyte-bucket verification. CMV serostatus mapping will be built from h5ad's `subject.cmv` obs column on download.
+
+GSE213516 (837MB tar) preserved on disk as historical-attempt artifact; NOT used for Issue 29 calibration.
+
+**Broader strategic note** (for v1.5+ scope): Allen Atlas should be the default starting point for any future healthy adult PBMC question in this project. Permissively licensed, gold-standard metadata, single-source-of-truth reference distribution. Where Jackson Lab and similar groups keep PBMC scRNA-seq under controlled access (GSE283744, likely Grabauskas Cohort 1 CMV), Allen publishes everything openly.
 
 **Substitution rationale**: original cohort (Grabauskas et al. 2025 / Wang 2025, Jackson Lab bioRxiv 2025.06.24.661167) likely under same controlled-access pattern as GSE283744 (same lab; verified blocked via bioRxiv Cloudflare challenge — data availability statement unverifiable from web). GSE213516 substituted as publicly-accessible alternative with CMV serostatus annotations explicitly available via GEO. The test now compares latent chronic herpesvirus discrimination from acute viral training distribution rather than chronic-vs-acute, but the biological intent — testing v1's discrimination capability for biologically-distant viral contexts — is preserved.
 
