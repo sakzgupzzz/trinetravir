@@ -1,0 +1,17 @@
+yoshida_annotation_broad,v1_bucket,n_cells,pct_of_total,routed_to_other
+T CD4+,CD4T,47607,28.334,False
+T CD8+,CD8T,37155,22.114,False
+B,B,27036,16.091,False
+Monocyte,monocyte,23615,14.055,False
+NK,NK,19147,11.396,False
+T g/d,other,3445,2.05,True
+T reg,CD4T,2957,1.76,False
+MAIT,CD8T,2494,1.484,False
+DC,other,1518,0.903,True
+Cycling,other,945,0.562,True
+Plasma,B,905,0.539,False
+Platelets,other,784,0.467,True
+ILC,other,187,0.111,True
+HPC,other,157,0.093,True
+RBC,other,60,0.036,True
+Baso/Eos,other,6,0.004,True
