@@ -1,0 +1,6 @@
+issue,primary_bucket,rule,observed_r_full,observed_r_mvs,perm_p_value_full,perm_p_value_mvs,fdr_corrected_p_mvs,fdr_corrected_p_full,ci_low_mvs,ci_high_mvs,verdict,n_d_cells,n_h_cells,healthy_reference_bucket
+"27 Randolph cross-context IAV (PRIMARY, post-Issue-31)",monocyte_infected,"r_mvs >= 0.40 SUPPORTS_H1; < 0.20 CHALLENGES; in [0.20, 0.40] INCONCLUSIVE",0.1289,-0.0113,0.001,0.0719,0.2696,0.0075,,,CHALLENGES_H1 (r_mvs < 0.20),4924.0,9785.0,monocyte
+"27 Randolph cross-context IAV (SENSITIVITY, bystander)",monocyte,"r_mvs >= 0.40 SUPPORTS_H1; < 0.20 CHALLENGES; in [0.20, 0.40] INCONCLUSIVE",0.2864,0.0126,0.008,0.4406,0.5084,0.03,,,CHALLENGES_H1 (r_mvs < 0.20),5686.0,9785.0,monocyte
+28 Yoshida pediatric vs adult cross-age,monocyte,"r_mvs >= 0.30 SUPPORTS_H1; < 0.10 CHALLENGES; in [0.10, 0.30] PARTIAL",0.3871,0.591,0.04,0.0519,0.2595,0.12,0.0174,0.6843,SUPPORTS_H1 (r_mvs ≥ 0.30; transfer across age groups),,,
+29 Allen Atlas chronic-latent CMV vs naive,monocyte,"r_mvs in [0.10, 0.40] APPROPRIATE; > 0.50 OVER_PREDICTION; < 0.05 NO_SHARED_BIOLOGY",0.1523,-0.0102,0.2028,0.5095,0.5459,0.3647,-0.5156,0.4153,CONCERNING_NO_SHARED_BIOLOGY (r_mvs < 0.05),,,
+30 GSE157829 HIV retrovirus context,CD4T,"r_mvs in [0.00, 0.20] EXPECTED; > 0.40 SURPRISING; < -0.10 ANTI_CORRELATION",0.084,0.2572,0.4296,0.1359,0.2865,0.4603,0.1568,0.5131,BORDERLINE (r_mvs = 0.257),,,

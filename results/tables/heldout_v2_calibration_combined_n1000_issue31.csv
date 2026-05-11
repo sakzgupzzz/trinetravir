@@ -1,0 +1,5 @@
+cohort,bucket,healthy_reference_bucket,n_common_genes,n_mvs_common,observed_r_full,observed_r_mvs,perm_p99_full,perm_p_value_full,perm_p99_mvs,perm_p_value_mvs,perm_n_actual,n_excluded_donors_low_count,n_d_cells,n_h_cells,fdr_corrected_p_mvs,calibrated_pass_p99_mvs_fdr
+randolph_2021,B,B,3351,48,0.3009,0.4827,0.287,0.005,0.5389,0.033,1000,1,7883,5082,0.066,False
+randolph_2021,NK,NK,3486,47,0.4808,0.5764,0.413,0.001,0.6097,0.032,1000,1,3586,2146,0.066,False
+randolph_2021,monocyte,monocyte,3456,57,0.2864,0.0126,0.2771,0.008,0.3123,0.4406,1000,1,5686,9785,0.4406,False
+randolph_2021,monocyte_infected,monocyte,3456,57,0.1289,-0.0113,0.0147,0.001,-0.0012,0.0719,1000,1,4924,9785,0.0959,False

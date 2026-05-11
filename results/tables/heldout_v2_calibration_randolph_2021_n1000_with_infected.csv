@@ -1,0 +1,4 @@
+cohort,bucket,n_common_genes,n_mvs_common,observed_r_full,observed_r_mvs,perm_p99_full,perm_p_value_full,perm_p99_mvs,perm_p_value_mvs,perm_n_actual,n_excluded_donors_low_count
+randolph_2021,B,3351,48,0.3009,0.4827,0.287,0.005,0.5389,0.033,1000,1
+randolph_2021,NK,3486,47,0.4808,0.5764,0.413,0.001,0.6097,0.032,1000,1
+randolph_2021,monocyte,3456,57,0.2864,0.0126,0.2771,0.008,0.3123,0.4406,1000,1

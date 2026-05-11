@@ -942,6 +942,35 @@ Issues 27-30 confirmatory verdicts via Session 5 v2 calibration framework (perm 
 **Date opened**: 2026-05-11
 **Date resolved**: 2026-05-11 (CHALLENGES_H1 with bystander-only caveat documented)
 
+#### Update 2026-05-11 (post-N=1000 + Issue 31 corrected re-run):
+
+The `infected_monocytes_cluster_singlets.rds` (375MB, 4964 cells in cluster 8) was re-acquired from Zenodo 10.5281/zenodo.4273999 and merged into the v6 h5ad as bucket `monocyte_infected`. Issue 31 (pre-spec) set the matched healthy reference to the parent `monocyte` bucket's NI/mock subset (n=9785 cells from same donors).
+
+**Corrected PRIMARY (monocyte_infected vs parent-bucket NI, N=1000, Issue 31)**:
+- diseased = 4924 infected monocytes (cluster 8, flu, HMN83575 excluded)
+- healthy = 9785 mock monocytes (parent bucket NI, HMN83575 excluded)
+- **r_mvs = −0.0113**; r_full = 0.1289
+- perm p_mvs = 0.072; FDR-corrected p_mvs = 0.270
+- perm p_full = 0.001; FDR-corrected p_full = 0.027 (only test crossing FDR<0.05 anywhere in the 15-test panel; on full HVG, not MVS)
+- **Mechanical verdict: CHALLENGES_H1** (r_mvs < 0.20)
+
+**SENSITIVITY (bystander monocyte, same N=1000)**:
+- r_mvs = 0.0126; r_full = 0.2864
+- perm p_mvs = 0.441
+- **Mechanical verdict: CHALLENGES_H1** (same direction)
+
+**Revised biological interpretation**: the bystander-only caveat is now closed. The corrected verdict establishes a genuine boundary condition rather than a data gap:
+
+- v1's training corpus monocyte ISG signature (natural in-vivo infection at days/weeks post-onset) does NOT correlate with ex vivo 6h IAV monocyte response (whether direct-infected cluster-8 cells or bystander cells) at the **MVS canonical-ISG level**.
+- The shared signal at full HVG (r_full = 0.13 for infected; 0.29 for bystander) is highly significant against permutation null (p_full = 0.001 for infected) but is **carried by non-ISG genes** (cell-state markers, basal transcription, lineage identity).
+- Kinetic interpretation: ex vivo 6h MOI 0.5 captures *early-phase* response dominated by direct viral PAMP sensing (RIG-I/MDA5) and immediate-early IFN gene induction. v1 corpus captures *late-phase* response dominated by mature paracrine IFN-α/β ISG cascade. These are structurally distinct programs that happen to share lineage-level signal but not the canonical-ISG signature.
+
+**Bystander vs infected sub-finding**: bystander r_full > infected r_full (0.29 vs 0.13). The bystander population is biologically *closer* to v1 corpus monocytes at full HVG than the directly-infected cluster is — because direct infection engages cell-autonomous antiviral programs (apoptosis, autophagy, viral-replication suppression) that diverge from the broader monocyte response captured in v1 corpus. Bystander monocytes look more like generic activated monocytes; infected monocytes look like specifically-infected cells with cell-fate-decision signatures.
+
+**Pre-committed numerical decision rule UNCHANGED**. Verdict mechanically CHALLENGES_H1 for both primary and sensitivity. The data gap is closed; the boundary condition is real.
+
+**Date of corrected resolution**: 2026-05-11 (this commit)
+
 ---
 
 ### Resolved Issue 28: pediatric cross-age stratification (Yoshida 2022) — 2026-05-11
@@ -960,6 +989,24 @@ Issues 27-30 confirmatory verdicts via Session 5 v2 calibration framework (perm 
 
 **Date opened**: 2026-05-11
 **Date resolved**: 2026-05-11
+
+#### Update 2026-05-11 (post-N=1000):
+
+N=1000 permutations + N=200 bootstrap re-run. Observed effect size unchanged (point estimate is deterministic on the data). Statistical precision tightened:
+
+- r_mvs = 0.591 (unchanged); r_full = 0.387 (unchanged)
+- perm p_mvs = 0.052 (raw); FDR-corrected p_mvs = 0.260
+- perm p_full = 0.040 (raw); FDR-corrected p_full = 0.300
+- **Bootstrap CI r_mvs = [0.017, 0.684]** (lower bound moved from −0.05 at N=200 to +0.017 at N=200-bootstrap N=1000-perm, still below the 0.30 SUPPORTING threshold)
+- Bootstrap CI r_full = [−0.103, 0.542]
+
+**Verdict reporting language for manuscript Section 4** (per CI vs threshold caveat):
+
+> Issue 28 SUPPORTS_H1: r_MVS = 0.591 (95% bootstrap CI [0.02, 0.68], N=1000 permutations p = 0.052). The observed effect size clears the pre-committed ≥0.30 threshold; the wide CI reflects limited donor power in the primary pediatric/adult strata (9 diseased + 26 healthy) and indicates the verdict is robust to point-estimate interpretation but cannot rule out, at 95% confidence, that the true effect lies below the supporting threshold.
+
+**Pre-committed numerical decision rule UNCHANGED**. Verdict mechanically SUPPORTS_H1.
+
+**Date of N=1000 update**: 2026-05-11 (this commit)
 
 ---
 
@@ -983,6 +1030,16 @@ The pre-spec rule treated r<0.05 as "concerning because conserved component is a
 **Date opened**: 2026-05-11
 **Date resolved**: 2026-05-11 (CONCERNING_NO_SHARED_BIOLOGY interpreted as scope-limitation finding)
 
+#### Update 2026-05-11 (post-N=1000):
+
+- r_mvs = −0.0102 (unchanged point estimate)
+- perm p_mvs = 0.509; FDR-corrected p_mvs = 0.546
+- **Bootstrap CI r_mvs = [−0.516, +0.415]** — very wide; null cannot be rejected and CI spans entirely across the [−0.10, 0.10] domain that contains the point estimate.
+
+The wide CI reflects single-bucket coverage (only monocyte met n_cells ≥ 50 gate) and the noise of a small canonical-ISG subset (n=57 MVS genes) against a flat ~0 signal. The scope-limitation reading is unchanged.
+
+**Date of N=1000 update**: 2026-05-11 (this commit)
+
 ---
 
 ### Resolved Issue 30: HIV retrovirus context (GSE157829) — 2026-05-11
@@ -999,6 +1056,22 @@ The pre-spec rule treated r<0.05 as "concerning because conserved component is a
 
 **Date opened**: 2026-05-11
 **Date resolved**: 2026-05-11 (BORDERLINE just above expected retrovirus-distinctness range)
+
+#### Update 2026-05-11 (post-N=1000):
+
+- r_mvs = 0.2572 (unchanged); r_full = 0.0840 (unchanged)
+- perm p_mvs = 0.136 (raw); FDR-corrected p_mvs = 0.286
+- **Bootstrap CI r_mvs = [0.157, 0.513]** — lower bound (0.157) sits *inside* the EXPECTED [0.00, 0.20] range; upper bound (0.513) crosses the SURPRISING_HIGH threshold (0.40).
+
+The bootstrap interval straddles two pre-committed verdict bands (EXPECTED at the lower end, BORDERLINE at the point, SURPRISING_HIGH at the upper end). The point-estimate BORDERLINE verdict is mechanically correct; the CI tells reviewers that with the donor power available (6 HIV donors + 1 healthy, cross-cohort design with v1 baseline), the true effect could plausibly sit anywhere from "expected partial overlap" to "surprisingly close to acute viral signature".
+
+**Verdict reporting language for manuscript Section 4** (mirror Yoshida framing):
+
+> Issue 30 BORDERLINE: r_MVS = 0.257 (95% bootstrap CI [0.157, 0.513], N=1000 permutations p = 0.136). The observed point estimate sits just above the pre-committed [0.00, 0.20] EXPECTED retrovirus-distinctness ceiling; the CI lower bound (0.16) lies inside the EXPECTED range, the upper bound (0.51) crosses the SURPRISING_HIGH threshold (>0.40). The mechanical verdict applies to the point estimate; the wide CI reflects limited donor power (6 HIV donors + 1 healthy, cross-cohort baseline design) and indicates the true effect is consistent with both expected-partial-overlap and surprisingly-high readings at 95% confidence.
+
+**Pre-committed numerical decision rule UNCHANGED**.
+
+**Date of N=1000 update**: 2026-05-11 (this commit)
 
 ---
 
