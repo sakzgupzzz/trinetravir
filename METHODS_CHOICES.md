@@ -527,8 +527,25 @@ the per-stratum framing is the only defensible v1 claim.
 
 **C-pre.6 amendment (Session 6A harmonization, 2026-05-11)**: Randolph cohort harmonized to **3 buckets only** (monocyte 15,531 / B 12,995 / NK 5,750). CD4T + CD8T DEFERRED to v1.5. Reason: the published Seurat .rds files (Zenodo 4273999 inputs.tar.gz) needed for cell-level barcode-to-donor demultiplexing exploded during rdata parsing — CD4_T_cluster_singlets.rds (10.3 GB compressed) caused OOM on the laptop (~16 GB RAM). CD8_T_cluster_singlets.rds (2.3 GB) was not attempted after the CD4T failure. Monocyte (1.7 GB), B (1.7 GB), NK (1.0 GB) parsed successfully via per-cell-type subprocess to limit memory accumulation. **Impact on Issue 27 primary test**: NONE — the primary biological test is monocyte cross-context conserved-component (per pre-spec). CD4T + CD8T were secondary buckets. Supplementary T-cell evaluation deferred. Future v1.5 fix: streaming Seurat parser, or installing R 4.4 with prebuilt CRAN binaries to read .rds natively. 90 diseased + 90 healthy donors PASS Issue 4 with massive margin in the 3 acquired buckets. paired_within_donor design preserved via `exposure_pair_id = donor_id`.
 
+**Low-cell-count donor exclusion rule (Issue 27 amendment, 2026-05-11 audit-gate findings)**:
+
+**General rule**: in paired_within_donor designs (Randolph + future ex_vivo_challenge cohorts), donors with **<50 cells in either condition** are excluded from primary analysis but retained in supplementary sensitivity table. Rationale: <50 cells per condition produces unstable per-donor response vectors; paired t-test power drops sharply. The supplementary table reports results under three thresholds (no exclusion, ≥50/condition, ≥100/condition) so reviewers can verify the finding is robust to choice of low-count threshold.
+
+**Application to Randolph 2021** (per-donor cell distribution from `randolph_2021_processed_v6.h5ad`, 2026-05-11):
+- Per-donor cell counts: median 181, min 43, max 475 across 180 donor-condition pairs.
+- **HMN83575 healthy_control = 43 cells** → falls below the ≥50/condition rule. **Excluded from primary analysis.** 89/90 donors retained in primary (89 paired mock+IAV donor-pairs).
+- **Watch-list for supplementary sensitivity table (≥100/condition threshold)**: 19 donor-condition pairs have <100 cells. Flagged so reviewers can verify the Issue 27 monocyte cross-context Pearson r is robust to alternative low-count thresholds.
+- All 90 donors retained for supplementary "no-exclusion" sensitivity row.
+
+**Sensitivity table format (Session 6B output)**: three rows per metric:
+- "primary (≥50 cells/condition)": 89/90 donors, excludes HMN83575 healthy.
+- "supplementary watch-list (≥100 cells/condition)": 71/90 donors, excludes 19 low-count.
+- "supplementary no-exclusion (all donors)": 90/90 donors, includes HMN83575.
+
+The headline Issue 27 verdict uses the primary row; the other two are robustness checks.
+
 **Date opened**: 2026-05-11
-**Date resolved**: pending Session 6B (3-bucket); CD4T/CD8T pending v1.5
+**Date resolved**: pending Session 6B (3-bucket, primary 89/90 donors); CD4T/CD8T pending v1.5
 
 ---
 
