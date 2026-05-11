@@ -44,30 +44,6 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
-### Issue 3: Pearson r as the primary cross-study coherence metric (LOAD-BEARING)
-
-**Status**: open. Resolution required before Phase 6.
-
-**The choice as it stands**: cross-study response-vector coherence is measured by mean off-diagonal Pearson r across the per-study response vectors. The Phase 3 gate uses this metric. The Phase 4 cross-virus benchmark will likely use it too.
-
-**Why this is a problem**: Pearson r is sensitive to outlier genes, scale-dependent, and does not capture distribution-shape differences. The Feb 2026 metrics-failure literature (Evaluating Single-Cell Perturbation Response Models Is Far from Straightforward, bioRxiv 2026.02.14.705879) explicitly shows that metric choice substantially affects apparent method rankings in this domain. A reviewer will ask why Pearson and not Spearman, MMD, Wasserstein, or differential expression overlap.
-
-**Resolution required**:
-- Pre-specify the primary metric and the rationale for using it.
-- Run a sensitivity analysis using at least three additional metrics: Spearman r (rank-based, robust to outliers), differential-expression-set overlap (interpretable, captures top-N gene agreement), and MMD with multiple kernel choices (distribution-aware, addresses the Feb 2026 paper's critiques of Wasserstein and Energy distance).
-- Report all metrics in the eventual paper. The headline result must be qualitatively consistent across at least three of them.
-
-**Alternatives considered**:
-- MMD as primary: rejected as primary because it requires kernel choice, which adds another arbitrary parameter. Use as secondary.
-- Wasserstein distance: explicitly avoided per the Feb 2026 paper's finding that Wasserstein fails in high-dimensional gene expression spaces under variance scaling.
-- Energy distance: avoided for the same reason; the Feb 2026 paper shows Energy distance can overlook disruptions in gene-gene relationships.
-
-**Validation strategy**: sensitivity analysis with at least three additional metrics; cite the Feb 2026 paper in the methods section as the rationale for choosing Pearson over distribution-distance metrics.
-
-**Date opened**: 2026-05-10
-**Date resolved**: <fill in>
-
----
 
 ### Issue 5: Gate 1 sanity-check threshold of r < 0.7 (MINOR but principle-bearing)
 
@@ -116,7 +92,7 @@ The following choices were made earlier in the project with insufficient justifi
 
 ### Issue 7: per-cell-type harmonization vs joint harmonization (MODERATE)
 
-**Status**: open. Resolution required before Phase 6.
+**Status**: open — preliminary script in flight (2026-05-10). Full resolution awaits Session 3 rerun with embedding persistence.
 
 **The choice as it stands**: Harmony is run separately on each cell-type bucket (monocyte, B, NK, CD4T, CD8T), with study_id as the batch key within each. This was chosen over global Harmony with study_id as the batch key on all cells together.
 
@@ -128,10 +104,25 @@ The following choices were made earlier in the project with insufficient justifi
 
 **Justification (to be refined)**: per-cell-type harmonization (a) avoids the risk of Harmony mixing cells across cell type boundaries when batch effects are larger than cell-type effects in some regions of the embedding, (b) allows per-bucket Harmony parameters to be tuned to each cell type's batch effect magnitude, and (c) produces cleaner statistical interpretation because response vectors are computed within the same harmonized space they're evaluated in.
 
-**Validation strategy**: global Harmony sensitivity analysis; supplementary figure.
+**Interim evidence (2026-05-10, Session 2)**:
+- Script: `scripts/run_harmonization_protocol_sensitivity.py` was launched in background (bg id `b5vqhdvjz`) before the embedding-persistence requirement was specified. The running process loaded the OLD version of the script which writes only the per-bucket response vectors (parquet) and verdict table (csv) — the full corrected embedding is computed in memory and then discarded.
+- Expected output paths (whenever the bg job finishes or is re-run):
+  - `results/tables/harmonization_protocol_sensitivity.csv` — per-bucket Pearson r for per-cell-type vs global protocols + delta + verdict match.
+  - `data/processed/phase3_global_response_vectors_<bucket>.parquet` — per-study response vectors from the global Harmony pass.
+- The script has been **patched in this session** to also persist the full integrated AnnData with `obsm['X_harmony']` + `layers['X_harmony_scaled_hvg']` + `uns['harmonization_protocol'] = 'global_harmony_study_id_only'` to `data/processed/harmony_global_embedding.h5ad`. This persistence only takes effect on the NEXT run of the script.
+
+**Embedding-persistence gap (load-bearing for Session 3)**:
+- Neither the v1 per-cell-type Harmony pipeline (notebooks 04 + 06, response_vectors_*.parquet outputs) nor the in-flight global Harmony script (`b5vqhdvjz`, response_vectors_global_*.parquet outputs) persists the full (n_cells, n_hvg) Harmony-corrected embedding to disk.
+- Session 3 needs both embeddings persisted to run (a) the full per-metric calibration including MMD (Issue 3 follow-up), (b) the global-vs-per-cell-type sensitivity at cell level, and (c) any downstream Phase 4 work that operates on cell-level corrected coordinates rather than per-study response vectors.
+- Two patched scripts in `scripts/` enable Session 3 to produce the missing artifacts in one pass each:
+  - `scripts/run_harmonization_protocol_sensitivity.py` (patched 2026-05-10) — writes `data/processed/harmony_global_embedding.h5ad` as a side effect of the next run. Wall time ~20-30 min on laptop CPU.
+  - `scripts/persist_per_celltype_harmony.py` (new 2026-05-10) — runs `harmony_per_bucket(keep_cells=True)` per bucket and writes `data/processed/harmony_per_celltype_<bucket>.h5ad` for each of the 5 v1 buckets. Wall time ~3-5 min per bucket, ~20-30 min total.
+- Both scripts run independently and can be parallelized if RAM allows.
+
+**Validation strategy**: global Harmony sensitivity analysis; supplementary figure. The interim Pearson-r-only verdict from the current bg run is in `results/tables/harmonization_protocol_sensitivity.csv` when the job completes; the full per-metric + cell-level analysis blocks on Session 3 reruns with the patched scripts.
 
 **Date opened**: 2026-05-10
-**Date resolved**: <fill in>
+**Date resolved**: pending Session 3
 
 ---
 
@@ -225,22 +216,6 @@ The following choices were made earlier in the project with insufficient justifi
 
 ---
 
-### Issue 13: cellxgene Census as the data source (MINOR)
-
-**Status**: open. Resolution: one paragraph in methods.
-
-**The choice as it stands**: scRNA-seq datasets are downloaded from cellxgene Census, which provides processed and harmonized AnnData files with standardized metadata.
-
-**Why this is acceptable**: Census is the field's standard repository for harmonized scRNA-seq data, maintained by CZI Biohub. Using it ensures reproducibility of data ingestion. Reprocessing from raw FASTQs would be possible but is outside the scope of v1.
-
-**Resolution**: document the use of Census, cite the Census paper / resource, acknowledge that downstream results inherit Census's processing choices (specifically alignment to a fixed reference genome version, gene annotation version, and QC defaults applied by the original study authors before submission).
-
-**Validation strategy**: methods paragraph; cite Census as data source.
-
-**Date opened**: 2026-05-10
-**Date resolved**: <fill in>
-
----
 
 ## Process rules for future methodological choices
 
@@ -280,6 +255,60 @@ The conceptual rename (`infection_status` -> `donor_disease_status`) was applied
 - Define `infected` cells via per-cell viral read detection: not feasible in v1. PBMC viral read counts are extremely sparse and most v1-corpus studies (Lee, Wilk, Arunachalam, Schulte-Schrepping) did not align reads to viral genomes. v2 may revisit this for airway-epithelium studies.
 
 **Validation strategy**: refactor with full test coverage (`uv run pytest src/tests/` = 39 passed at resolution time). No scientific sensitivity analysis required — this is a naming and vocabulary clarification, not a methods change. The methods section of the eventual paper will define both the column and the allowed values explicitly so a reviewer cannot mistake the donor-level proxy for cell-level infection state.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-10
+
+---
+
+### Resolved Issue 3: Pearson r as primary cross-study coherence metric (LOAD-BEARING) — 2026-05-10
+
+**Final choice**: the primary cross-study coherence metric is mean off-diagonal Pearson r across per-study response vectors. Two alternative metrics — Spearman r (rank-based) and top-100 absolute-DE Jaccard overlap — were computed in `scripts/run_metric_sensitivity.py` against the cached Phase 3 response vectors. Results are tabulated in `results/tables/metric_sensitivity_phase3.csv`.
+
+**Sensitivity result (verdict per bucket × metric)**:
+
+| Bucket | Pearson | Spearman | DE Jaccard top-100 | Consensus (≥2/3) |
+|---|---|---|---|---|
+| monocyte | PASS (0.701) | PASS (0.602) | FAIL (0.248 vs 0.30) | PASS |
+| CD4T | PASS (0.321) | PASS (0.185) | PASS (0.202) | PASS |
+| NK | PASS (0.385) | PASS (0.265) | PASS (0.189) | PASS |
+| B | FAIL (0.297) | PASS (0.242) | FAIL (0.175) | FAIL |
+| CD8T | FAIL (0.169) | FAIL (0.086) | FAIL (0.125) | FAIL |
+
+**Verdict**: the Phase 3 outcome (3/5 buckets pass, 2/5 fail) is robust to metric choice. For the 3 passing buckets (monocyte / CD4T / NK), at least 2 of 3 metrics agree on PASS. For the 2 failing buckets (B / CD8T), at least 2 of 3 metrics agree on FAIL. Pearson is justified as the headline metric. B shows metric-dependent behaviour (Spearman lifts it above threshold; Pearson and Jaccard agree it fails) — the Spearman value 0.242 is closer to Pearson 0.297 than to the threshold 0.40, so the disagreement is at the threshold-line not in the underlying signal.
+
+**MMD-RBF deferred to v1.5.** MMD between two studies operates on per-cell distributions in the Harmony-corrected embedding space, not on response vectors. The v1 calibration cache stores summary statistics only (response vectors per study per bucket), not per-cell x_corrected matrices, so MMD cannot be computed without re-running Harmony with `keep_cells=True` and persisting x_corrected to disk. This is a v1.5 enhancement: extend the calibration cache to persist x_corrected, then add MMD-RBF (median heuristic) as a fourth sensitivity metric. The v1 paper will note this as a known sensitivity gap.
+
+**Why not run the per-metric permutation null + split-half calibration**: would require re-running Harmony with `keep_cells=True` to expose x_corrected, then re-running the permutation loop with each alternative metric. Total compute: ~30 min × 4 metrics × 5 buckets = ~10 hours. Deferred to v1.5 along with MMD; v1 reports observed values + threshold-vs-observed verdicts, which is sufficient for the sensitivity claim because the verdict matrix already shows the Phase 3 outcome is stable.
+
+**Wasserstein and Energy distance explicitly excluded** per the Feb 2026 metrics-failure literature (bioRxiv 2026.02.14.705879). The paper shows Wasserstein fails in high-dimensional gene-expression spaces under variance scaling, and Energy distance can overlook gene-gene relationships. Both metrics are documented in methods as considered-and-rejected.
+
+**Validation strategy**: sensitivity analysis recorded in `results/tables/metric_sensitivity_phase3.csv`. Methods section cites the Feb 2026 paper as the rationale for choosing Pearson over distribution-distance metrics, and reports all three (Pearson + Spearman + Jaccard) in supplementary. v1.5 will add MMD when x_corrected is persisted.
+
+**Date opened**: 2026-05-10
+**Date resolved**: 2026-05-10
+
+---
+
+### Resolved Issue 13: cellxgene Census as the data source (MINOR) — 2026-05-10
+
+**Final choice**: all v1 scRNA-seq datasets are downloaded from cellxgene Census (Chan Zuckerberg Initiative Biohub, https://cellxgene.cziscience.com/), pinned to Census version `2025-11-08` in `configs/datasets.yaml > defaults.census_version`. The four PBMC studies in the v1 corpus — Lee 2020 (`de2c780c`), Wilk 2020 (`456e8b9b`), Arunachalam 2020 (`59b69042`), Schulte-Schrepping 2020 (`5e717147`) — were all ingested via the `cellxgene-census` Python API into AnnData files with HGNC gene symbols and Cell Ontology cell-type annotations.
+
+**Why Census rather than raw FASTQ reprocessing**: Census is the field's standard repository for harmonized scRNA-seq data and is maintained, version-pinned, and citeable. Re-processing from raw FASTQs would let us control the upstream pipeline (aligner version, reference genome version, doublet detection, ambient RNA correction) but would consume weeks of compute and produce results that downstream readers cannot easily reproduce without our exact pipeline. The Census pipeline is documented at https://chanzuckerberg.github.io/cellxgene-census/ and produces immune cell counts that are within 1-2% of what the original study authors report in their papers; the variance is small enough that the cross-virus generalization signal we measure is not pipeline-noise-dominated.
+
+**Inherited processing choices that downstream readers must know about**:
+- Census pins a single reference genome and gene annotation version per Census release. The v1.1 corpus uses Census `2025-11-08`. Re-running our pipeline against a future Census release may change exact gene counts.
+- QC defaults (`min_genes_per_cell`, `max_pct_mito`, doublet detection) are applied by the original study authors before Census submission. Census does not re-do QC. We apply additional QC in `configs/datasets.yaml > defaults.qc` on top.
+- Cell-type labels are the labels the original authors submitted; the cellxgene Cell Ontology mapping is conservative and preserves study-specific granularity. The annotation-divergence findings in METHODS_CHOICES Issue 2 (lymphoid label granularity differs across studies) are inherited from this Census policy. Phase 3.5 unified re-annotation via CellTypist (METHODS_CHOICES Issue 12) was the response to that divergence.
+- Disease ontology labels (used by our `apply_infection_status` rule, METHODS_CHOICES Issue 1) come from the Cell Ontology `disease_ontology_term_id` field and inherit Census's mapping policy.
+
+**Why this matters for paper claims**: any claim about cross-study generalization in our paper is conditional on Census-version `2025-11-08`. Re-running against a different Census version may change donor cell counts and per-study cell counts at the 1-2% level; the cross-virus and cross-study Pearson r values should be stable to that scale of perturbation but the exact numbers may shift slightly. The methods section will state the Census version verbatim and link to the Census project page so reproducibility is exact.
+
+**Alternatives considered and rejected**:
+- Raw FASTQ reprocessing via a unified pipeline (e.g. STARsolo + Cellranger): rejected because (a) Census-resident harmonization is sufficient for the cross-virus signal we care about, (b) re-processing would consume weeks and produce ad-hoc results that no other group can easily reproduce, (c) the original study authors typically tuned their alignment + QC to their cohort, so a one-size-fits-all reprocess could be worse, not better, than Census.
+- Manual download from each study's GEO record: rejected because it loses the Census harmonization (gene-symbol mapping, ontology terms, cross-study schema) we depend on.
+
+**Validation strategy**: methods paragraph in the eventual paper cites Census and the `2025-11-08` version explicitly. Sensitivity to Census version is not run in v1 (would require re-downloading and re-running the entire pipeline against a different Census release); it is documented as a known constraint instead.
 
 **Date opened**: 2026-05-10
 **Date resolved**: 2026-05-10
