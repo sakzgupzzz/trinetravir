@@ -64,6 +64,11 @@ results/figures/*
 !results/tables/.gitkeep
 !results/figures/.gitkeep
 
+# --- Reference repos (cloned externally; not our code) ---
+references/repos/
+references/papers/
+# references/notes/ + references/refs.bib are tracked
+
 # --- Secrets ---
 .env
 .env.*
@@ -71,3 +76,12 @@ results/figures/*
 *.key
 *.pem
 credentials.json
+
+# --- Terraform state (ephemeral; do NOT commit) ---
+infrastructure/.terraform/
+infrastructure/.terraform.lock.hcl
+infrastructure/terraform.tfstate
+infrastructure/terraform.tfstate.backup
+infrastructure/terraform.tfstate.*.backup
+infrastructure/crash.log
+infrastructure/crash.*.log
