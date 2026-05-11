@@ -448,6 +448,56 @@ Guo 2020 (0 healthy / 2 diseased) and MGH acute COVID (1 healthy / 14 diseased) 
 
 ---
 
+## Resolved at the rule level
+
+This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.
+
+### Issue 17: atomic schema-change process rule (PROCESS)
+
+**Status**: resolved at the rule level; revisit if violated.
+
+**The rule**: schema changes that touch both code and persisted
+data must land atomically — code change and data migration in the
+same commit, with a test that fails informatively if either side
+is missing.
+
+**Why this rule exists**: during Session 1, the rename `healthy` ->
+`healthy_control` was applied to source code at 22:34. A
+sensitivity script launched at 22:53 loaded the new code, expected
+the new value on disk, and read h5ads that still carried `healthy`.
+Result: zero cells per bucket, NaN global_r, invalid sensitivity
+output. The migration script
+`scripts/migrate_donor_disease_status_value.py` was staged but had
+not been run. The bug was caught by Claude Code's own diagnostic
+comparing expected vs observed cell counts. The migration ran on
+data/raw and data/processed, sensitivity re-launched against
+correctly-aligned data, valid output produced.
+
+The cost of the bug was a ~10-minute delay. The cost of an
+undetected version mismatch could have been a methods section
+citing NaN-corrupted numbers. The rule prevents recurrence.
+
+**Implementation**: future schema changes (renaming columns,
+renaming allowed values, restructuring obs metadata) must:
+1. Include both the code change and the migration script in the
+   same commit.
+2. Run the migration script as part of the commit's pre-commit
+   hook or CI check, OR include a test that fails informatively
+   if the migration was not applied (e.g., a test that loads each
+   h5ad under data/processed/ and asserts the expected schema).
+3. Document the migration in METHODS_CHOICES.md if the schema
+   change is methodologically significant.
+
+**Validation strategy**: process commitment, not scientific claim.
+Violation is detected by automated checks; if none are in place at
+the time of a future schema change, the violation triggers
+retroactive documentation and remediation.
+
+**Date opened**: 2026-05-11
+**Date resolved**: 2026-05-11 (rule-level resolution)
+
+---
+
 ## Pending revisions
 
 This section tracks choices that have been resolved but may need revisiting based on later findings.
