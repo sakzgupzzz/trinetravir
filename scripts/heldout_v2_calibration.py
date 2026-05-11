@@ -64,6 +64,11 @@ COHORT_FILES = {
 
 PAIRED_COHORTS = {"randolph_2021"}
 
+# Held-out bucket → training-corpus bucket alias. Used when a cohort defines
+# a refined subpopulation bucket (e.g., Randolph monocyte_infected) and we
+# want to compare against the parent training response vector.
+BUCKET_TRAINING_ALIAS = {"monocyte_infected": "monocyte"}
+
 
 def load_training_response_vectors() -> dict[str, pd.Series]:
     out = {}
@@ -73,6 +78,10 @@ def load_training_response_vectors() -> dict[str, pd.Series]:
             continue
         df = pd.read_parquet(p)
         out[bucket] = df.mean(axis=1)
+    # Expose aliases pointing at the same training vector.
+    for alias, target in BUCKET_TRAINING_ALIAS.items():
+        if target in out:
+            out[alias] = out[target]
     return out
 
 
