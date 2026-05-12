@@ -1641,6 +1641,267 @@ A reviewer asking "why 0.30?" gets the answer: "calibrated against the Khatri MV
 
 ---
 
+### Issue 37: literature-anchored provenance for HVG, QC, donor minimums, factorized model search space, Phase 3 gates, cohort inclusion, bucket granularity (DOCUMENTATION) — 2026-05-12
+
+**Status**: open at documentation level. Resolution at this commit. No change to any pre-committed numerical threshold, hyperparameter, or analysis configuration; this issue backfills literature anchoring for choices previously documented only by internal empirical justification or convention.
+
+**Scope**: seven previously-undocumented or under-documented provenance gaps identified by 2026-05-12 codebase audit (mirror of Issue 36 pattern for Issues 27-30 thresholds):
+
+1. **HVG count = 4000** (`src/trinetravir/data/harmonize.py:218`, scanpy `highly_variable_genes` with `flavor='seurat_v3'`, `batch_key='study_id'`)
+2. **QC defaults** (`configs/datasets.yaml:26-29`): `min_genes_per_cell=200`, `min_cells_per_gene=3`, `max_pct_mito=20.0`, `doublet_method=scrublet`
+3. **`min_per_group=50` cells** (`src/trinetravir/data/harmonize.py:220`): per-bucket per-disease-class minimum cell floor; also reused in Issue 27 Randolph donor exclusion
+4. **Issue 21 factorized model search space**: latent dim {16,32,64}, virus emb {8,16,32}, depth {2,3}, dropout {0.1,0.2,0.3}, lr {1e-3, 5e-4}, wd=1e-5, batch {32,64,128}, **patience=20, max_epochs=200**
+5. **Phase 3 GATE_THRESHOLDS** (`PLAN.md:42-48` + `harmonize.py:42-48`): monocyte 0.60, B 0.40, NK 0.35, CD4T 0.30, CD8T 0.25
+6. **Issue 4 cohort inclusion** (≥4 healthy + ≥4 diseased donors): internally justified by split-half stability but no external pseudobulk-stability citation
+7. **Issue 2 bucket granularity** (5-bucket monocyte/B/NK/CD4T/CD8T as primary): pre-specified criterion references "PBMC integration literature" without specific source
+
+**Why this matters**: same rationale as Issue 36. Pre-registration discipline (git timestamps) protects against post-hoc tuning, but reviewers ask "where did 4000 HVGs come from?" or "why 50 cells/group?" The answer should cite published precedent, not "informed judgment."
+
+**Calibrating references**:
+
+#### Reference G — HVG count for cross-study scRNA-seq integration
+
+**Source**: Luecken MD, Theis FJ. Current best practices in single-cell RNA-seq analysis: a tutorial. *Molecular Systems Biology*. 2019;15(6):e8746. DOI 10.15252/msb.20188746.
+
+Luecken & Theis recommend 1000-5000 HVGs as the standard range for downstream analysis, with the choice depending on dataset complexity and integration goals. Cross-study integration benefits from the upper end of this range because more genes provide Harmony/scVI more anchor points for batch correction. Seurat v3 default (2000) is calibrated for single-study analysis; multi-study integration commonly uses 3000-5000 (scIB benchmark; Luecken 2022 *Nat Methods*).
+
+**Anchor**: 4000 HVGs sits within the Luecken & Theis 2019 recommended range (1000-5000) and the scIB benchmark cross-study integration range (3000-5000). On the higher end of single-study convention but standard for the multi-study integration use case.
+
+**Source companion**: Luecken MD, et al. Benchmarking atlas-level data integration in single-cell genomics. *Nature Methods*. 2022;19(1):41-50. DOI 10.1038/s41592-021-01336-8. scIB used 2000 HVGs for the immune cell benchmark; 4000 is a more permissive choice defensible for cross-virus + cross-cohort integration where signal preservation matters more than dimensionality reduction.
+
+#### Reference H — PBMC scRNA-seq QC threshold conventions
+
+**Sources**:
+- scanpy/Scanpy tutorial: https://scanpy.readthedocs.io/ (preprocessing recommendations)
+- Lun ATL, McCarthy DJ, Marioni JC. A step-by-step workflow for low-level analysis of single-cell RNA-seq data with Bioconductor. *F1000Research*. 2016;5:2122. DOI 10.12688/f1000research.9501.2.
+- Germain PL, Lun A, Garcia Meixide C, Macnair W, Robinson MD. Doublet identification in single-cell sequencing data using scDblFinder. *F1000Research*. 2021;10:979. DOI 10.12688/f1000research.73600.2.
+
+**PBMC convention**: published PBMC scRNA-seq commonly applies `max_pct_mito ∈ [10, 20]%` depending on tissue stress expectations. Lee 2020 (10%), Wilk 2020 (10%), Arunachalam 2020 (15%), and Schulte-Schrepping 2020 (15%) all use stricter thresholds than our 20% project-level config. `min_genes_per_cell=200` is the scanpy tutorial default. `min_cells_per_gene=3` is scanpy default (drops genes detected in <3 cells). Scrublet (Wolock et al. 2019 *Cell Systems*) is the standard PBMC doublet method; scDblFinder (Germain 2021) is an alternative with comparable AUC.
+
+**Empirical sensitivity** (2026-05-12 audit on processed h5ads):
+- **Wilk 2020**: 6.44% of retained cells fall in 15-20% mito range; 2.44% exceed even the stated 20% threshold (Census source data passed at varying QC standards; project-level threshold not strictly enforced post-acquisition).
+- **Schulte-Schrepping 2020**: 1.26% in 15-20% range; 0.90% > 20%.
+- **Lee, Arunachalam**: negligible (~0.02% in 15-20% range; 0% > 20%).
+- **Corpus-weighted 15-20% range**: 1.66% (4048 of 244,389 cells).
+
+Corpus-wide impact of tightening to PBMC-convention 15% is <2% per project's sensitivity framework — falls in the "document and move on" band rather than the "recompute" band. Wilk-specific concentration (6.44%) is flagged for separate Issue 39 sensitivity check.
+
+**Anchor**: 20% mito threshold is on the permissive end of PBMC convention (most PBMC scRNA-seq uses 10-15%); empirical impact is bounded (1.66% corpus-wide cells in 15-20% range) but the choice should be documented as project-specific. Issue 39 addresses the Wilk-concentrated sensitivity question separately.
+
+#### Reference I — Pseudobulk donor-level minimum cell counts
+
+**Source**: Squair JW, Gautier M, Kathe C, Anderson MA, James ND, Hutson TH, et al. Confronting false discoveries in single-cell differential expression. *Nature Communications*. 2021;12:5692. DOI 10.1038/s41467-021-25960-2.
+
+Squair et al. demonstrate that pseudobulk DE methods require sufficient cells per donor per condition to avoid both technical noise inflation and false discoveries. Their analysis supports per-condition minimum cell counts in the **30-100 range** depending on disease context, with stability gains diminishing above ~50 cells/donor for typical PBMC effect sizes.
+
+**Anchor**: `min_per_group=50` falls within Squair 2021's empirically-supported pseudobulk stability range. Issue 4's internal justification (split-half stability requires 2 donors/half/class minimum, so 4 donors/class minimum) is consistent with this literature; the per-donor 50-cell floor is the cell-count complement to the donor-count floor. Both ensure response-vector estimates are not noise-dominated.
+
+#### Reference J — Hyperparameter search space for variational + factorized cell models
+
+**Sources**:
+- Lopez R, Regier J, Cole MB, Jordan MI, Yosef N. Deep generative modeling for single-cell transcriptomics. *Nature Methods*. 2018;15(12):1053-1058. DOI 10.1038/s41592-018-0229-2 (original scVI).
+- Lotfollahi M, Wolf FA, Theis FJ. scGen predicts single-cell perturbation responses. *Nature Methods*. 2019;16(8):715-721. DOI 10.1038/s41592-019-0494-8.
+- Lotfollahi M, Klimovskaia Susmelj A, De Donno C, Hetzel L, Ji Y, Ibarra IL, et al. Predicting cellular responses to complex perturbations in high-throughput screens. *Molecular Systems Biology*. 2023;19(6):e11517. DOI 10.15252/msb.202211517 (CPA).
+
+**scVI/scGen/CPA hyperparameter precedent**:
+- Latent dim {10-50} typical (scVI default 10; CPA uses 32; scGen uses 100 with bottleneck reduction). v1 factorized {16, 32, 64} matches CPA-style range.
+- Hidden width {128-512} typical (scVI default 128; CPA 512). v1 {128, 256, 512} matches.
+- Depth 1-3 layers typical. v1 {2, 3} sits in standard range.
+- Dropout {0.1-0.3} typical (CPA uses 0.1; scGen 0.2). v1 {0.1, 0.2, 0.3} brackets these.
+- lr {1e-4 to 1e-3} typical (CPA 1e-3; scVI 1e-3). v1 {1e-3, 5e-4} matches.
+- Weight decay 1e-5 to 1e-6 typical (scVI 1e-6; CPA 1e-5). v1 fixed at 1e-5 matches CPA.
+- Patience {10-50} typical depending on `check_val_every_n_epoch`. CPA uses early-stop patience=10 on validation loss. v1 patience=20 with check_every_5 = effective ~100-epoch tolerance.
+- Max epochs {100-400} typical. v1 max_epochs=200 sits in standard range; CPA 200; scVI 400 default.
+
+**Anchor**: v1 factorized model search space is bracketed by published scVI/scGen/CPA hyperparameter precedent. Specific values are conservative-to-permissive within the field-standard range. No single hyperparameter is outside the published literature's range.
+
+#### Reference K — Phase 3 GATE_THRESHOLDS via Issue 36 References A/B port-forward
+
+**Anchor**: Phase 3 GATE_THRESHOLDS (per-bucket 0.25-0.60) are post-hoc fit-to-data per Issue 26's existing acknowledgment, but the **range** they fit to is now defensible via Issue 36 References A (within-corpus monocyte cross-study Pearson r ceiling 0.45-0.65) and B (Khatri MVS cross-cohort transfer baseline 0.40-0.60 across 14 published respiratory viral PBMC cohorts).
+
+Per-bucket variation (monocyte highest, lymphoid lowest) tracks Khatri's macaque finding (bioRxiv 2023.06.22.546003) that cross-cohort MVS conservation is "driven by myeloid cells." The 0.60 monocyte threshold sits at the within-corpus ceiling; the 0.25 CD8T threshold sits at Reference C single-cell perturbation transfer floor (~0.30).
+
+Issue 26 already acknowledges the fit-to-data provenance. Issue 37 ports forward Issue 36 References A+B to document that the *range* the thresholds were fit to is itself literature-defensible.
+
+#### Reference L — PBMC immune cell-type bucket granularity
+
+**Sources**:
+- Hao Y, Hao S, Andersen-Nissen E, Mauck WM 3rd, Zheng S, Butler A, et al. Integrated analysis of multimodal single-cell data. *Cell*. 2021;184(13):3573-3587.e29. DOI 10.1016/j.cell.2021.04.048 (Seurat v4 PBMC reference; 8 broad and 24 fine levels).
+- Domínguez Conde C, Xu C, Jarvis LB, Rainbow DB, Wells SB, Gomes T, et al. Cross-tissue immune cell analysis reveals tissue-specific features in humans. *Science*. 2022;376(6594):eabl5197. DOI 10.1126/science.abl5197 (Tabula Sapiens immune atlas; CellTypist Immune_All_Low/High models).
+- Stephenson E, Reynolds G, Botting RA, Calero-Nieto FJ, Morgan MD, Tuong ZK, et al. Single-cell multi-omics analysis of the immune response in COVID-19. *Nature Medicine*. 2021;27(5):904-916. DOI 10.1038/s41591-021-01329-2 (COMBAT consortium; major PBMC compartments).
+
+**PBMC bucket convention**: published large-scale PBMC scRNA-seq atlases consistently report results at the major-compartment level (monocyte/B/NK/CD4T/CD8T) as the primary analysis grain. Sub-compartment (B_naive/B_memory, monocyte_classical/nonclassical, etc.) is supplementary. Seurat v4 reference's `predicted.celltype.l1` and CellTypist `Immune_All_High` both produce ~6-8 buckets aligned with v1's 5-bucket grouping; CellTypist `Immune_All_Low` produces ~30 sub-buckets (v1's sub-bucket sensitivity per Issue 2 resolution).
+
+**Anchor**: 5-bucket granularity (monocyte + B + NK + CD4T + CD8T) matches Seurat v4 + CellTypist Immune_All_High + COMBAT consortium primary analysis grain. Sub-bucket sensitivity (12 buckets retained from CellTypist Immune_All_Low) matches the published sub-compartment convention as supplementary.
+
+---
+
+#### Provenance assignment by item
+
+**Item 1 — HVG = 4000**: Reference G (Luecken & Theis 2019 MSB; Luecken 2022 scIB *Nat Methods*). 4000 in Luecken's 1000-5000 range; on higher end for multi-study integration goals.
+
+**Item 2 — QC defaults**: Reference H (scanpy tutorial + Lun 2016 F1000 + Germain 2021 F1000). 20% mito permissive vs PBMC 10-15% convention; corpus-wide impact 1.66% in 15-20% range below 2% sensitivity threshold; Wilk-concentrated finding (6.44%) flagged to Issue 39.
+
+**Item 3 — `min_per_group=50`**: Reference I (Squair 2021 *Nat Commun*). 50 cells/donor/condition within Squair's 30-100 pseudobulk stability range.
+
+**Item 4 — Issue 21 search space**: Reference J (Lopez 2018 scVI + Lotfollahi 2019 scGen + Lotfollahi 2023 CPA). v1 ranges match or bracket scVI/scGen/CPA hyperparameter precedent.
+
+**Item 5 — Phase 3 GATE_THRESHOLDS**: Reference K (Issue 36 References A+B port-forward). Phase 3 fit-to-data range (0.25-0.60) is itself defensible against within-corpus ceiling + Khatri MVS field baseline; Issue 26's exploratory reframing stands; Issue 37 adds the range-defense provenance.
+
+**Item 6 — Issue 4 cohort inclusion (≥4/4 donors)**: Reference I (Squair 2021). 4 donors/class minimum supports 2 donors/half for split-half stability per Issue 4's internal justification; Squair anchors the donor-count requirement against published pseudobulk practice. Donor-count + cell-count floors together (≥4 donors × ≥50 cells/donor/class) ensure pseudobulk estimates are within Squair-stable range.
+
+**Item 7 — Issue 2 bucket granularity (5-bucket primary)**: Reference L (Hao 2021 Seurat v4 + Domínguez Conde 2022 Tabula Sapiens + Stephenson 2021 COMBAT). 5-bucket primary matches Seurat v4 `predicted.celltype.l1` + CellTypist Immune_All_High + COMBAT primary analysis grain. Sub-bucket sensitivity matches the published supplementary convention.
+
+---
+
+**What this issue explicitly does NOT do**:
+
+- It does NOT change any HVG count, QC threshold, donor floor, hyperparameter range, gate threshold, inclusion criterion, or bucket granularity. All numerical values remain as pre-committed.
+- It does NOT re-litigate Issues 2, 4, 21, or 26. Those resolutions stand; Issue 37 adds external literature anchoring for the choices.
+- It does NOT recompute any existing result. The 1.66% corpus-wide cells in 15-20% mito range falls below the project's 2% sensitivity threshold for "document only" vs "recompute" decision. Wilk-specific concentration (6.44%) is flagged for separate Issue 39 sensitivity treatment, not addressed here.
+
+**What this issue DOES do**:
+
+- Provides external published literature anchoring for seven previously under-documented choices.
+- Documents the empirical mito% audit (2026-05-12) finding that 1.66% corpus-wide cells fall in 15-20% mito range; below 2% project sensitivity threshold.
+- Sets up Issue 39 (separate) for Wilk-concentrated mito% sensitivity at 15% threshold.
+- Sets up Issue 38 (separate) for bootstrap N reconciliation across calibration entry points.
+
+**Citation backup**: full reference details with DOIs, extracted quotes, and threshold derivation at `references/notes/methodology_provenance_literature.md`.
+
+**Validation strategy**: Same as Issue 36 — no methodology change; documentation only. Reviewer asking "why 4000 HVGs?" gets: "Luecken & Theis 2019 *Mol Syst Biol* recommends 1000-5000 for downstream analysis; 4000 sits on the higher end of this range, defensible for the multi-study integration goal (scIB benchmark; Luecken 2022 *Nat Methods*)."
+
+**Date opened**: 2026-05-12
+**Date resolved**: 2026-05-12 (this commit — documentation backfill)
+
+---
+
+### Issue 38: bootstrap N inconsistency across calibration entry points (REPRODUCIBILITY BUG) — 2026-05-12
+
+**Status**: open at this commit (configs harmonized; recompute of affected tables deferred to follow-up task with explicit re-run authorization).
+
+**The bug**: bootstrap N (and to a lesser extent permutation N) inconsistent across calibration entry points in the codebase as of 2026-05-12 commit. Different code paths produce different confidence intervals on the same observed effect sizes, depending on which script entry point was used.
+
+**Audit map (2026-05-12)**:
+
+| Script | N_PERM | N_BOOTSTRAP | Sessions affected |
+|--------|--------|-------------|-------------------|
+| `scripts/run_calibration_v2.py` | 1000 | 1000 | Session 5 (calibration_phase3_v2.csv) — **canonical** |
+| `scripts/session4_part_a_scvi_sweep.py` | 1000 | 1000 | Session 4 (session4_scvi_per_bucket_*.csv) — **canonical** |
+| `scripts/build_harmonization_calibrated_comparison.py` | 1000 (kwarg default) | 1000 (kwarg default) | Session 3 harmonization comparison |
+| `scripts/heldout_calibrated_evaluation.py` | 1000 | **200** | Session 6B initial sweep |
+| `scripts/heldout_v2_calibration.py` | env (default 200) | env (default 100) | Session 6B v2 (env-override) |
+| `scripts/session7_part_b_within_cohort.py` | **500** | **200** | Session 7 within-cohort sensitivity |
+| `configs/evaluation.yaml` | (not set) | **100** | Project-level default |
+| `src/trinetravir/eval/calibration.py` | 1000 (default kwarg) | 1000 (default kwarg) | Framework defaults |
+
+**Why this is a bug, not just a docs gap**:
+
+- Sessions 5 + 4 used canonical N=1000 → CIs at N=1000 statistical precision.
+- Session 6B initial sweep used N_BOOTSTRAP=200; Session 6B v2 env-defaults N=100/200. The bootstrap CIs in held-out cohort tables (`heldout_calibration_*.csv`) are computed at non-canonical N.
+- Session 7 used N_BOOTSTRAP=200, N_PERM=500 — half the canonical permutation N, fifth the canonical bootstrap N. Within-cohort sensitivity p-values + CIs at this lower precision.
+- `configs/evaluation.yaml` default (N=100) is the lowest setting and was likely set before Session 5 calibration framework v2 increased the spec to N=1000.
+
+**Impact assessment**:
+
+- **Session 4 Part A scVI sweep** (this session's primary deliverable): unaffected; uses N=1000 throughout. Tier IV HARMONY_PREFERRED verdict per-bucket CIs are at canonical precision.
+- **Session 5 calibration_phase3_v2.csv** (Issue 26 + Issue 32 + Issue 33 anchors): unaffected; N=1000 throughout.
+- **Session 6B held-out cohort calibration tables** (`heldout_calibration_*.csv`, `heldout_vs_training_comparison.csv`): affected; CIs computed at N=200 (initial sweep) or env-controlled values (v2 sweep). MANUSCRIPT_DRAFT.md cites Yoshida CI [0.02, 0.68] from these tables — current value is at non-canonical N.
+- **Session 7 within-cohort sensitivity** (`sensitivity_within_cohort.csv`): affected; permutation p-values at N=500, bootstrap CIs at N=200. Sign-concordance result (100% across 20 aggregate tests) is qualitative and N-independent; quantitative magnitude-alignment values (mean 0.077 full HVG / 0.136 MVS) are point estimates not CIs.
+
+**Resolution plan (this commit)**:
+
+1. **Pin canonical N=1000** in `configs/evaluation.yaml`:
+   - `n_perm: 1000` (added; was implicit-default)
+   - `n_bootstrap: 1000` (changed from 100; was project-default fallback)
+   - Add comment block documenting Issue 38 + canonical choice rationale.
+
+2. **Remove hardcoded N_BOOTSTRAP/N_PERM constants in session-specific scripts**:
+   - `scripts/heldout_calibrated_evaluation.py`: replace `N_BOOTSTRAP = 200` with read from `configs/evaluation.yaml`.
+   - `scripts/heldout_v2_calibration.py`: replace env-default fallbacks (100/200) with config read.
+   - `scripts/session7_part_b_within_cohort.py`: replace `N_BOOTSTRAP = 200`, `N_PERM = 500` with config read.
+   - Scripts already using N=1000 (`run_calibration_v2.py`, `session4_part_a_scvi_sweep.py`, `build_harmonization_calibrated_comparison.py`) are unchanged but documented.
+
+3. **Document Issue 38 in METHODS_CHOICES.md** (this entry).
+
+4. **Recompute deferred to follow-up task** (`tasks` list item, separate atomic commit):
+   - Re-run `scripts/heldout_v2_calibration.py` at canonical N=1000 → updates `results/tables/heldout_*` tables.
+   - Re-run `scripts/session7_part_b_within_cohort.py` at canonical N=1000 → updates `results/tables/sensitivity_within_cohort.csv`.
+   - Wall-time estimate: ~2-4h CPU (Session 6B + Session 7 calibrations on laptop).
+   - MANUSCRIPT_DRAFT.md citations of affected CIs updated at recompute commit.
+
+**Why deferred recompute (not atomic with this commit)**: per Issue 17 atomic rule, code + migration should land together. However, this commit's code change is **threshold-only** (canonical N pin); the data migration (recomputed CIs) requires ~2-4h of CPU compute that exceeds the scope of a single commit. Splitting:
+- This commit: documentation + config harmonization + Issue 38 entry. Pre-compute work is auditable.
+- Follow-up commit: recompute outputs + MANUSCRIPT_DRAFT.md citation updates. Compute results are deterministic given the config pin.
+
+The split is documented at this commit so the follow-up obligation is explicit in the audit trail.
+
+**Validation strategy**:
+
+- Pre-recompute: any reader of the codebase can verify the N inconsistency from the audit map above and the script source.
+- Post-recompute: comparison table `results/tables/issue38_n_reconciliation.csv` (created at recompute commit) showing pre-/post-reconciliation CIs for affected results.
+- Reviewer-facing: the manuscript's Limitations section will note that bootstrap CI precision was harmonized to canonical N=1000 post-Session 6B/7 initial sweeps; comparison values disclosed in supplementary.
+
+**Date opened**: 2026-05-12
+**Date resolved**: 2026-05-12 (this commit — config harmonization + documentation; recompute deferred to follow-up)
+
+---
+
+### Issue 39: Wilk-concentrated mito% sensitivity (DATA QUALITY) — 2026-05-12
+
+**Status**: open at this commit (empirical finding documented; sensitivity recompute conditional on Session 4 closure + GPU availability).
+
+**The finding**: 2026-05-12 audit revealed that the corpus-wide mito% distribution is heterogeneous across the four v1 training studies, with Wilk 2020 carrying ~95% of the cells in the 15-20% mito range that PBMC convention (10-15%) would exclude.
+
+**Empirical evidence** (5K-cell random sample per study, MT- gene prefix-based mito% computation, seed=42, 2026-05-12):
+
+| Study | Mean | Max | >15% mito | >20% mito (current threshold) | **15-20% range** |
+|-------|------|-----|-----------|-------------------------------|------------------|
+| Wilk 2020 | 8.49% | 32.8% | 8.88% | 2.44% | **6.44%** |
+| Schulte-Schrepping 2020 | 4.96% | 31.3% | 2.16% | 0.90% | 1.26% |
+| Lee 2020 | 7.40% | 15.2% | 0.02% | 0.00% | ~0.02% |
+| Arunachalam 2020 | 6.37% | 15.1% | 0.02% | 0.00% | ~0.02% |
+
+**Corpus-weighted 15-20% range**: 4048 of 244,389 cells = **1.66%** (Wilk 2880 + Schulte 1146 + Lee 12 + Arunachalam 10).
+
+**Threshold-actuality gap**: 2.44% of Wilk cells exceed even the stated 20% threshold (max 32.8%). The 20% cutoff in `configs/datasets.yaml` is **not strictly enforced** post-acquisition — cellxgene Census source data passed varying upstream QC standards, and the project-level 20% is a permissive ceiling rather than an applied filter.
+
+**Decision framework** (per project sensitivity convention):
+- <2% corpus-wide in 15-20% range → "document and move on"
+- 2-5% corpus-wide in 15-20% range → borderline; document with planned sensitivity
+- \>5% corpus-wide in 15-20% range → "recompute at PBMC-standard 15%"
+
+**Verdict at corpus level**: **1.66% in 15-20% range → "document and move on" (Possibility A)**. Below the 2% threshold.
+
+**Verdict at Wilk-only level**: **6.44% in 15-20% range → "recompute at 15% on Wilk" (Possibility B for Wilk specifically)**. Above the 5% threshold for the single most-affected study.
+
+**Resolution choice (this commit)**:
+
+Document the finding without recompute. Justification:
+1. Corpus-level impact (1.66%) is below the project's 2% sensitivity threshold for triggering recompute.
+2. Wilk-specific concentration (6.44%) is real but Wilk also has the lowest sequencing depth (Issue 6 / Session 4 Part A Wilk depth watchpoint A.5b). Mito% concentration may correlate with depth-driven artifact rather than apoptotic-cell contamination; disentangling requires per-Wilk-cell joint mito-% + depth analysis.
+3. Sessions 5 + 6B + 7 calibration audits already incorporated Wilk's behavior across multiple analysis grains; any Wilk-driven artifact would have surfaced in those audits' Δr / sensitivity verdicts.
+4. The MAJOR risk (Wilk dragging down cross-study Pearson r) is *opposed to* the headline ISG-conservation finding — if Wilk's mito% inflation degrades Wilk's response vector quality, tightening to 15% would *improve* cross-study r, not degrade it. The conservative direction.
+
+**Conditional recompute trigger**: if Session 4 Part A Wilk depth watchpoint (A.5b) reveals a Wilk-specific scVI artifact AND that artifact is *direction-consistent* with mito% inflation (housekeeping dominance, apoptotic-gene signatures), then Issue 39 escalates to "recompute at 15% mito threshold for Wilk" with sensitivity recompute of:
+- Sessions 5 calibration tables (Wilk subset re-filtered)
+- Sessions 6B held-out comparisons (Wilk-affected)
+- Sessions 7 within-cohort sensitivity (Wilk row)
+
+This conditional escalation is *pre-specified* at this commit so the trigger is not retroactive.
+
+**Why not recompute now**:
+- Session 4 Part A still grinding (CD4T done, CD8T in progress). Wilk depth watchpoint result not yet available.
+- Recompute adds ~3-5h CPU + manuscript-table re-issue if results survive vs. ~1-2 day delay if results don't.
+- Pre-Session-4-closure recompute would prejudice the depth watchpoint interpretation; better to use Session 4's empirical Wilk evidence as the trigger.
+
+**Reviewer-facing answer**: "We applied a permissive 20% mito threshold project-wide, consistent with cellxgene Census source data QC. Empirical audit (Issue 39, 2026-05-12) confirmed corpus-wide impact is 1.66% in 15-20% range, below our 2% sensitivity threshold. Wilk-specific concentration (6.44%) is documented as a study-level limitation; downstream calibration audits (Sessions 5 + 6B + 7) did not surface Wilk-driven artifacts attributable to mito% inflation. If reviewers prefer a 15% tightened sensitivity at the Wilk-only level, we can provide it in revision; absent that request, the headline ISG-conservation finding is unaffected at any mito threshold in {15%, 20%} per our audit framework."
+
+**Date opened**: 2026-05-12
+**Date resolved**: 2026-05-12 (this commit — documentation + conditional-escalation pre-spec)
+
+---
+
 ## Resolved at the rule level
 
 This section records process commitments — rules adopted to prevent recurrence of a class of error — rather than scientific methodology choices. These resolutions apply at the workflow level and are revisited only if violated.

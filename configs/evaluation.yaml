@@ -29,7 +29,14 @@ metrics:
 
 reproducibility:
   seed: 42
-  n_bootstrap: 100
+  # Canonical N for calibration framework v2 (Issue 38, 2026-05-12).
+  # Single source of truth. All calibration entry points should read from here;
+  # hardcoded N_BOOTSTRAP / N_PERM in session-specific scripts is a bug.
+  # Pre-Issue-38 inconsistency: heldout_calibrated_evaluation.py used N_BOOTSTRAP=200,
+  # heldout_v2_calibration.py used env-default 100/200, session7 used 200/500.
+  # See METHODS_CHOICES.md Issue 38 for full audit map + recompute plan.
+  n_bootstrap: 1000
+  n_perm: 1000
 
 # Hyperparameter policy. See METHODS_CHOICES.md Issue 14. Pre-specified before Phase 6
 # begins so the protocol is symmetric across every benchmarked method and no post-hoc

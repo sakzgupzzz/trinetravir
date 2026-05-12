@@ -47,11 +47,13 @@ PROC = REPO / "data" / "processed"
 TABLES = REPO / "results" / "tables"
 MVS_FILE = REPO / "data" / "reference" / "khatri_mvs_module_genes.txt"
 
-# Env-var overrides for v1.5 tightening runs.
-# Defaults 200/100 = Session 6B Step 3 baseline (~2.5h/cohort).
-# Recommended v1.5: HELDOUT_N_PERM=1000 HELDOUT_N_BOOTSTRAP=500 (~12h/cohort).
-N_PERM = int(os.environ.get("HELDOUT_N_PERM", "200"))
-N_BOOTSTRAP = int(os.environ.get("HELDOUT_N_BOOTSTRAP", "100"))
+# Canonical N per Issue 38 reconciliation (2026-05-12). Pre-Issue-38 defaults
+# (N_PERM=200, N_BOOTSTRAP=100) were inconsistent with configs/evaluation.yaml
+# canonical 1000. Env vars preserved for diagnostic re-runs only; production
+# defaults now match canonical N=1000. Recompute of held-out cohort tables
+# deferred per Issue 38.
+N_PERM = int(os.environ.get("HELDOUT_N_PERM", "1000"))
+N_BOOTSTRAP = int(os.environ.get("HELDOUT_N_BOOTSTRAP", "1000"))
 SEED = 42
 OUT_SUFFIX = os.environ.get("HELDOUT_OUT_SUFFIX", "")  # e.g., "_n1000" → _<cohort>_n1000.csv
 

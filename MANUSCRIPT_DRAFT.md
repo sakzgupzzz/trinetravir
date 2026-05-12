@@ -120,7 +120,7 @@ Single-paragraph summary covering: methodology framework, ISG-restriction findin
 
 **Harmonization** — per-cell-type Harmony with `study_id` (or `donor_id` within-cohort) as batch variable. Choice of per-cell-type over global Harmony documented per Issue 7 (acknowledged as methodological-alignment choice with factorized model's per-bucket grain).
 
-**Calibration framework v2** — permutation null with donor-level resampling, bootstrap CI on observed Pearson r (donor-level B=1000), split-half ceiling, FDR-BH correction, MVS-restricted analysis. `test_calibration.py` with 8 synthetic ground-truth tests for verification.
+**Calibration framework v2** — permutation null with donor-level resampling (N_perm=1000), bootstrap CI on observed Pearson r (donor-level B=200 for held-out cohort tables; canonical N=1000 recompute pending per `METHODS_CHOICES.md` Issue 38), split-half ceiling, FDR-BH correction, MVS-restricted analysis. `test_calibration.py` with 8 synthetic ground-truth tests for verification. Note: held-out cohort verdicts (Issues 27-30) are assigned mechanically on observed `r_mvs` point estimate alone — CI bounds are reported for transparency but do not enter verdict logic, so the N_bootstrap=200 → 1000 reconciliation does not affect verdict assignments.
 
 **Khatri MVS external anchor** — canonical antiviral ISG signature from Andres-Terre et al. 2015 used as orthogonal validation set. Cross-study coherence under MVS restriction compared to full HVG calibration.
 

@@ -53,8 +53,12 @@ STUDY_FILE = {
     "arunachalam_2020": PROC / "arunachalam_2020_reannotated.h5ad",
     "schulte_schrepping_2020": PROC / "schulte_schrepping_2020_reannotated.h5ad",
 }
-N_PERM = 500
-N_BOOTSTRAP = 200
+# Canonical N per Issue 38 reconciliation (2026-05-12). Previous N_PERM=500,
+# N_BOOTSTRAP=200 were inconsistent with configs/evaluation.yaml canonical 1000.
+# Sign-concordance result (100% across 20 aggregate tests) is N-independent; quantitative
+# magnitude-alignment values + per-row p-values affected. Recompute deferred per Issue 38.
+N_PERM = 1000
+N_BOOTSTRAP = 1000
 SEED = 42
 
 

@@ -53,8 +53,12 @@ PROC = REPO / "data" / "processed"
 TABLES = REPO / "results" / "tables"
 MVS_FILE = REPO / "data" / "reference" / "khatri_mvs_module_genes.txt"
 
+# Canonical N per Issue 38 reconciliation (2026-05-12). Previous N_BOOTSTRAP=200
+# was inconsistent with configs/evaluation.yaml n_bootstrap=1000 and the calibration
+# framework default. Recompute of held-out cohort tables at canonical N is a
+# deferred follow-up task per Issue 38.
 N_PERM = 1000
-N_BOOTSTRAP = 200
+N_BOOTSTRAP = 1000
 SEED = 42
 
 # ---------------------------------------------------------------------------
@@ -103,11 +107,20 @@ def cohort_response_vectors_per_bucket(
     """
     logger.info("loading %s", adata_path.name)
     a = ad.read_h5ad(adata_path)
-    # Use gene_symbol if available; else var_names
-    if "gene_symbol" in a.var.columns:
-        gene_symbols = a.var["gene_symbol"].astype(str).values
+    # Resolve gene symbols: try common var columns in priority order;
+    # fall back to var_names. Yoshida cellxgene h5ad uses Ensembl IDs as
+    # var_names with symbols in 'feature_name' or 'name' columns.
+    sym_col = None
+    for c in ("gene_symbol", "feature_name", "name", "gene_symbols", "symbol"):
+        if c in a.var.columns:
+            sym_col = c
+            break
+    if sym_col is not None:
+        gene_symbols = a.var[sym_col].astype(str).values
+        logger.info("  using var['%s'] as gene symbols", sym_col)
     else:
         gene_symbols = a.var_names.astype(str).values
+        logger.info("  using var_names as gene symbols (no symbol column found)")
     # Normalize + log1p (held-out cohort may be raw counts)
     if "log1p" not in (a.uns.get("log_layers") or {}) and a.X.max() > 20:
         a.X = a.X.astype(np.float32)
