@@ -1,0 +1,2 @@
+verdict,max_delta_r_mvs,min_delta_r_mvs,mean_delta_r_mvs,n_buckets,regenerated_locally,source
+TIER_IV_HARMONY_PREFERRED (≥3 buckets Δr_mvs < -0.10 [n=4]),-0.0462,-0.2059,-0.1257,5,True,scripts/session4_part_a_regen_combined.py

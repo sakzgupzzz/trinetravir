@@ -1,0 +1,6 @@
+bucket,config_idx,n_latent,n_hidden,n_layers,r_full,r_mvs,n_genes_full,n_genes_mvs,wall_seconds,selected,calibrated,r_full_harmony,r_mvs_harmony,delta_r_full,delta_r_mvs,perm_p_mvs,ci_low_mvs,ci_high_mvs,n_perm
+monocyte,4,20,128,1,0.3595,0.4507,,,,True,True,0.7012,0.6566,-0.3418,-0.2059,0.02,0.1785,0.5432,1000.0
+B,8,30,128,1,0.178,0.2275,,,,True,True,0.2971,0.3587,-0.1192,-0.1312,0.0979,0.0397,0.3716,1000.0
+NK,10,30,256,1,0.1871,0.3599,,,,True,True,0.3845,0.469,-0.1974,-0.109,0.011,0.196,0.5183,1000.0
+CD4T,1,10,128,2,0.1197,0.3456,,,,True,True,0.3214,0.4818,-0.2017,-0.1362,0.008,0.1657,0.5119,1000.0
+CD8T,10,30,256,1,0.1091,0.3538,,,,True,True,0.1686,0.4,-0.0595,-0.0462,0.033,0.1541,0.5163,1000.0
