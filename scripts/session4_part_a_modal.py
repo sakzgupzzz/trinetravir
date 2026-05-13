@@ -40,6 +40,8 @@ Pay-per-second, auto-terminate. Modal $30 new-account credit covers all of these
 
 from __future__ import annotations
 
+import os as _os_outer
+
 import modal
 
 app = modal.App("trinetravir-session-4")
@@ -88,17 +90,37 @@ image = (
 )
 
 
+# Single-bucket re-run mode: pass via SESSION4_BUCKETS env var to the script
+# (e.g., SESSION4_BUCKETS=CD8T for CD8T-only resume after initial sweep timeout).
+# Default behavior unchanged for full-sweep runs.
+_BUCKETS_OVERRIDE = _os_outer.environ.get("SESSION4_BUCKETS", "").strip()
+_IS_SINGLE_BUCKET = bool(_BUCKETS_OVERRIDE and "," not in _BUCKETS_OVERRIDE)
+
+
 @app.function(
     image=image,
-    gpu="A10G",  # 24GB; sufficient for 4000-HVG scVI on 68K-cell bucket
-    timeout=14 * 3600,  # 14h ceiling per spec wall-time estimate + buffer
+    gpu="L4",  # 24GB Ada Lovelace; cheapest viable GPU at $1.05/hr.
+    # Cost-optimal per Modal pricing analysis: L4 expected wall-time ~12h
+    # (~1.25x A10G from empirical 4s/epoch baseline) × $1.05/hr = ~$12.60 total.
+    # Cheaper than A100 ($25), L40S ($20), A10G (timeout risk), T4 (timeout fails).
+    # Single-bucket re-run: ~4h ceiling; full sweep: ~16h ceiling.
+    timeout=(4 if _IS_SINGLE_BUCKET else 16) * 3600,
     volumes={"/data": volume},
 )
-def run_part_a_sweep() -> None:
-    """Run scripts/session4_part_a_scvi_sweep.py with mounted volume."""
+def run_part_a_sweep(buckets_env: str = "") -> None:
+    """Run scripts/session4_part_a_scvi_sweep.py with mounted volume.
+
+    Args:
+        buckets_env: optional SESSION4_BUCKETS value to pass to the script
+            (e.g., 'CD8T' for single-bucket resume). Empty = full 5-bucket sweep.
+    """
     import os
     import subprocess
     import sys
+
+    if buckets_env:
+        os.environ["SESSION4_BUCKETS"] = buckets_env
+        print(f"Single-bucket mode: SESSION4_BUCKETS={buckets_env}")
 
     # Symlink volume inputs into the repo's expected data/processed path
     os.makedirs("/repo/data/processed", exist_ok=True)
@@ -163,7 +185,12 @@ def main() -> None:
     print("  /inputs/scvi_input_<bucket>.h5ad × 5")
     print("  /inputs/phase3_response_vectors_<bucket>.parquet × 5")
     print()
-    run_part_a_sweep.remote()
+    import os as _os_local
+
+    _buckets = _os_local.environ.get("SESSION4_BUCKETS", "").strip()
+    if _buckets:
+        print(f"Single-bucket mode (host env): SESSION4_BUCKETS={_buckets}")
+    run_part_a_sweep.remote(buckets_env=_buckets)
     print()
     print("Done. Download results with:")
     print("  modal volume get trinetravir-data /outputs/ results/tables/")
