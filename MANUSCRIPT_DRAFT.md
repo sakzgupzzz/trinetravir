@@ -120,7 +120,7 @@ Single-paragraph summary covering: methodology framework, ISG-restriction findin
 
 **Harmonization** — per-cell-type Harmony with `study_id` (or `donor_id` within-cohort) as batch variable. Choice of per-cell-type over global Harmony documented per Issue 7 (acknowledged as methodological-alignment choice with factorized model's per-bucket grain).
 
-**Calibration framework v2** — permutation null with donor-level resampling (N_perm=1000), bootstrap CI on observed Pearson r (donor-level B=200 for held-out cohort tables; canonical N=1000 recompute pending per `METHODS_CHOICES.md` Issue 38), split-half ceiling, FDR-BH correction, MVS-restricted analysis. `test_calibration.py` with 8 synthetic ground-truth tests for verification. Note: held-out cohort verdicts (Issues 27-30) are assigned mechanically on observed `r_mvs` point estimate alone — CI bounds are reported for transparency but do not enter verdict logic, so the N_bootstrap=200 → 1000 reconciliation does not affect verdict assignments.
+**Calibration framework v2** — permutation null with donor-level resampling (N_perm=1000), bootstrap CI on observed Pearson r (donor-level B=1000 canonical per `METHODS_CHOICES.md` Issue 38 reconciliation; held-out cohort tables recomputed at canonical N as of 2026-05-13), split-half ceiling, FDR-BH correction, MVS-restricted analysis. `test_calibration.py` with 8 synthetic ground-truth tests for verification. Held-out cohort verdicts (Issues 27-30) are assigned mechanically on observed `r_mvs` point estimate alone — CI bounds are reported for transparency but do not enter verdict logic, so the N_bootstrap=200 → 1000 reconciliation did not affect any verdict assignment. Cross-cohort verdict-comparison artifact at `results/tables/issue_38_verdict_comparison.csv` (15 rows across 4 cohorts; all observed r_mvs values byte-identical across N reconciliation; CI widths mixed direction with most-notable widening at Yoshida monocyte +0.082 reflecting N=200 over-confidence at the wide-CI boundary).
 
 **Khatri MVS external anchor** — canonical antiviral ISG signature from Andres-Terre et al. 2015 used as orthogonal validation set. Cross-study coherence under MVS restriction compared to full HVG calibration.
 
@@ -160,9 +160,9 @@ Subsections per Issue 27–30 hypothesis. Each subsection reports: observed Pear
 |---|---|---|---|---|---|---|---|---|
 | 27 PRIMARY | Randolph monocyte_infected (Issue 31) | cluster-8 IAV-infected vs parent-bucket NI mock | 0.129 | **−0.011** | n/a (paired) | 0.072 | 0.270 | **CHALLENGES_H1** |
 | 27 SENSITIVITY | Randolph monocyte (bystander) | flu vs NI within bystander bucket | 0.286 | 0.013 | n/a (paired) | 0.441 | 0.508 | CHALLENGES_H1 |
-| 28 | Yoshida monocyte | pediatric ↔ adult cross-age | 0.387 | **0.591** | [0.017, 0.684] | 0.052 | 0.260 | **SUPPORTS_H1** |
-| 29 | Allen Atlas monocyte | chronic-latent CMV+ vs CMV− | 0.152 | **−0.010** | [−0.516, 0.415] | 0.509 | 0.546 | **CONCERNING_NO_SHARED_BIOLOGY** (scope-limitation finding) |
-| 30 | GSE157829 CD4T | chronic HIV vs v1 baseline | 0.084 | **0.257** | [0.157, 0.513] | 0.136 | 0.286 | **BORDERLINE** (just above EXPECTED ceiling) |
+| 28 | Yoshida monocyte | pediatric ↔ adult cross-age | 0.387 | **0.591** | [−0.064, 0.685] | 0.055 | 0.260 | **SUPPORTS_H1** |
+| 29 | Allen Atlas monocyte | chronic-latent CMV+ vs CMV− | 0.152 | **−0.010** | [−0.497, 0.443] | 0.510 | 0.546 | **CONCERNING_NO_SHARED_BIOLOGY** (scope-limitation finding) |
+| 30 | GSE157829 CD4T | chronic HIV vs v1 baseline | 0.084 | **0.257** | [0.141, 0.434] | 0.153 | 0.286 | **BORDERLINE** (just above EXPECTED ceiling) |
 
 ##### Issue 27 — Cross-context IAV (Randolph 2021)
 
@@ -174,17 +174,17 @@ Bystander r_full > infected r_full (0.286 vs 0.129) is biologically interpretabl
 
 ##### Issue 28 — Cross-age (Yoshida 2022)
 
-> Issue 28 SUPPORTS_H1: r_MVS = 0.591 (95% bootstrap CI [0.02, 0.68], N=1000 permutations p = 0.052). The observed effect size clears the pre-committed ≥0.30 threshold; the wide CI reflects limited donor power in the primary pediatric/adult strata (9 diseased + 26 healthy) and indicates the verdict is robust to point-estimate interpretation but cannot rule out, at 95% confidence, that the true effect lies below the supporting threshold.
+> Issue 28 SUPPORTS_H1: r_MVS = 0.591 (95% bootstrap CI [−0.06, 0.69] at canonical N_bootstrap=1000, N=1000 permutations p = 0.055). The observed effect size clears the pre-committed ≥0.30 threshold; the wide CI reflects limited donor power in the primary pediatric/adult strata (9 diseased + 26 healthy) and indicates the verdict is robust to point-estimate interpretation but cannot rule out, at 95% confidence, that the true effect lies below the supporting threshold — at canonical N=1000 the CI lower bound is below zero, strengthening this caveat over the N=200 reading (Issue 38 reconciliation revealed N=200 was over-confident at the wide-CI boundary).
 
 This is the strongest single-cohort held-out result in v1. Yoshida is the only cohort whose primary verdict supports H1 under the pre-committed mechanical rule.
 
 ##### Issue 29 — Chronic-latent CMV discrimination (Allen Atlas)
 
-The CONCERNING_NO_SHARED_BIOLOGY verdict is mechanically correct under the pre-committed rule (r_mvs < 0.05) but reads biologically as a **scope-limitation finding**: v1's training corpus captures acute IFN-driven response, not chronic-latent IFN tone. The framework is acute-disease-specific by construction; the boundary condition is appropriate, not failure. The bootstrap CI [−0.516, 0.415] reflects single-bucket coverage (monocyte only met the n_cells ≥ 50 sensitivity gate) and small canonical-ISG sample (n=57 MVS genes) against a flat ~0 signal.
+The CONCERNING_NO_SHARED_BIOLOGY verdict is mechanically correct under the pre-committed rule (r_mvs < 0.05) but reads biologically as a **scope-limitation finding**: v1's training corpus captures acute IFN-driven response, not chronic-latent IFN tone. The framework is acute-disease-specific by construction; the boundary condition is appropriate, not failure. The bootstrap CI [−0.497, 0.443] (canonical N_bootstrap=1000) reflects single-bucket coverage (monocyte only met the n_cells ≥ 50 sensitivity gate) and small canonical-ISG sample (n=57 MVS genes) against a flat ~0 signal.
 
 ##### Issue 30 — Chronic HIV retrovirus distinctness (GSE157829)
 
-> Issue 30 BORDERLINE: r_MVS = 0.257 (95% bootstrap CI [0.157, 0.513], N=1000 permutations p = 0.136). The observed point estimate sits just above the pre-committed [0.00, 0.20] EXPECTED retrovirus-distinctness ceiling; the CI lower bound (0.16) lies inside the EXPECTED range, the upper bound (0.51) crosses the SURPRISING_HIGH threshold (>0.40). The mechanical verdict applies to the point estimate; the wide CI reflects limited donor power (6 HIV donors + 1 healthy, cross-cohort baseline design) and indicates the true effect is consistent with both expected-partial-overlap and surprisingly-high readings at 95% confidence.
+> Issue 30 BORDERLINE: r_MVS = 0.257 (95% bootstrap CI [0.141, 0.434] at canonical N_bootstrap=1000, N=1000 permutations p = 0.153). The observed point estimate sits just above the pre-committed [0.00, 0.20] EXPECTED retrovirus-distinctness ceiling; the CI lower bound (0.14) lies inside the EXPECTED range, the upper bound (0.43) crosses the SURPRISING_HIGH threshold (>0.40). The mechanical verdict applies to the point estimate; the wide CI reflects limited donor power (6 HIV donors + 1 healthy, cross-cohort baseline design) and indicates the true effect is consistent with both expected-partial-overlap and surprisingly-high readings at 95% confidence.
 
 CD4T target-cell biology in chronic HIV overlaps acute viral ISG signature ~50% at MVS level, ~10% at full-HVG level. The framework discriminates retrovirus from acute RNA virus imperfectly at the conserved-ISG level, cleanly at the full-HVG level. CD8T r_MVS = 0.612 (CI [0.345, 0.661]) and B r_MVS = 0.596 (CI [0.219, 0.672]) show stronger lymphoid ISG transfer than the CD4T primary contrast.
 
@@ -195,7 +195,7 @@ CD4T target-cell biology in chronic HIV overlaps acute viral ISG signature ~50% 
 **Headline:** The v1 model's transfer scope is defined by what does and doesn't generalize. Findings (N=1000 confirmatory analysis):
 
 - **Cross-context IAV** (Randolph ex vivo 6h IAV MOI 0.5 → v1 natural-infection corpus): **does NOT transfer** at the MVS canonical-ISG level for monocytes, in either the cluster-8 infected subpopulation (r_MVS = −0.011) or the bystander subpopulation (r_MVS = 0.013). Full-HVG signal does transfer (r_full = 0.129 infected; 0.286 bystander), but is carried by non-ISG lineage-level signal. Kinetic boundary: early-phase ex vivo response ≠ late-phase natural-infection response at the canonical-ISG level. Lymphoid cross-context IAV transfer IS observed: B r_MVS = 0.483 (p_mvs = 0.033), NK r_MVS = 0.576 (p_mvs = 0.032). The boundary is monocyte-specific and kinetic-specific.
-- **Cross-age** (adult → pediatric, same virus, same context): **transfers**. Monocyte signal at r_mvs = 0.591 well above the 0.30 SUPPORTING threshold. Conserved component preserves canonical ISG signature across age groups. Caveat: wide bootstrap CI [0.02, 0.68] indicates the verdict is robust to point-estimate interpretation but cannot rule out a true effect below the threshold at 95% confidence given Yoshida's limited per-stratum donor counts.
+- **Cross-age** (adult → pediatric, same virus, same context): **transfers**. Monocyte signal at r_mvs = 0.591 well above the 0.30 SUPPORTING threshold. Conserved component preserves canonical ISG signature across age groups. Caveat: wide bootstrap CI [−0.06, 0.69] (canonical N_bootstrap=1000) indicates the verdict is robust to point-estimate interpretation but cannot rule out a true effect below the threshold at 95% confidence given Yoshida's limited per-stratum donor counts; lower bound below zero strengthens this caveat over the N=200 reading per Issue 38 reconciliation.
 - **Chronic-latent CMV:** monocyte transcriptional signature **not detectable** at MVS level (r_MVS ≈ 0). Consistent with CMV memory residing in adaptive compartments (CD8 TEMRA, GZMK+ T cells, adaptive NK) rather than monocytes. v1 framework is acute-disease-specific by construction; this boundary is appropriate, not failure.
 - **Chronic HIV:** lymphoid ISG signature substantially shared with acute viral training (CD8T r_MVS = 0.61; B r_MVS = 0.60; NK r_MVS = 0.42); CD4T primary target r_MVS = 0.257 sits at the BORDERLINE just above expected retrovirus-distinctness; monocyte response distinct (r_MVS = 0.04, flat). Chronic IFN tone preserves canonical ISG signature in lymphoid compartments but does NOT correlate at the CD4T target compartment as strongly, reflecting cell-autonomous retroviral biology specific to HIV target cells.
 
@@ -362,6 +362,12 @@ Section headers correspond to manuscript sections. Bullet points become paragrap
 | 2026-05-11 | Ingested as MANUSCRIPT_DRAFT.md in repo root; table formatting normalized to GFM | Session 6B Step 4 (manuscript ingest) |
 | 2026-05-11 | Section 4 + 5 + Limitations updated with N=1000 verdicts (15 tests); Issue 27 corrected per Issue 31 cross-bucket healthy reference (PRIMARY = monocyte_infected, r_mvs = −0.011, CHALLENGES_H1); Yoshida CI [0.02, 0.68] caveat + Issue 30 CI [0.157, 0.513] mirror caveat added; FDR<0.05 disclosure added to Limitations | Session 6B post-bg consolidation |
 | 2026-05-11 | Methods supplementary updated with Session 7 pre-modeling sensitivity audit (Issues 32 + 33); Limitations updated with Harmony contribution disclosure (Δr 0.02–0.25, MIXED verdict) + within-cohort sign-concordance perfect-replication finding | Session 7 atomic commit #4 |
+| 2026-05-12 | Issue 36 added (Issues 27-30 literature-anchored threshold provenance) with Discussion bullet citing six published references for the cross-cohort transfer thresholds | Session 4 audit-response sweep |
+| 2026-05-13 | Issue 38 canonical N_bootstrap=1000 reconciliation propagated: held-out cohort CIs at canonical N (Yoshida monocyte [−0.06, 0.69], Allen Atlas monocyte [−0.50, 0.44], GSE157829 CD4T [0.14, 0.43]); methods section discloses N=200→1000 reconciliation + verdict-comparison artifact at `results/tables/issue_38_verdict_comparison.csv`; Yoshida wide-CI caveat strengthened (lower bound below zero at canonical N) | Session 4.5 Part D Step 6a |
+| TBD | Step 6b Session 7 N_PERM=1000 refresh | Session 4.5 Part D Step 6b |
+| TBD | Step 6d Issue 34 Amendment 1 methods disclosure | Session 4.5 Part D Step 6d |
+| TBD | Step 6e Issue 6 Tier IV resolution + Wilk watchpoint propagation | Session 4.5 Part D Step 6e |
+| TBD | Step 6c manuscript smoke-test | Session 4.5 Part D Step 6c (LAST) |
 | TBD | Issues 18–24 methods detail | Session 3.5 completion |
 | TBD | Model results inserted | Phase 5 completion |
 | TBD | First draft assembled | Phase 7 |
