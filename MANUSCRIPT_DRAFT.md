@@ -154,7 +154,7 @@ Single-paragraph summary covering: methodology framework, ISG-restriction findin
 
 Subsections per Issue 27–30 hypothesis. Each subsection reports: observed Pearson r (full + MVS-restricted) with bootstrap CI, permutation null p-value, FDR-corrected significance, comparison to pre-committed decision rule, mechanical verdict.
 
-##### Headline summary (N=1000 permutations, N=200 bootstrap, 15-test panel)
+##### Headline summary (N=1000 permutations, N=1000 bootstrap canonical, 15-test panel)
 
 | Issue | Cohort × Bucket | Primary contrast | r_full | r_MVS | Bootstrap CI r_MVS | Raw p_MVS | FDR p_MVS | Verdict |
 |---|---|---|---|---|---|---|---|---|
@@ -234,7 +234,7 @@ The v1 framework's **domain of validity** is acute respiratory viral infection (
 - Sensitivity analyses: alternative age cutoffs (Issue 28), alternative cell-count thresholds (Issue 27 HMN83575), alternative MVS gene sets (Interferome 2.0 vs Khatri MVS — Issue 18)
 - **Session 7 pre-modeling sensitivity audit** (Issues 32 + 33, pre-specified 2026-05-11 before any analysis ran):
   - **Pre/post-harmonization Δr (Issue 32)**: per-bucket pre-Harmony (raw normalized log1p) vs post-Harmony cross-study Pearson r on response vectors. Across 5 buckets × 2 gene sets (full HVG + Khatri MVS): pre-Harmony r already substantial (0.13–0.58); Harmony adds 0.02–0.25 on top. Aggregate verdict: **MIXED both gene sets** (bio=2/mix=3/har=0 full HVG; bio=1/mix=4/har=0 MVS). No bucket × gene_set crosses the Δr > 0.30 HARMONY_DOMINANT threshold. Monocyte MVS Δr = 0.08 → BIOLOGY_DOMINANT verdict at the load-bearing bucket for the ISG-restriction contribution.
-  - **Within-cohort sensitivity (Issue 33)**: v2 calibration framework applied independently to each v1 cohort (no cross-study integration). 10 bucket pairs × 4 cohorts × 2 gene sets = 80 within-cohort response-vector correlations; 20 aggregate rows vs cross-study harmonized. Sign concordance = **100%** in every aggregate test; mean magnitude alignment = 0.077 (full HVG) / 0.136 (MVS). Aggregate verdict: **BIOLOGY_CONSISTENT both gene sets**. Cross-study integration amplifies rather than creates the signal.
+  - **Within-cohort sensitivity (Issue 33)**: v2 calibration framework applied independently to each v1 cohort (no cross-study integration). 10 bucket pairs × 4 cohorts × 2 gene sets = 80 within-cohort response-vector correlations; 20 aggregate rows vs cross-study harmonized. Sign concordance = **100%** in every aggregate test; mean magnitude alignment = 0.077 (full HVG) / 0.136 (MVS). Aggregate verdict: **BIOLOGY_CONSISTENT both gene sets**. Cross-study integration amplifies rather than creates the signal. *Session 4.5 reconfirmation at canonical N_PERM=1000 (up from N=500 in initial Session 7 sweep): magnitude alignment values byte-identical (point estimates N-independent); sign-concordance 100% preserved; verdict BIOLOGY_CONSISTENT robust per Issue 38 reconciliation audit trail.*
   - Deliverables: `results/tables/sensitivity_pre_post_harmony.csv`, `results/tables/sensitivity_within_cohort.csv`, `results/tables/sensitivity_within_vs_cross.csv`. Pre-committed decision rules and verdicts in `METHODS_CHOICES.md` Issues 32–33.
 
 ---
@@ -364,7 +364,7 @@ Section headers correspond to manuscript sections. Bullet points become paragrap
 | 2026-05-11 | Methods supplementary updated with Session 7 pre-modeling sensitivity audit (Issues 32 + 33); Limitations updated with Harmony contribution disclosure (Δr 0.02–0.25, MIXED verdict) + within-cohort sign-concordance perfect-replication finding | Session 7 atomic commit #4 |
 | 2026-05-12 | Issue 36 added (Issues 27-30 literature-anchored threshold provenance) with Discussion bullet citing six published references for the cross-cohort transfer thresholds | Session 4 audit-response sweep |
 | 2026-05-13 | Issue 38 canonical N_bootstrap=1000 reconciliation propagated: held-out cohort CIs at canonical N (Yoshida monocyte [−0.06, 0.69], Allen Atlas monocyte [−0.50, 0.44], GSE157829 CD4T [0.14, 0.43]); methods section discloses N=200→1000 reconciliation + verdict-comparison artifact at `results/tables/issue_38_verdict_comparison.csv`; Yoshida wide-CI caveat strengthened (lower bound below zero at canonical N) | Session 4.5 Part D Step 6a |
-| TBD | Step 6b Session 7 N_PERM=1000 refresh | Session 4.5 Part D Step 6b |
+| 2026-05-13 | Step 6b: Session 7 Issue 33 BIOLOGY_CONSISTENT verdict reconfirmed at canonical N_PERM=1000 (up from N=500 in initial sweep); magnitude alignment values byte-identical; sign-concordance 100% preserved; line 157 headline summary updated from "N=200 bootstrap" to "N=1000 bootstrap canonical" | Session 4.5 Part D Step 6b |
 | TBD | Step 6d Issue 34 Amendment 1 methods disclosure | Session 4.5 Part D Step 6d |
 | TBD | Step 6e Issue 6 Tier IV resolution + Wilk watchpoint propagation | Session 4.5 Part D Step 6e |
 | TBD | Step 6c manuscript smoke-test | Session 4.5 Part D Step 6c (LAST) |
