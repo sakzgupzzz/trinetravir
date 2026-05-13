@@ -2052,7 +2052,56 @@ This conditional escalation is *pre-specified* at this commit so the trigger is 
 **Reviewer-facing answer**: "We applied a permissive 20% mito threshold project-wide, consistent with cellxgene Census source data QC. Empirical audit (Issue 39, 2026-05-12) confirmed corpus-wide impact is 1.66% in 15-20% range, below our 2% sensitivity threshold. Wilk-specific concentration (6.44%) is documented as a study-level limitation; downstream calibration audits (Sessions 5 + 6B + 7) did not surface Wilk-driven artifacts attributable to mito% inflation. If reviewers prefer a 15% tightened sensitivity at the Wilk-only level, we can provide it in revision; absent that request, the headline ISG-conservation finding is unaffected at any mito threshold in {15%, 20%} per our audit framework."
 
 **Date opened**: 2026-05-12
-**Date resolved**: 2026-05-12 (this commit — documentation + conditional-escalation pre-spec)
+**Date resolved**: 2026-05-12 (Session 4 documentation pass) + Session 4.5 Part C resolution below (pre-spec rule pre-commit; measurement + tier-based resolution in next commit).
+
+---
+
+#### Issue 39 Amendment — Session 4.5 Part C pre-spec (PRE-MEASUREMENT, 2026-05-13)
+
+**Status**: pre-spec decision rule pre-commit. Resolution rule committed BEFORE Wilk mito-fraction measurement to preserve pre-registration discipline (same pattern as Issue 27-30 pre-specs, Amendment 1 data-direction-independence principle).
+
+**Question separate from Session 4 audit**: the 2026-05-12 audit measured "% of retained cells in 15-20% mito range" (corpus-wide 1.66%, Wilk-only 6.44%). This is the CELL-COUNT-FRACTION dimension. Session 4.5 Part C now measures a parallel-but-distinct dimension: **mito GENE-EXPRESSION FRACTION per cell, averaged per study**. This addresses whether Wilk's NB-likelihood inference under scVI could be perturbed by systematic mito-gene-expression differences vs the other 3 studies (independent of how many high-mito cells were retained).
+
+**Measurement protocol** (pre-committed):
+- For each of 4 v1 studies, compute per-cell mito% (sum of MT- prefixed gene counts / total gene counts × 100), then aggregate to study-level mean.
+- Use MT- prefix on gene symbols (n=37 MT genes observed in Session 4 audit; subset present in 4000-HVG space may differ).
+- Compute mean(other_studies) and SD(other_studies) — 3-study reference distribution (Lee, Arunachalam, Schulte-Schrepping).
+- Compute Wilk's z-score relative to other-3 mean/SD: `(Wilk_mean - mean_others) / SD_others`.
+
+**Pre-committed decision rule**:
+
+**Tier I — REDUNDANT_DEFER**:
+- |z| ≤ 1.0 (Wilk within 1 SD of others)
+- → Issue 39 closed as redundant given Session 4 Part A.5b depth watchpoint clean. No new sensitivity analysis. Documented as v1 limitation in manuscript discussion section.
+
+**Tier II — RUN_SENSITIVITY**:
+- 1.0 < |z| ≤ 2.0
+- → Run per-bucket response-vector correlation excluding MT- genes (drop ~37 mito genes from 4000-HVG space, recompute response vectors + cross-study Pearson r). Verify |Δr_no_mito| ≤ 0.05 across all 5 buckets.
+- → If passes: Issue 39 resolved as "no mito-driven artifact"; document robustness in manuscript supplementary.
+- → If fails: escalate to Phase 5 supplementary with explicit manuscript disclosure of mito-driven contribution.
+
+**Tier III — ESCALATE_NOW**:
+- |z| > 2.0 (Wilk > 2 SD from others)
+- → Run Tier II sensitivity (mito-excluded response vectors) AND consider whether Tier IV HARMONY_PREFERRED verdict from Issue 6 needs Wilk-specific caveat beyond existing depth caveat.
+- → Issue 39 resolution documents both per-bucket Δr_no_mito results AND any Issue 6 caveat addendum.
+
+**Tie-break / boundary case**: |z| at threshold ± 0.1 → conservative tier (i.e., 1.05 → Tier II, not Tier I; 2.05 → Tier III, not Tier II). Boundary case noted in resolution if it applies.
+
+**Threshold anchoring**:
+- 1 SD / 2 SD conventional cutoffs for "noticeable" and "extreme" outliers respectively. Anchored in standard statistical practice (Tukey-style flagging at 1.5×IQR ≈ 1 SD for normal-ish distributions).
+- Data-direction-independent test (Amendment 1 precedent): the same rule applies if Wilk had LOWER mito than others (sequencing depth-confound concern would still hold via inverse z-score interpretation). Pre-spec is symmetric.
+- If Wilk's measured z-score is at an unexpected boundary (e.g., |z|=0.95 or |z|=1.05), the pre-spec rule applies mechanically per the band it falls in. Do NOT amend thresholds post-measurement — that would be data-direction-dependent rationalization.
+
+**Why pre-commit before measurement**: prevents post-hoc tier framing. Reviewer asking "did you pick the tier after seeing the data?" gets git-timestamp evidence that the rule pre-commits the resolution paths before the measurement runs.
+
+**Pre-spec NOT covered by this amendment**: the original Issue 39 documentation pass (Session 4, 2026-05-12) addressed cell-count fraction in 15-20% range. That decision (Possibility A: document only at corpus level 1.66%) stands and is independent of this pre-spec. This pre-spec opens a NEW dimension (mito-gene-expression mean) for measurement.
+
+**Output**:
+- `results/tables/session4_5_wilk_mito_sensitivity.csv` (z-score table + tier determination + Δr_no_mito if Tier II/III triggered).
+- Issue 39 resolution amendment per tier in next commit.
+
+**Date opened**: 2026-05-13 (pre-measurement pre-commit)
+**Date resolved**: TBD (measurement + tier resolution in next Session 4.5 commit per Part C protocol)
 
 ---
 
