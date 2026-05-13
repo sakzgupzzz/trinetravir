@@ -75,6 +75,22 @@ Compare to observed aggregate $\bar{y}_b^v$ via:
 3. **Top-100 DE-gene Jaccard** between predicted and observed gene rankings on $\text{post} - \text{pre}$ direction.
 4. **Direction-of-change accuracy** per gene (sign of $\text{post} - \text{pre}$).
 
+### 3.1 Post-Eval Amendment (2026-05-13): Aggregation-grain identity, scope, and KNN reading
+
+**Empirical finding (Phase 5 v6, commit b32fe37).** Across all 20 conditions × 6 metrics (per-gene Pearson r full + MVS, per-gene R² full + MVS, top-100 DE Jaccard, direction-of-change accuracy), `predict_mean` and `linear_delta` produced byte-identical values. Zero distinguishable difference on any metric, any bucket-virus-direction tuple.
+
+**Algebraic identity.** At the aggregated grain defined in §3, $\bar{\hat{y}}_b^v = \tfrac{1}{n} \sum_i \hat{y}_i$, the `linear_delta` prediction $\hat{y}_i = x_i + \delta_b$ collapses to `predict_mean`:
+
+$$\frac{1}{n} \sum_i (x_i + \delta_b) = \bar{x}_\text{test-baseline} + \delta_b = \bar{x}_\text{train-baseline} + (\bar{y}_\text{train-post} - \bar{x}_\text{train-baseline}) = \bar{y}_\text{train-post}$$
+
+The final equality requires $\bar{x}_\text{test-baseline} \approx \bar{x}_\text{train-baseline}$, which holds in Phase 5 because test cells are drawn from the same mock-donor distribution as training-baseline cells under scGen-style held-out splits within the same study (Lee 2020).
+
+**Scope condition.** The identity is *test-grain conditional*. It holds whenever test baseline cells share their first moment with the training baseline pool. Under a different evaluation grain — for example, Phase 6 *cross-cohort* evaluation where test cells come from a study with shifted baseline expression (different sequencing depth, batch effects, donor demographics, biological covariates) — $\bar{x}_\text{test-baseline}$ no longer collapses to $\bar{x}_\text{train-baseline}$, and `linear_delta` becomes a genuine *per-cell additive shift*: $\hat{y}_i = x_i^\text{test} + \delta^\text{train}_b$ has population mean $\bar{x}_\text{test-baseline} + \delta^\text{train}_b \neq \bar{y}_\text{train-post}$. The two baselines should then separate. Phase 6 cross-cohort design therefore re-activates the methodological distinction this identity flattens here.
+
+**KNN reading note.** In some conditions KNN baselines score *worse* than `predict_mean` on aggregate metrics — e.g., monocyte SARS-CoV-2 within-virus, where DE Jaccard is 0.28 (knn_k50) vs 0.89 (pm). This is not evidence KNN is a deficient baseline. It is evidence that the aggregation step in §3 discards exactly the per-cell neighborhood structure KNN encodes. `predict_mean` predicts the cohort mean; aggregate evaluation compares to the cohort mean; the metric rewards the prediction the metric is structurally aligned with. KNN's per-cell variation gets averaged out before scoring and the remaining noise looks like prediction error. The aggregate grain underweights any method that adds per-cell signal beyond the population shift.
+
+**Implication for Phase 6.** Phase 5 results are valid for the question Phase 5 asked (does the predict_mean floor exist under the canonical scGen aggregate grain? Yes, and it's tight). They do not adjudicate Phase 6, which asks whether sophisticated methods (scGen, CPA, scVI conditional, foundation models) beat baselines under cross-cohort or cell-level grains where the §3 aggregation identity does not apply. Phase 6 metric selection requires its own pre-spec (deferred to Session 5.5).
+
 ## 4. Calibration Framework v2 Application
 
 Apply per Issue 36 framework to all reported metrics:
