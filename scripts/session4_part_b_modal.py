@@ -68,8 +68,8 @@ image = (
 
 @app.function(
     image=image,
-    gpu="L4",
-    timeout=8 * 3600,  # 8h ceiling: ~3-6h estimate + buffer
+    gpu="A100",  # 3× faster than L4 on 244K-cell global scVI; ~5-6h vs ~17h on L4
+    timeout=8 * 3600,  # 8h ceiling: ~5-6h A100 estimate + buffer
     volumes={"/data": volume},
 )
 def run_part_b_global_sweep() -> None:
