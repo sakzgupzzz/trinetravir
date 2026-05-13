@@ -123,7 +123,52 @@ Granularity sensitivity for this issue is therefore run as a *within-Low* sweep 
 **Validation strategy**: scVI sensitivity analysis in Phase 6 or 7; one supplementary figure showing qualitative consistency.
 
 **Date opened**: 2026-05-10
-**Date resolved**: open — Session 4 deliverable (scVI sensitivity vs Harmony; see SHORT_TERM_PLAN.md Block #8). Issue 6 is the only methodological open issue at Session 3.5 close.
+**Date resolved**: 2026-05-12 — Session 4 Part A close (see resolution below; Part B global supplementary still in progress at 2026-05-12, will append confirmation when Part B verdict lands).
+
+---
+
+#### Issue 6 Resolution (Session 4 Part A close, 2026-05-12)
+
+**Mechanical verdict**: TIER_IV_HARMONY_PREFERRED (`results/tables/session4_issue6_verdict.csv`, commit `a92404a`).
+
+**Per-bucket Δr_mvs** (scVI minus per-cell-type Harmony, MVS-subset Pearson; calibration framework v2 at canonical N_PERM=1000 + N_BOOTSTRAP=1000 per Issue 38 spec from Session 4 start):
+
+| Bucket   | scVI r_mvs | Harmony r_mvs | Δr_mvs   | perm p | 95% bootstrap CI | Selected config         |
+|----------|------------|---------------|----------|--------|------------------|-------------------------|
+| monocyte | 0.4507     | 0.6566        | **−0.2059** | 0.020 | [0.18, 0.54]   | n_lat=20, hid=128, L=1 |
+| B        | 0.2275     | 0.3587        | **−0.1312** | 0.098 | [0.04, 0.37]   | n_lat=30, hid=128, L=1 |
+| NK       | 0.3599     | 0.4690        | **−0.1090** | 0.011 | [0.20, 0.52]   | n_lat=30, hid=256, L=1 |
+| CD4T     | 0.3456     | 0.4818        | **−0.1362** | 0.008 | [0.17, 0.51]   | n_lat=10, hid=128, L=2 |
+| CD8T     | 0.3538     | 0.4000        | −0.0462 | 0.033 | [0.15, 0.52]   | (best of 16)            |
+
+4 of 5 buckets clear the Tier IV trigger (Δr_mvs < −0.10) per Issue 34 Amendment 1 (`9ba7c25`) two-sided rule. CD8T marginal at Δr_mvs = −0.0462 (smaller Harmony lead; still negative).
+
+**Action per Issue 34 Tier IV resolution rule**:
+> "No action; supports current methodology choice. Document in supplementary."
+
+Harmony stays as v1 primary integration method. No re-run of Sessions 5/6B/7 on scVI output needed. v1 manuscript Methods + supplementary report scVI vs Harmony comparison as **empirical support** for the Harmony methodology choice, not just lit-consensus defense.
+
+**Wilk depth watchpoint (A.5b, `session4_wilk_watchpoint.csv`)**: all 5 buckets pass watchpoint with no artifact pattern. Wilk-vs-other-3-studies Pearson r_mvs = 0.354-0.824 across buckets; 0/10 housekeeping in Wilk's top-10 absolute-magnitude genes anywhere; L2 magnitude ratio Wilk/others ∈ [1.17, 1.91] (slightly elevated but within 2× ceiling). Conclusion: Wilk's lower sequencing depth (5-10× lower than other 3 studies) is properly handled by scVI's NB likelihood + `library_size=1e4` normalization. The Tier IV verdict applies as-is; no Wilk-specific scVI artifact concern.
+
+**Selected hyperparameter pattern**: 4 of 5 best configs use `n_layers=1` (only CD4T uses `n_layers=2`). Consistent with scIB benchmark (Luecken 2022 *Nat Methods*) + Briefings in Bioinformatics 2022 reporting that scVI 1-layer is competitive with Harmony on immune integration. 2-layer scVI may overfit on per-bucket PBMC data; 1-layer is the appropriate inductive bias.
+
+**Literature alignment** (updated post-empirical):
+- scIB benchmark (Luecken 2022): said Harmony among best, scVI competitive but not dominant. **Confirmed.**
+- *Briefings in Bioinformatics* 2022: said scVI ≈ Harmony on immune. **Refined: in v1's per-cell-type protocol with calibrated framework, Harmony beats scVI by Δr_mvs = -0.05 to -0.21 across all 5 buckets.** Difference from literature is in expected direction (some Harmony lift), unexpected in magnitude (consistent across buckets).
+
+**Part B supplementary status (2026-05-12)**: Part B global scVI sweep in progress on Modal L4. Per Issue 34, Part B addresses reviewer concern "did you try scVI in its standard global mode?" Verdict from Part B (same four-tier rule applied to scVI_global vs Harmony_global Δr_mvs) will append to this resolution at Part B close.
+
+**Session 4 inputs canonical-N compliance (Issue 38)**: Session 4 Part A outputs used N_BOOTSTRAP = N_PERM = 1000 from spec start (`scripts/session4_part_a_scvi_sweep.py`); no Issue 38 reconciliation needed for Session 4 results. Audit trail clean.
+
+**Implementation references**:
+- `scripts/session4_part_a_scvi_sweep.py` (Part A per-bucket sweep)
+- `scripts/session4_part_a_regen_combined.py` (post-amendment verdict regen)
+- `scripts/session4_wilk_watchpoint.py` (Part A.5b diagnostic)
+- `references/session_4_prompt.md` (Part A + B + C spec)
+- Commit `a92404a` (Part A outputs + Tier IV verdict)
+- Commit `9ba7c25` (Issue 34 Amendment 1)
+
+**Pipeline impact**: Session 4 Block #8 advances. Phase 4 (sanity check GATE 1) unblocked. Factorized model (Phase 8) inherits Harmony as the integration method; no architecture-side changes from this verdict.
 
 ---
 

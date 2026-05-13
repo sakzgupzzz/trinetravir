@@ -1,0 +1,6 @@
+bucket,wilk_vs_others_mean_r_full,wilk_vs_others_mean_r_mvs,wilk_vs_arunachalam_r,wilk_vs_lee_r,wilk_vs_schulte_r,min_others_pairwise_r,wilk_l2_full,wilk_l2_mvs,wilk_l2_vs_others_ratio_full,wilk_l2_vs_others_ratio_mvs,wilk_top10_genes,wilk_n_housekeeping_in_top10,wilk_n_mvs_in_top10,n_mvs_in_rv
+monocyte,0.8266,0.8235,0.8662,0.77,0.5791,0.6082,8.814,3.859,1.032,1.255,"S100A8,CLU,PLAC8,IFI27,RNASE2...",0,4,57
+B,0.5756,0.3543,0.7623,0.2714,0.1147,0.0686,9.941,2.467,1.669,1.421,"MS4A1,JCHAIN,MZB1,CD74,HSP90B1...",0,0,48
+NK,0.3802,0.5528,0.5362,0.1923,0.2095,0.3447,6.266,4.057,0.857,1.546,"MT-ND4,IFI44L,MX1,MT-CO1,OAS3...",0,6,47
+CD4T,0.5211,0.7466,0.5724,0.3842,0.2817,0.0078,6.564,3.838,1.013,1.905,"MT-CO1,MT-ND4,MT-CYB,MT-CO3,MT-ATP6...",0,2,57
+CD8T,0.2867,0.6463,0.4296,0.2264,0.0339,-0.0292,6.372,2.626,0.955,1.172,"MT-ND4,MT-CO1,MT-CYB,MT-ATP6,MT-ND5...",0,0,61
