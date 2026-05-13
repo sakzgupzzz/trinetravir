@@ -13,7 +13,7 @@
 | 5 | **Session 6B (held-out calibration + per-stratum sensitivity + few-shot)** | inline spec (chat) | Block #4 audit gate passes | **DONE 2026-05-11 (Parts A/B/C/F/G; Parts D/E deferred to Phase 5+ — require v1 factorized model)** |
 | 6 | **Session 7 (pre-modeling sensitivity audit)** | `references/session_7_prompt.md` | Block #5 closure + Session 7 prompt committed | **DONE 2026-05-11** — Issue 32 MIXED (Δr 0.02-0.25; monocyte MVS BIOLOGY_DOMINANT) + Issue 33 BIOLOGY_CONSISTENT (100% within-cohort sign concordance); ISG-conservation framework empirically defended; human audit-confirmed |
 | 7 | **Session 3.5 (pre-specs)** | `SESSION_3_5_CHECKLIST.md` | Block #6 audit-confirm | **DONE 2026-05-11** — Issues 18-24 pre-specified; Khatri MVS gene-list canonicalized as `references/khatri_mvs_gene_list.csv`; baseline stubs at `src/trinetravir/baselines/`; PLAN.md v1.3 with §1.1 expansion + §1.5 + §1.6 + §1.7 |
-| 8 | **Session 4 (GPU/scVI)** | Not yet drafted | Block #7 complete | **NEXT** — Issue 6 scVI sensitivity analysis + GPU environment setup |
+| 8 | **Session 4 (GPU/scVI)** | `references/session_4_prompt.md` | Block #7 complete | **DONE 2026-05-13** (Option Narrow: Issue 6 + 34 + 35 closed; Part B + Issue 38 manuscript application deferred to Session 4.5) |
 
 **Block #6 (Session 7) is the new gate** between Session 6B closure and Session 3.5. Triggered by critique-document concern 4 (Harmony preserving only conserved axes). Pattern mirrors Session 5 audit response: pre-committed decision rules before computation; results disclosed regardless of outcome.
 
@@ -86,11 +86,38 @@
     - 33 issues total in METHODS_CHOICES.md
   - All Phase 5/7/9 modeling decisions are now pre-registered against the Session 5+6B+7 audit trail. Implementation in Phases 5+ cannot drift from these pre-specs without an atomic Issue 17 audit-trail change.
 
-- **Block #8 (Session 4, GPU/scVI)**: NEXT, after Session 3.5 close
-  - Spec: not yet drafted.
-  - Scope: Issue 6 (scVI sensitivity analysis vs Harmony), GPU environment setup, possibly initial Phase 4+ implementation work.
-  - Compute envelope: foundation model baselines (Issue 23: Geneformer, scGPT) gated on Session 4 GPU access.
-  - End-state: Issue 6 resolved. Pipeline cleared for Phase 4+ modeling implementation.
+- **Block #8 (Session 4, GPU/scVI)**: **DONE 2026-05-13** (Option Narrow closure; Part B + Issue 38 manuscript application deferred to Session 4.5)
+  - Spec: `references/session_4_prompt.md`
+  - Atomic commits (this session):
+    - `d3b2a6b` session_4_prompt.md spec
+    - `1120716` Issue 34 + Issue 35 pre-spec gate
+    - `e8efca2` configs/methods_versions.yaml + gpu_environment.yaml
+    - `f70b0ed` extract_per_bucket_counts.py + 5 scvi_input h5ads
+    - `4bebc44` Modal wrapper for Part A sweep
+    - `4a8f19f` IndexError fix in per_study_status_response_vectors
+    - `a92404a` Part A 5-bucket scVI sweep results + Tier IV verdict
+    - `9ba7c25` Issue 34 Amendment 1 (two-sided Tier I structural correction)
+    - `88a6fec` Issue 6 resolved: TIER_IV_HARMONY_PREFERRED (Harmony stays primary)
+    - `414f4be` E402 lint fix in session4_part_a_modal.py
+    - `732723c` Issue 35 resolved: INCLUDE Geneformer + scGPT (projection-based, <10% of both budgets)
+    - this commit: pipeline closure (Block #8 DONE)
+  - Audit-response sub-sweep (out of original spec, surfaced by Session 4 Part A):
+    - `e5b5e82` Issue 36 (Issues 27-30 threshold provenance)
+    - `793344e` Issues 37 + 38 + 39 (audit-response sweep + bootstrap N reconciliation + mito% audit)
+    - `308231f` Archive pre-Issue-38 calibration outputs
+  - **End-state (Option Narrow Session 4 closure)**:
+    - Issue 6 RESOLVED: Tier IV HARMONY_PREFERRED (4/5 buckets Δr_mvs < -0.10; CD8T marginal -0.046). Harmony stays v1 primary.
+    - Issue 34 + Amendment 1 RESOLVED: scVI comparison framework pre-spec + structural defect correction.
+    - Issue 35 RESOLVED: INCLUDE Geneformer + scGPT in Phase 7. Projection-based per Theodoris 2023 + Cui 2024 published throughput.
+    - 35 issues total in METHODS_CHOICES.md (1-39 minus deferred 36b).
+    - 0 open methodological issues at Session 4 close (Option Narrow scope).
+  - **Deferred to Session 4.5** (audit-cascade follow-ups not in original spec):
+    - Part B global scVI sweep (Modal upload of 16GB harmony_global file blocked; needs precomputed cache rebuild)
+    - Issue 38 recompute outputs application to manuscript (Steps 6a/6b/6c per Issue 17 atomic decomposition)
+    - Issue 39 Wilk mito% sensitivity check (~30-60 min CPU)
+    - Randolph Issue 31 recompute at canonical N=1000 (Task #18)
+    - Manuscript smoke-test (Task #23)
+  - **Pipeline state at Block #8 close (Option Narrow)**: 8/8 blocks complete on original spec. Phase 4 (GATE 1 sanity check) unblocked. Phase 5+ modeling implementation can begin once Session 4.5 audit cascade closes.
 
 ## Enforcement protocol
 
