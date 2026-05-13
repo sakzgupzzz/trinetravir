@@ -34,6 +34,7 @@ Reproducibility:
 from __future__ import annotations
 
 import logging
+import os
 import time
 import warnings
 from itertools import product
@@ -53,7 +54,11 @@ PROC = REPO / "data" / "processed"
 TABLES = REPO / "results" / "tables"
 MVS_FILE = REPO / "references" / "khatri_mvs_gene_list.csv"
 
-BUCKETS = ("monocyte", "B", "NK", "CD4T", "CD8T")
+# Env override for single-bucket re-runs (e.g., CD8T solo after timeout per Issue 38).
+# Default = full 5-bucket sweep. Set SESSION4_BUCKETS="CD8T" for CD8T-only resume.
+_DEFAULT_BUCKETS = ("monocyte", "B", "NK", "CD4T", "CD8T")
+_env_buckets = os.environ.get("SESSION4_BUCKETS", "").strip()
+BUCKETS = tuple(_env_buckets.split(",")) if _env_buckets else _DEFAULT_BUCKETS
 
 # Issue 34 pre-spec hyperparameter grid (16 configs)
 HP_GRID = list(
@@ -405,19 +410,30 @@ def run_bucket(bucket: str, mvs_genes: set[str], harmony_rvs: dict[str, pd.Serie
 
 
 def apply_verdict(combined: pd.DataFrame) -> str:
-    """Issue 34 four-tier verdict from per-bucket Δr_mvs."""
+    """Issue 34 four-tier verdict from per-bucket Δr_mvs.
+
+    Tier I CORRECTED per Issue 34 Amendment 1 (2026-05-12): two-sided proximity
+    (max(|Δr|) ≤ 0.05) rather than one-sided (max(Δr) ≤ 0.05). Original rule
+    fired even when Harmony arbitrarily-strongly beat scVI, contradicting the
+    "HARMONY_ADEQUATE: scVI ≈ Harmony" label. Amendment data-direction-independent.
+    """
     deltas = combined["delta_r_mvs"].astype(float).values
-    max_d = float(np.max(deltas))
-    if max_d <= 0.05:
-        return f"TIER_I_HARMONY_ADEQUATE (max Δr_mvs = {max_d:.4f} ≤ 0.05)"
+    max_abs_d = float(np.max(np.abs(deltas)))
     above_010 = int((deltas > 0.10).sum())
     above_020 = int((deltas > 0.20).sum())
     in_005_010 = int(((deltas > 0.05) & (deltas <= 0.10)).sum())
     below_neg010 = int((deltas < -0.10).sum())
+
+    # Tier I (Amendment 1): two-sided proximity
+    if max_abs_d <= 0.05:
+        return f"TIER_I_HARMONY_ADEQUATE (max |Δr_mvs| = {max_abs_d:.4f} ≤ 0.05)"
+    # Tier III SCVI_PREFERRED (one-sided; scVI dominance)
     if above_010 >= 3 or above_020 >= 1:
         return "TIER_III_SCVI_PREFERRED (≥3 buckets Δr_mvs > 0.10 or any > 0.20)"
+    # Tier IV HARMONY_PREFERRED (one-sided; Harmony dominance)
     if below_neg010 >= 3:
         return "TIER_IV_HARMONY_PREFERRED (≥3 buckets Δr_mvs < -0.10)"
+    # Tier II MIXED (scVI marginal)
     if in_005_010 >= 1 and above_010 == 0:
         return "TIER_II_MIXED (at least one Δr_mvs in (0.05, 0.10], none > 0.10)"
     # Boundary case → conservative

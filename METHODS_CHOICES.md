@@ -1473,6 +1473,47 @@ Threshold anchors:
 
 ---
 
+#### Issue 34 Amendment 1: Tier I structural defect correction (POST-OBSERVATION; data-direction-independent fix) — 2026-05-12
+
+**Status**: amendment to Issue 34 pre-spec, committed before re-running verdict against amended rule. Surfaced by Part A empirical observation, but the fix is data-direction-independent — same correction applies regardless of which method (scVI or Harmony) dominated.
+
+**The structural defect**: Tier I as originally written said `max(Δr) ≤ 0.05 across all 5 buckets`. This is a **one-sided rule**: it fires whenever scVI doesn't substantively beat Harmony, including when Harmony arbitrarily-strongly beats scVI. Under the original rule, hypothetical all-bucket `Δr = -1.0` (complete Harmony dominance) would trigger Tier I `HARMONY_ADEQUATE: scVI ≈ Harmony, no difference` — nonsensical given the label presupposes |Δr| is small in both directions.
+
+**The fix**: Tier I corrected to **two-sided**:
+- **Corrected Tier I HARMONY_ADEQUATE**: `max(|Δr|) ≤ 0.05` across all 5 buckets → scVI and Harmony perform similarly (proximity in both directions).
+
+**Why this is a defensible post-hoc amendment**:
+
+The diagnostic test for honest post-hoc structural correction in pre-registered studies is: **"Would this amendment be the right fix regardless of data direction?"**
+
+For Amendment 1, the answer is unambiguously yes:
+- If scVI had dominated (`Δr` positive, large): one-sided Tier I would have correctly failed (max > 0.05). Two-sided would also correctly fail. Same outcome.
+- If Harmony had dominated (`Δr` negative, large — actual case): one-sided Tier I incorrectly fires. Two-sided correctly fails. Different outcome — fixes the structural defect.
+- If methods tied (`|Δr|` small): one-sided and two-sided both correctly fire Tier I. Same outcome.
+
+The fix is data-direction-independent — symmetric for all hypothetical outcomes the pre-spec needed to handle. Contrast with a dominance-ordering amendment (e.g., "Tier IV dominates Tier I when both fire"), which IS data-direction-dependent and would be a post-hoc rationalization.
+
+**Empirical surfacing**: Part A observed `Δr_mvs` values for all 5 buckets are negative (Harmony beats scVI everywhere): monocyte -0.2059, B -0.1312, NK -0.1090, CD4T -0.1362, CD8T -0.0462. Original Tier I rule fires (`max = -0.0462 ≤ 0.05`) AND Tier IV rule fires (4 of 5 buckets `< -0.10`). Both triggers simultaneously firing exposed the Tier I one-sided defect.
+
+**Effect on the other tiers**: amendment is scoped narrowly to Tier I structural correction. Tiers II, III, IV unchanged:
+- Tier II MIXED: at least one bucket `Δr ∈ (0.05, 0.10]`, none `> 0.10` (one-directional; appropriate as Tier II describes scVI marginal improvement).
+- Tier III SCVI_PREFERRED: `≥3` of 5 buckets `Δr > 0.10` OR any `> 0.20` (one-directional; appropriate for scVI dominance).
+- Tier IV HARMONY_PREFERRED: `≥3` of 5 buckets `Δr < -0.10` (one-directional; appropriate for Harmony dominance).
+- Tier II, III, IV are each one-directional because each describes a specific *asymmetric* condition. Only Tier I (no difference / proximity) requires the two-sided framing — and that's what Amendment 1 fixes.
+
+**Implementation**: `scripts/session4_part_a_scvi_sweep.py` `apply_verdict()` and `scripts/session4_part_a_regen_combined.py` `apply_verdict()` both updated at this commit. Re-run regenerator post-amendment produces Tier IV HARMONY_PREFERRED verdict on the 5 per-bucket CSVs.
+
+**Audit trail discipline**: Amendment 1 commit lands BEFORE the regenerator re-run that produces the canonical verdict CSV. Git timestamps verify the amendment precedes the verdict assignment under the amended rule (matches Issue 17 atomic discipline). Without this commit ordering, the amendment would read as reverse-engineering to the observed data.
+
+**Rationale**: Pre-registration discipline allows post-hoc structural corrections when the fix is data-direction-independent. The alternative — reporting Tier I per the one-sided rule on data that clearly satisfies Tier IV — would produce a manuscript headline `HARMONY_ADEQUATE: no difference` directly next to `Δr_mono = -0.21` rows. That's not pre-registration discipline; that's pre-registration cosplay at the cost of honest reporting. The amendment honors the pre-spec **intent** (capture the empirical comparison) while correcting a structural error in the **implementation** (the rule's one-sidedness).
+
+**Validation**: same as Issue 34 base: Part A verdict assignment under the amended rule produces a defensible classification of scVI vs Harmony comparison. The Part B global verdict (separate) re-runs against the same amended rule.
+
+**Date amendment opened**: 2026-05-12
+**Date amendment resolved**: 2026-05-12 (this commit; amended rule active for all subsequent verdict assignments)
+
+---
+
 ### Issue 35: Foundation model compute-envelope decision (INFERENCE-only) — 2026-05-11
 
 **Status**: pre-specified BEFORE Session 4 Part C compute. Operationalizes the Session 3.5 Issue 23 contingency that foundation model baselines (Geneformer, scGPT) are gated on measured compute envelope.
