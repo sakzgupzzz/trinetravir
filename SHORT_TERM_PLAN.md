@@ -112,7 +112,7 @@
     - 35 issues total in METHODS_CHOICES.md (1-39 minus deferred 36b).
     - 0 open methodological issues at Session 4 close (Option Narrow scope).
   - **Deferred to Session 4.5** (audit-cascade follow-ups not in original spec):
-    - Part B global scVI sweep (Modal upload of 16GB harmony_global file blocked; needs precomputed cache rebuild)
+    - Part B global scVI sweep (Modal upload of 16GB harmony_global file blocked; needs precomputed cache rebuild) — **further deferred to v1.5**, see `references/part_b_v1_5_deferral.md` (Issue 6 verdict mechanically locked Tier IV HARMONY_PREFERRED from Part A; Part B was supplementary reviewer-concern hedge; infrastructure preserved at `scripts/extract_global_counts.py` + `scripts/build_harmony_global_response_vector_cache.py` + `scripts/session4_part_b_*.py`)
     - Issue 38 recompute outputs application to manuscript (Steps 6a/6b/6c per Issue 17 atomic decomposition)
     - Issue 39 Wilk mito% sensitivity check (~30-60 min CPU)
     - Randolph Issue 31 recompute at canonical N=1000 (Task #18)
