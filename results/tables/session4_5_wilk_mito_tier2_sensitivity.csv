@@ -1,0 +1,6 @@
+bucket,n_genes_total,n_mt_genes,n_genes_no_mito,r_with_mito,r_no_mito,delta_r_no_mito,abs_delta_r,pass_005_threshold
+monocyte,4000,5,3995,0.7012,0.7061,0.0048,0.0048,True
+B,4000,8,3992,0.2971,0.3022,0.0051,0.0051,True
+NK,4000,11,3989,0.3845,0.3654,-0.0191,0.0191,True
+CD4T,4000,10,3990,0.3214,0.308,-0.0134,0.0134,True
+CD8T,4000,12,3988,0.1686,0.1461,-0.0224,0.0224,True

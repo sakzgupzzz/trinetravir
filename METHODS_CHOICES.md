@@ -2101,7 +2101,70 @@ This conditional escalation is *pre-specified* at this commit so the trigger is 
 - Issue 39 resolution amendment per tier in next commit.
 
 **Date opened**: 2026-05-13 (pre-measurement pre-commit)
-**Date resolved**: TBD (measurement + tier resolution in next Session 4.5 commit per Part C protocol)
+**Date resolved**: 2026-05-13 (this commit — Tier II measurement + PASS verdict applied per pre-spec)
+
+---
+
+#### Issue 39 Amendment Resolution — Tier II PASS (mito-excluded sensitivity, 2026-05-13)
+
+**Measurement** (10K-cell sample per study, seed=42, MT- prefix on reannotated h5ad gene symbols, 37 MT genes detected per study):
+
+| Study               | mito_pct mean | SD     | median | max     |
+|---------------------|---------------|--------|--------|---------|
+| Wilk 2020           | **8.477**     | 4.449  | 7.526  | 40.325  |
+| Lee 2020            | 7.355         | 2.803  | 7.137  | 15.192  |
+| Arunachalam 2020    | 6.356         | 2.581  | 6.194  | 15.052  |
+| Schulte-Schrepping  | 4.933         | 3.738  | 3.840  | 31.288  |
+
+**Wilk z-score vs other-3 reference**:
+- mean(other 3 study means) = **6.215%**
+- SD(other 3 study means)    = **1.217%**
+- (8.477 − 6.215) / 1.217 = **z = 1.859**
+
+|z| = 1.859 falls in band `1.0 < |z| ≤ 2.0` → **Tier II RUN_SENSITIVITY** triggered.
+
+**Tier II sensitivity outcome** (`session4_5_wilk_mito_tier2_sensitivity.csv`):
+
+Per-bucket Harmony response-vector recompute with MT- genes excluded (from 4000-HVG to ~3988-3995 non-mito genes; 5-12 MT genes dropped per bucket):
+
+| Bucket   | r_with_mito | r_no_mito | Δr_no_mito | \|Δr\| | Verdict |
+|----------|-------------|-----------|------------|--------|---------|
+| monocyte | 0.7012      | 0.7061    | +0.0048    | 0.0048 | PASS    |
+| B        | 0.2971      | 0.3022    | +0.0051    | 0.0051 | PASS    |
+| NK       | 0.3845      | 0.3654    | −0.0191    | 0.0191 | PASS    |
+| CD4T     | 0.3214      | 0.3080    | −0.0134    | 0.0134 | PASS    |
+| CD8T     | 0.1686      | 0.1461    | −0.0224    | 0.0224 | PASS    |
+
+**Max |Δr_no_mito| = 0.0224 (CD8T)**, well under pre-spec 0.05 threshold. **All 5 buckets PASS.**
+
+**Verdict: NO_MITO_DRIVEN_ARTIFACT.** Mito-gene inclusion does not materially affect cross-study response-vector coherence at the 0.05 sensitivity threshold. Wilk's elevated mito mean (z=1.86) reflects a known sequencing-depth correlate (consistent with Session 4 Part A.5b depth watchpoint findings) but does not propagate into systematic bias on the cross-study comparison.
+
+**Resolution narrative**:
+
+Issue 39 covers two parallel-but-distinct dimensions of Wilk's QC profile:
+1. **Cell-count fraction in 15-20% mito range** (Session 4 audit, 2026-05-12): Wilk = 6.44%, corpus-wide = 1.66%. Below 2% sensitivity threshold → documentation only, Possibility A.
+2. **Mito-gene-expression mean per cell** (Session 4.5 Part C, 2026-05-13): Wilk z=1.86 vs other-3 reference → Tier II measurement → PASS at 0.05 Δr threshold.
+
+Both dimensions resolved without methodology change. Wilk's lower per-cell sequencing depth → slightly elevated mito% (both cell-fraction and gene-expression-mean) → but downstream cross-study Pearson r is robust to mito-gene exclusion. Conclusion: Wilk's depth profile is **a depth-correlate finding**, not a systematic bias on integration outcomes.
+
+**Reviewer-facing answer (updated)**:
+> "We measured Wilk's mito-gene-expression mean (8.48%) vs other-3 reference (6.22% ± 1.22%) → z=1.86, within our pre-committed Tier II 'run sensitivity' band. Mito-excluded per-bucket recompute showed max |Δr| = 0.022 across 5 buckets — well below our 0.05 sensitivity threshold. Wilk's elevated mito reflects its lower per-cell sequencing depth (already disclosed) but does not propagate into cross-study artifact. Both Session 4 cell-fraction audit (1.66% corpus, 6.44% Wilk in 15-20% range) and Session 4.5 gene-expression-mean audit (Tier II PASS) confirm Wilk's QC profile is non-confounding."
+
+**Manuscript impact**: 1 paragraph in supplementary documenting the audit + Tier II PASS. Methods Limitations section gains one sentence: "Wilk 2020 shows elevated mito-gene fraction (z=1.86 vs other v1 studies) reflecting its lower per-cell sequencing depth; mito-excluded sensitivity analysis (Session 4.5 Part C Tier II) confirms cross-study coherence is robust (|Δr| ≤ 0.022 across all 5 buckets)."
+
+**Output files**:
+- `results/tables/session4_5_wilk_mito_sensitivity.csv` (z-score measurement per study)
+- `results/tables/session4_5_wilk_mito_tier2_sensitivity.csv` (5-bucket Δr_no_mito table)
+
+**Implementation references**:
+- `scripts/session4_5_wilk_mito_sensitivity.py` (z-score measurement; tier assignment)
+- `scripts/session4_5_wilk_mito_tier2_sensitivity.py` (mito-excluded response-vector recompute)
+- Pre-spec rule: Issue 39 Amendment commit `1ea9dc9` (pre-measurement)
+
+**Pipeline impact**: Issue 39 fully resolved. Both Session 4 + Session 4.5 dimensions closed without methodology change. Tier IV HARMONY_PREFERRED verdict from Issue 6 unchanged; no Wilk-specific caveat addendum needed beyond depth disclosure already in place.
+
+**Date opened (Amendment)**: 2026-05-13
+**Date resolved (Amendment)**: 2026-05-13 (this commit)
 
 ---
 
